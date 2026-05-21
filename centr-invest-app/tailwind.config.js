@@ -20,7 +20,11 @@ module.exports = {
       // 3. Можно добавить свои радиусы скругления, если нужно
       borderRadius: {
         '3xl': '30px',
-      }
+      },
+      fontFamily: {
+        roboto: ["Roboto_400Regular"],
+        robotoLight: ["Roboto_300Light"], // Добавляем эту строку
+      },
     },
   },
   plugins: [],
