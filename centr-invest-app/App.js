@@ -7,7 +7,7 @@ import * as SplashScreen from 'expo-splash-screen';
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(false); // По умолчанию поставил false, чтобы сразу видеть Регистрацию
   const [fontsLoaded] = useFonts({ Roboto_400Regular, Roboto_300Light });
 
   if (!fontsLoaded) return null;
@@ -15,63 +15,131 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      {/* Фон всего экрана */}
       <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
         
-        {/* Декоративные шары (поверх фона, под формой) */}
+        {/* Шары на фоне */}
         <View className="absolute w-full h-full" pointerEvents="none">
           <View className="absolute w-[180px] h-[180px] bg-[#FF501A] rounded-full -left-20 bottom-[30%] opacity-20" />
           <View className="absolute w-[140px] h-[140px] bg-[#7700FF] rounded-full -right-10 bottom-[15%] opacity-20" />
         </View>
 
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+          className="flex-1"
+        >
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
             <View className="flex-1 px-[46px] pb-10">
               
-              {/* Логотип */}
-              <View style={{ width: 190, height: 67 }} className="mt-[130px] self-center items-center justify-center flex-row">
+              {/* Логотип (190x67, mt 130px) */}
+              <View style={{ width: 190, height: 67 }} className="mt-[13px] self-center items-center justify-center flex-row">
                 <View className="w-8 h-10 bg-[#7700FF] rounded-tr-xl rounded-bl-xl mr-2" />
                 <Text className="text-2xl font-bold text-[#182030]">Тест</Text>
               </View>
 
-              {/* БЕЛЫЙ БОКС С ТЕНЬЮ */}
+              {/* ОБЩИЙ БОКС */}
               <View style={styles.shadowContainer}>
+                <View className="bg-white rounded-[8px] border border-[#EAEBED] overflow-hidden">
+                  
+              {/* ТАБЫ: Исправленное центрирование без обрезки */}
+              <View className="items-center pt-[16px]">
                 <View 
-                  className="bg-white rounded-[8px] border border-[#EAEBED] overflow-hidden"
+                  style={{ minWidth: 250 }} // Используем minWidth вместо жесткого width
+                  className="flex-row items-center justify-center"
                 >
-                  {/* ТАБЫ */}
-                  <View className="items-center pt-[16px]">
-                    <View style={{ width: 250, minHeight: 24 }} className="flex-row items-center justify-center">
-                      <TouchableOpacity onPress={() => setIsLogin(true)} className="py-[4px]">
-                        <Text className={`font-roboto text-[16px] ${isLogin ? 'text-[#000000]' : 'text-[#D6D6D6]'}`}>Войти</Text>
-                      </TouchableOpacity>
-                      <View className="mx-[24px] w-[1px] h-[16px] bg-[#000000]" />
-                      <TouchableOpacity onPress={() => setIsLogin(false)} className="py-[4px]">
-                        <Text className={`font-roboto text-[16px] ${!isLogin ? 'text-[#000000]' : 'text-[#D6D6D6]'}`}>Зарегистрироваться</Text>
-                      </TouchableOpacity>
-                    </View>
+                  {/* Кнопка Войти */}
+                  <TouchableOpacity 
+                    onPress={() => setIsLogin(true)}
+                    className="py-[4px] px-[2px] justify-center items-center"
+                  >
+                    <Text 
+                      style={{ 
+                        lineHeight: 20, // Явно задаем высоту строки
+                        includeFontPadding: false, // Убираем системные отступы Android
+                        textAlignVertical: 'center' 
+                      }} 
+                      className={`font-roboto text-[16px] ${isLogin ? 'text-[#000000]' : 'text-[#D6D6D6]'}`}
+                    >
+                      Войти
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Палочка: Высота 16, Отступы по 24 */}
+                  <View className="mx-[24px] w-[1px] h-[16px] bg-[#000000]" />
+
+                  {/* Кнопка Зарегистрироваться */}
+                  <TouchableOpacity 
+                    onPress={() => setIsLogin(false)}
+                    className="py-[4px] px-[2px] justify-center items-center"
+                  >
+                    <Text 
+                      style={{ 
+                        lineHeight: 20, 
+                        includeFontPadding: false, 
+                        textAlignVertical: 'center' 
+                      }} 
+                      className={`font-roboto text-[16px] ${!isLogin ? 'text-[#000000]' : 'text-[#D6D6D6]'}`}
+                    >
+                      Зарегистрироваться
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+                  {/* КОНТЕНТ ФОРМЫ (отступ сверху 10px, по бокам 16px) */}
+                  <View className="px-[16px] mt-[10px]">
+                    
+                    {isLogin ? (
+                      /* --- ФОРМА ВХОДА --- */
+                      <View>
+                        <TextInput 
+                          placeholder="Введите логин" 
+                          placeholderTextColor="#D6D6D6"
+                          className="w-full h-[56px] border border-[#EAEBED] px-[16px] rounded-[8px] font-roboto text-[16px] mb-[10px]"
+                        />
+                        <TextInput 
+                          placeholder="Введите пароль" 
+                          placeholderTextColor="#D6D6D6"
+                          secureTextEntry
+                          className="w-full h-[56px] border border-[#EAEBED] px-[16px] rounded-[8px] font-roboto text-[16px] mb-[10px]"
+                        />
+                        <TouchableOpacity className="bg-[#7700FF] w-full h-[56px] rounded-[8px] items-center justify-center">
+                          <Text className="font-roboto text-[16px] text-white font-medium">Войти</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity className="items-center py-[16px]">
+                          <Text className="text-[#FF501A] text-[14px] underline font-robotoLight">Забыли пароль?</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      /* --- ФОРМА РЕГИСТРАЦИИ --- */
+                      <View>
+                        <TextInput placeholder="Иванов" placeholderTextColor="#D6D6D6" 
+                          className="w-full h-[56px] border border-[#EAEBED] px-[16px] rounded-[8px] font-roboto text-[16px] mb-[10px]" />
+                        
+                        <TextInput placeholder="Иван" placeholderTextColor="#D6D6D6" 
+                          className="w-full h-[56px] border border-[#EAEBED] px-[16px] rounded-[8px] font-roboto text-[16px] mb-[10px]" />
+                        
+                        <TextInput placeholder="Иванович" placeholderTextColor="#D6D6D6" 
+                          className="w-full h-[56px] border border-[#EAEBED] px-[16px] rounded-[8px] font-roboto text-[16px] mb-[10px]" />
+                        
+                        <TextInput placeholder="+7 (999) 99-99-999" placeholderTextColor="#D6D6D6" keyboardType="phone-pad"
+                          className="w-full h-[56px] border border-[#EAEBED] px-[16px] rounded-[8px] font-roboto text-[16px] mb-[10px]" />
+                        
+                        <TextInput placeholder="testmail@yandex.ru" placeholderTextColor="#D6D6D6" keyboardType="email-address"
+                          className="w-full h-[56px] border border-[#EAEBED] px-[16px] rounded-[8px] font-roboto text-[16px] mb-[10px]" />
+                        
+                        <TextInput placeholder="Пароль" placeholderTextColor="#D6D6D6" secureTextEntry
+                          className="w-full h-[56px] border border-[#EAEBED] px-[16px] rounded-[8px] font-roboto text-[16px] mb-[10px]" />
+                        
+                        <TextInput placeholder="Подтверждение пароля" placeholderTextColor="#D6D6D6" secureTextEntry
+                          className="w-full h-[56px] border border-[#EAEBED] px-[16px] rounded-[8px] font-roboto text-[16px] mb-[10px]" />
+
+                        <TouchableOpacity className="bg-[#7700FF] w-full h-[56px] rounded-[8px] items-center justify-center mb-[16px]">
+                          <Text className="font-roboto text-[16px] text-white font-medium">Зарегистрироваться</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
 
-                  {/* ФОРМА */}
-                  <View className="px-[16px] mt-[10px]">
-                    <TextInput 
-                      placeholder="Введите логин" 
-                      placeholderTextColor="#D6D6D6"
-                      className="w-full h-[56px] border border-[#EAEBED] px-[16px] rounded-[8px] font-roboto text-[16px] mb-[10px]"
-                    />
-                    <TextInput 
-                      placeholder="Введите пароль" 
-                      placeholderTextColor="#D6D6D6"
-                      secureTextEntry
-                      className="w-full h-[56px] border border-[#EAEBED] px-[16px] rounded-[8px] font-roboto text-[16px] mb-[10px]"
-                    />
-                    <TouchableOpacity className="bg-[#7700FF] w-full h-[56px] rounded-[8px] items-center justify-center">
-                      <Text className="font-roboto text-[16px] text-white font-medium">Войти</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity className="items-center py-[16px]">
-                      <Text className="text-[#FF501A] text-[14px] underline font-robotoLight">Забыли пароль?</Text>
-                    </TouchableOpacity>
-                  </View>
                 </View>
               </View>
 
@@ -86,19 +154,17 @@ export default function App() {
 const styles = StyleSheet.create({
   shadowContainer: {
     marginTop: 20,
-    // Настройки тени
     ...Platform.select({
       ios: {
-        shadowColor: '#000', // Используем черный, т.к. F2EFFF на фоне F2EFFF не виден
+        shadowColor: '#F2EFFF',
         shadowOffset: { width: -6, height: 6 },
-        shadowOpacity: 0.1, // Маленькая прозрачность, чтобы тень была нежной
+        shadowOpacity: 0.8,
         shadowRadius: 5,
       },
       android: {
-        elevation: 10, // На Android только так
+        elevation: 8,
       },
       web: {
-        // Для веба можно прописать в точности как в Figma
         boxShadow: '-6px 6px 5px 0px rgba(242, 239, 255, 0.75)',
       }
     }),
