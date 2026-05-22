@@ -32,7 +32,7 @@ npx expo start --localhost
 
 В `centr-invest-app/App.js` логин сделан в демо-режиме и проверяет тестовые креды:
 
-- Email: `test@centrinvest.app`
+- Email: `м`
 - Пароль: `CentrInvest#2026`
 
 ## Настройка Android Emulator в Android Studio

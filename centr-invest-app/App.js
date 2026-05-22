@@ -24,9 +24,9 @@ function FormAlert({ variant = 'error', message, onClose }) {
   const isError = variant === 'error';
   const containerStyle = {
     backgroundColor: isError ? '#FFF0EB' : '#E9F8EE',
-    borderColor: isError ? '#FF4F12' : '#26A144',
+    borderColor: isError ? '#F23030' : '#26A144',
   };
-  const textStyle = { color: isError ? '#FF4F12' : '#26A144' };
+  const textStyle = { color: isError ? '#F23030' : '#26A144' };
 
   return (
     <View style={[styles.alertBox, containerStyle]}>
@@ -90,31 +90,26 @@ export default function App() {
 
     if (!email) {
       setFieldError('loginEmail', 'Введите Email');
-      setAlert({ variant: 'error', message: 'Введите Email' });
       return;
     }
 
     if (!isValidEmail(email)) {
       setFieldError('loginEmail', 'Некорректный Email');
-      setAlert({ variant: 'error', message: 'Некорректный Email' });
       return;
     }
 
     if (!password) {
       setFieldError('loginPassword', 'Введите пароль');
-      setAlert({ variant: 'error', message: 'Введите пароль' });
       return;
     }
 
     if (email.toLowerCase() !== TEST_ACCOUNT.email.toLowerCase()) {
-      setFieldError('loginEmail', 'Пользователь не найден');
-      setAlert({ variant: 'error', message: 'Пользователь не найден' });
+      setFieldError('loginPassword', 'Пользователь не найден');
       return;
     }
 
     if (password !== TEST_ACCOUNT.password) {
       setFieldError('loginPassword', 'Неверный пароль');
-      setAlert({ variant: 'error', message: 'Неверный пароль' });
       return;
     }
 
@@ -251,7 +246,7 @@ export default function App() {
                         />
                         <TextInput 
                           placeholder="Введите Email" 
-                          placeholderTextColor={fieldErrors?.loginEmail ? '#FF4F12' : '#D6D6D6'}
+                          placeholderTextColor={fieldErrors?.loginEmail ? '#F23030' : '#D6D6D6'}
                           keyboardType="email-address"
                           autoCapitalize="none"
                           value={loginEmail}
@@ -260,14 +255,14 @@ export default function App() {
                             clearFieldError('loginEmail');
                           }}
                           onFocus={() => clearFieldError('loginEmail')}
-                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.loginEmail ? 'border-[#FF4F12]' : 'border-[#EAEBED]'} mb-[6px]`}
+                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.loginEmail ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.loginEmail ? 'mb-0' : 'mb-[10px]'}`}
                         />
                         {fieldErrors?.loginEmail ? (
-                          <Text className="text-[#FF4F12] text-[14px] font-robotoLight mb-[6px]">{fieldErrors.loginEmail}</Text>
+                          <Text style={{ lineHeight: 22, textAlignVertical: 'center', includeFontPadding: false }} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">{fieldErrors.loginEmail}</Text>
                         ) : null}
                         <TextInput 
                           placeholder="Введите пароль" 
-                          placeholderTextColor={fieldErrors?.loginPassword ? '#FF4F12' : '#D6D6D6'}
+                          placeholderTextColor={fieldErrors?.loginPassword ? '#F23030' : '#D6D6D6'}
                           secureTextEntry
                           value={loginPassword}
                           onChangeText={(v) => {
@@ -275,10 +270,10 @@ export default function App() {
                             clearFieldError('loginPassword');
                           }}
                           onFocus={() => clearFieldError('loginPassword')}
-                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.loginPassword ? 'border-[#FF4F12]' : 'border-[#EAEBED]'} mb-[6px]`}
+                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.loginPassword ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.loginPassword ? 'mb-0' : 'mb-[10px]'}`}
                         />
                         {fieldErrors?.loginPassword ? (
-                          <Text className="text-[#FF4F12] text-[14px] font-robotoLight mb-[6px]">{fieldErrors.loginPassword}</Text>
+                          <Text style={{ lineHeight: 22, textAlignVertical: 'center', includeFontPadding: false }} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">{fieldErrors.loginPassword}</Text>
                         ) : null}
                         <TouchableOpacity
                           onPress={handleLogin}
@@ -286,8 +281,8 @@ export default function App() {
                         >
                           <Text className="font-roboto text-[16px] text-white font-medium">Войти</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity className="items-center pt-[16px]">
-                          <Text className="text-[#FF4F12] text-[14px] underline font-robotoLight">Забыли пароль?</Text>
+                        <TouchableOpacity className="items-center pt-[10px]">
+                          <Text className="text-[#F23030] text-[14px] underline font-robotoLight">Забыли пароль?</Text>
                         </TouchableOpacity>
                       </View>
                     ) : (
@@ -300,32 +295,32 @@ export default function App() {
                         />
                         <TextInput
                           placeholder="Иванов"
-                          placeholderTextColor={fieldErrors?.regLastName ? '#FF4F12' : '#D6D6D6'}
+                          placeholderTextColor={fieldErrors?.regLastName ? '#F23030' : '#D6D6D6'}
                           value={regLastName}
                           onChangeText={(v) => {
                             setRegLastName(v);
                             clearFieldError('regLastName');
                           }}
                           onFocus={() => clearFieldError('regLastName')}
-                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regLastName ? 'border-[#FF4F12]' : 'border-[#EAEBED]'} mb-[6px]`}
+                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regLastName ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regLastName ? 'mb-0' : 'mb-[10px]'}`}
                         />
                         {fieldErrors?.regLastName ? (
-                          <Text className="text-[#FF4F12] text-[14px] font-robotoLight mb-[6px]">{fieldErrors.regLastName}</Text>
+                          <Text style={{ lineHeight: 22, textAlignVertical: 'center', includeFontPadding: false }} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">{fieldErrors.regLastName}</Text>
                         ) : null}
                         
                         <TextInput
                           placeholder="Иван"
-                          placeholderTextColor={fieldErrors?.regFirstName ? '#FF4F12' : '#D6D6D6'}
+                          placeholderTextColor={fieldErrors?.regFirstName ? '#F23030' : '#D6D6D6'}
                           value={regFirstName}
                           onChangeText={(v) => {
                             setRegFirstName(v);
                             clearFieldError('regFirstName');
                           }}
                           onFocus={() => clearFieldError('regFirstName')}
-                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regFirstName ? 'border-[#FF4F12]' : 'border-[#EAEBED]'} mb-[6px]`}
+                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regFirstName ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regFirstName ? 'mb-0' : 'mb-[10px]'}`}
                         />
                         {fieldErrors?.regFirstName ? (
-                          <Text className="text-[#FF4F12] text-[14px] font-robotoLight mb-[6px]">{fieldErrors.regFirstName}</Text>
+                          <Text style={{ lineHeight: 22, textAlignVertical: 'center', includeFontPadding: false }} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">{fieldErrors.regFirstName}</Text>
                         ) : null}
                         
                         <TextInput
@@ -338,7 +333,7 @@ export default function App() {
                         
                         <TextInput
                           placeholder="+7 (999) 99-99-999"
-                          placeholderTextColor={fieldErrors?.regPhone ? '#FF4F12' : '#D6D6D6'}
+                          placeholderTextColor={fieldErrors?.regPhone ? '#F23030' : '#D6D6D6'}
                           keyboardType="phone-pad"
                           value={regPhone}
                           onChangeText={(v) => {
@@ -346,15 +341,15 @@ export default function App() {
                             clearFieldError('regPhone');
                           }}
                           onFocus={() => clearFieldError('regPhone')}
-                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regPhone ? 'border-[#FF4F12]' : 'border-[#EAEBED]'} mb-[6px]`}
+                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regPhone ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regPhone ? 'mb-0' : 'mb-[10px]'}`}
                         />
                         {fieldErrors?.regPhone ? (
-                          <Text className="text-[#FF4F12] text-[14px] font-robotoLight mb-[6px]">{fieldErrors.regPhone}</Text>
+                          <Text style={{ lineHeight: 22, textAlignVertical: 'center', includeFontPadding: false }} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">{fieldErrors.regPhone}</Text>
                         ) : null}
                         
                         <TextInput
                           placeholder="testmail@yandex.ru"
-                          placeholderTextColor={fieldErrors?.regEmail ? '#FF4F12' : '#D6D6D6'}
+                          placeholderTextColor={fieldErrors?.regEmail ? '#F23030' : '#D6D6D6'}
                           keyboardType="email-address"
                           autoCapitalize="none"
                           value={regEmail}
@@ -363,15 +358,15 @@ export default function App() {
                             clearFieldError('regEmail');
                           }}
                           onFocus={() => clearFieldError('regEmail')}
-                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regEmail ? 'border-[#FF4F12]' : 'border-[#EAEBED]'} mb-[6px]`}
+                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regEmail ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regEmail ? 'mb-0' : 'mb-[10px]'}`}
                         />
                         {fieldErrors?.regEmail ? (
-                          <Text className="text-[#FF4F12] text-[14px] font-robotoLight mb-[6px]">{fieldErrors.regEmail}</Text>
+                          <Text style={{ lineHeight: 22, textAlignVertical: 'center', includeFontPadding: false }} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">{fieldErrors.regEmail}</Text>
                         ) : null}
                         
                         <TextInput
                           placeholder="Пароль"
-                          placeholderTextColor={fieldErrors?.regPassword ? '#FF4F12' : '#D6D6D6'}
+                          placeholderTextColor={fieldErrors?.regPassword ? '#F23030' : '#D6D6D6'}
                           secureTextEntry
                           value={regPassword}
                           onChangeText={(v) => {
@@ -379,15 +374,15 @@ export default function App() {
                             clearFieldError('regPassword');
                           }}
                           onFocus={() => clearFieldError('regPassword')}
-                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regPassword ? 'border-[#FF4F12]' : 'border-[#EAEBED]'} mb-[6px]`}
+                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regPassword ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regPassword ? 'mb-0' : 'mb-[10px]'}`}
                         />
                         {fieldErrors?.regPassword ? (
-                          <Text className="text-[#FF4F12] text-[14px] font-robotoLight mb-[6px]">{fieldErrors.regPassword}</Text>
+                          <Text style={{ lineHeight: 22, textAlignVertical: 'center', includeFontPadding: false }} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">{fieldErrors.regPassword}</Text>
                         ) : null}
                         
                         <TextInput
                           placeholder="Подтверждение пароля"
-                          placeholderTextColor={fieldErrors?.regPassword2 ? '#FF4F12' : '#D6D6D6'}
+                          placeholderTextColor={fieldErrors?.regPassword2 ? '#F23030' : '#D6D6D6'}
                           secureTextEntry
                           value={regPassword2}
                           onChangeText={(v) => {
@@ -395,10 +390,10 @@ export default function App() {
                             clearFieldError('regPassword2');
                           }}
                           onFocus={() => clearFieldError('regPassword2')}
-                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regPassword2 ? 'border-[#FF4F12]' : 'border-[#EAEBED]'} mb-[6px]`}
+                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regPassword2 ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regPassword2 ? 'mb-0' : 'mb-[10px]'}`}
                         />
                         {fieldErrors?.regPassword2 ? (
-                          <Text className="text-[#FF4F12] text-[14px] font-robotoLight mb-[6px]">{fieldErrors.regPassword2}</Text>
+                          <Text style={{ lineHeight: 22, textAlignVertical: 'center', includeFontPadding: false }} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">{fieldErrors.regPassword2}</Text>
                         ) : null}
 
                         <TouchableOpacity onPress={handleRegister} className="bg-[#7700FF] w-full h-[56px] rounded-[8px] items-center justify-center mb-[16px]">
@@ -455,8 +450,10 @@ const styles = StyleSheet.create({
     width: '100%',
     borderWidth: 1,
     borderRadius: 12,
-    paddingVertical: 10,
+    paddingTop: 10,
+    paddingBottom: 10,
     paddingHorizontal: 12,
+    marginTop: 10,
     marginBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
@@ -466,14 +463,19 @@ const styles = StyleSheet.create({
   alertText: {
     flex: 1,
     fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontWeight: '400',
     fontSize: 14,
-    lineHeight: 18,
+    lineHeight: 22,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   alertClose: {
     fontFamily: 'Roboto',
     fontWeight: '700',
     fontSize: 18,
-    lineHeight: 18,
+    lineHeight: 22,
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
 });
