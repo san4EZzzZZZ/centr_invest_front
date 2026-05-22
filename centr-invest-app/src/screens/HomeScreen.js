@@ -5,14 +5,16 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const bottomInset = Math.max(insets.bottom, 16);
+  const bottomInset = insets.bottom;
+  const NAV_HEIGHT = 64;
+  const NAV_SIDE = 0;
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView edges={['top']} style={styles.screen}>
       {/* ГЛАВНЫЙ КОНТЕЙНЕР (Без горизонтального padding) */}
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 72 + bottomInset + 16 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: NAV_HEIGHT + bottomInset + 24 }]}
       >
         
         {/* HEADER (Отступ px-5 задаем внутри) */}
@@ -98,22 +100,27 @@ export default function HomeScreen() {
       </ScrollView>
 
     {/* --- ОБНОВЛЕННЫЙ BOTTOM NAVIGATION --- */}
-        <View pointerEvents="box-none" style={[styles.bottomNavContainer, { paddingBottom: bottomInset }]}>
-            <View style={styles.bottomNav}>
-            {/* Кнопка Домой (Активная) */}
-            <TouchableOpacity style={styles.bottomNavBtn}>
-                <Ionicons name="home" size={28} color="#7A1136" />
-            </TouchableOpacity>
+        <View
+          pointerEvents="box-none"
+          style={[styles.bottomNavContainer, { paddingHorizontal: NAV_SIDE }]}
+        >
+            <View style={styles.bottomNavShadow}>
+              <View style={[styles.bottomNav, { height: NAV_HEIGHT + bottomInset, paddingBottom: bottomInset }]}>
+                {/* Кнопка Домой (Активная) */}
+                <TouchableOpacity style={styles.bottomNavBtn}>
+                    <Ionicons name="home" size={28} color="#7A1136" />
+                </TouchableOpacity>
 
-            {/* Кнопка Избранное */}
-            <TouchableOpacity style={styles.bottomNavBtn}>
-                <Ionicons name="heart-outline" size={30} color="#D1D1D1" />
-            </TouchableOpacity>
+                {/* Кнопка Избранное */}
+                <TouchableOpacity style={styles.bottomNavBtn}>
+                    <Ionicons name="heart-outline" size={30} color="#D1D1D1" />
+                </TouchableOpacity>
 
-            {/* Кнопка Профиль */}
-            <TouchableOpacity style={styles.bottomNavBtn}>
-                <Ionicons name="person-outline" size={30} color="#D1D1D1" />
-            </TouchableOpacity>
+                {/* Кнопка Профиль */}
+                <TouchableOpacity style={styles.bottomNavBtn}>
+                    <Ionicons name="person-outline" size={30} color="#D1D1D1" />
+                </TouchableOpacity>
+              </View>
             </View>
         </View>
     </SafeAreaView>
@@ -312,27 +319,34 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'transparent',
   },
   bottomNav: {
-    marginHorizontal: 16,
-    height: 72,
+    overflow: 'hidden',
     backgroundColor: '#FFFFFF',
-    borderRadius: 32,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    width: '100%',
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    // Тень для объема
+    paddingHorizontal: 24,
+  },
+  bottomNavShadow: {
+    width: '100%',
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    // Тень для объема (на внешнем контейнере, чтобы не было "квадратных углов" у контента)
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.05,
-    shadowRadius: 20,
-    elevation: 5,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 12,
   },
   bottomNavBtn: {
-    flex: 1,
+    width: 56,
     alignItems: 'center',
     justifyContent: 'center',
   },
