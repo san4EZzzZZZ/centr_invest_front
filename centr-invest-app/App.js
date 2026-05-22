@@ -284,7 +284,7 @@ export default function App() {
                         >
                           <Text className="font-roboto text-[16px] text-white font-medium">Войти</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity className="items-center pt-[10px] pb-[16px]">
+                        <TouchableOpacity className="items-center pt-[14px] pb-[14px]">
                           <Text style={{ lineHeight: 22, textAlignVertical: 'center', includeFontPadding: false }} className="text-[#F23030] text-[14px] underline font-robotoLight">Забыли пароль?</Text>
                         </TouchableOpacity>
                       </View>
