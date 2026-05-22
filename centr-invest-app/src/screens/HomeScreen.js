@@ -108,20 +108,20 @@ export default function HomeScreen() {
           </View>
           <View style={styles.recentList}>
             <RecentCard 
+              title="Смешанный тест" 
+              questions="12 вопросов" 
+              status="Новый" 
+              statusVariant="not_passed"
+              iconColor="#FFB58F"
+              onPress={() => setRoute({ name: 'quiz', quiz: quizzesByTitle.get('Java Senior') ?? QUIZZES[0] })}
+            />
+            <RecentCard 
               title="Python Junior" 
               questions="12 вопросов" 
               status="Пройдено" 
               statusVariant="passed"
               iconColor="#FDE68A"
               onPress={() => setRoute({ name: 'quiz', quiz: quizzesByTitle.get('Python Junior') ?? QUIZZES[0] })}
-            />
-            <RecentCard 
-              title="Java developer" 
-              questions="12 вопросов" 
-              status="Пройдено" 
-              statusVariant="passed"
-              iconColor="#FDE68A"
-              onPress={() => setRoute({ name: 'quiz', quiz: quizzesByTitle.get('Java Senior') ?? QUIZZES[0] })}
             />
             <RecentCard 
               title="Java Senior" 
