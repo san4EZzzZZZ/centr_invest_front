@@ -363,7 +363,34 @@ export default function App() {
                           <View
                             className={`w-[22px] h-[22px] rounded-[6px] items-center justify-center mr-[10px] ${regCreator ? 'bg-[#76113A]' : 'border border-[#76113A] bg-white'}`}
                           >
-                            {regCreator ? <Text className="text-white text-[16px] leading-[18px]">✓</Text> : null}
+                            {regCreator ? (
+                              <View className="relative w-[14px] h-[12px]">
+                                <View
+                                  style={{
+                                    position: 'absolute',
+                                    left: 2,
+                                    top: 4,
+                                    width: 2,
+                                    height: 7,
+                                    backgroundColor: '#FFFFFF',
+                                    borderRadius: 999,
+                                    transform: [{ rotate: '-45deg' }],
+                                  }}
+                                />
+                                <View
+                                  style={{
+                                    position: 'absolute',
+                                    left: 7.5,
+                                    top: 0.5,
+                                    width: 2,
+                                    height: 12,
+                                    backgroundColor: '#FFFFFF',
+                                    borderRadius: 999,
+                                    transform: [{ rotate: '45deg' }],
+                                  }}
+                                />
+                              </View>
+                            ) : null}
                           </View>
                           <Text className="font-roboto text-[16px] text-[#252525]">Создатель Хайпа</Text>
                         </TouchableOpacity>
