@@ -28,6 +28,13 @@ npx expo start --localhost
 - `a` — открыть на Android (эмулятор/устройство)
 - `w` — открыть Web
 
+## Тестовая учётка (для демо-логина)
+
+В `centr-invest-app/App.js` логин сделан в демо-режиме и проверяет тестовые креды:
+
+- Email: `test@centrinvest.app`
+- Пароль: `CentrInvest#2026`
+
 ## Настройка Android Emulator в Android Studio
 
 1. Установи **Android Studio**.
