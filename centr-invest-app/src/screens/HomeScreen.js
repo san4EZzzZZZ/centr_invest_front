@@ -1,13 +1,46 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, TextInput, ScrollView, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import QuizScreen from './QuizScreen';
+import QuizResultScreen from './QuizResultScreen';
+import { QUIZZES } from '../data/quizzes';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const bottomInset = insets.bottom;
   const NAV_HEIGHT = 64;
   const NAV_SIDE = 0;
+
+  const [route, setRoute] = useState({ name: 'home' });
+
+  const quizzesByTitle = useMemo(() => {
+    const map = new Map();
+    for (const q of QUIZZES) map.set(q.title, q);
+    return map;
+  }, []);
+
+  if (route.name === 'quiz') {
+    return (
+      <QuizScreen
+        quiz={route.quiz}
+        onBack={() => setRoute({ name: 'home' })}
+        onFinish={({ quiz, score, total }) => setRoute({ name: 'result', quiz, score, total })}
+      />
+    );
+  }
+
+  if (route.name === 'result') {
+    return (
+      <QuizResultScreen
+        quizTitle={route.quiz?.title}
+        score={route.score}
+        total={route.total}
+        onGoHome={() => setRoute({ name: 'home' })}
+        onReview={() => setRoute({ name: 'home' })}
+      />
+    );
+  }
 
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
@@ -80,6 +113,7 @@ export default function HomeScreen() {
               status="Пройдено" 
               statusVariant="passed"
               iconColor="#FDE68A"
+              onPress={() => setRoute({ name: 'quiz', quiz: quizzesByTitle.get('Python Junior') ?? QUIZZES[0] })}
             />
             <RecentCard 
               title="Java developer" 
@@ -87,6 +121,7 @@ export default function HomeScreen() {
               status="Пройдено" 
               statusVariant="passed"
               iconColor="#FDE68A"
+              onPress={() => setRoute({ name: 'quiz', quiz: quizzesByTitle.get('Java Senior') ?? QUIZZES[0] })}
             />
             <RecentCard 
               title="Java Senior" 
@@ -94,6 +129,7 @@ export default function HomeScreen() {
               status="Не пройдено" 
               statusVariant="not_passed"
               iconColor="#D17E7E"
+              onPress={() => setRoute({ name: 'quiz', quiz: quizzesByTitle.get('Java Senior') ?? QUIZZES[0] })}
             />
           </View>
         </View>
@@ -128,10 +164,10 @@ export default function HomeScreen() {
 }
 
 // Компонент карточки
-function RecentCard({ title, questions, status, statusVariant, iconColor }) {
+function RecentCard({ title, questions, status, statusVariant, iconColor, onPress }) {
   const isPassed = statusVariant === 'passed';
   return (
-    <View style={styles.recentCard}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.recentCard}>
       <View style={styles.recentLeft}>
         <View style={[styles.recentIcon, { backgroundColor: iconColor }]} />
         <View>
@@ -147,7 +183,7 @@ function RecentCard({ title, questions, status, statusVariant, iconColor }) {
           {status}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
