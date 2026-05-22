@@ -51,13 +51,11 @@ export default function App() {
   const [loginEmail, setLoginEmail] = useState(TEST_ACCOUNT.email);
   const [loginPassword, setLoginPassword] = useState(TEST_ACCOUNT.password);
 
-  const [regLastName, setRegLastName] = useState('');
-  const [regFirstName, setRegFirstName] = useState('');
-  const [regMiddleName, setRegMiddleName] = useState('');
-  const [regPhone, setRegPhone] = useState('');
+  const [regUsername, setRegUsername] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regPassword2, setRegPassword2] = useState('');
+  const [regCreator, setRegCreator] = useState(true);
 
   function resetFormErrors() {
     setAlert(null);
@@ -120,16 +118,12 @@ export default function App() {
   function handleRegister() {
     resetFormErrors();
 
-    const lastName = String(regLastName || '').trim();
-    const firstName = String(regFirstName || '').trim();
-    const phone = String(regPhone || '').trim();
+    const username = String(regUsername || '').trim();
     const email = String(regEmail || '').trim();
     const password = String(regPassword || '');
     const password2 = String(regPassword2 || '');
 
-    if (!lastName) setFieldError('regLastName', 'Введите фамилию');
-    if (!firstName) setFieldError('regFirstName', 'Введите имя');
-    if (!phone) setFieldError('regPhone', 'Введите телефон');
+    if (!username) setFieldError('regUsername', 'Введите имя пользователя');
     if (!email) setFieldError('regEmail', 'Введите Email');
     if (email && !isValidEmail(email)) setFieldError('regEmail', 'Некорректный Email');
     if (!password) setFieldError('regPassword', 'Введите пароль');
@@ -140,9 +134,7 @@ export default function App() {
     const hasAnyError = Object.keys(fieldErrors).length > 0;
     // fieldErrors обновляются асинхронно — проверим вручную теми же условиями
     const shouldFail =
-      !lastName ||
-      !firstName ||
-      !phone ||
+      !username ||
       !email ||
       (email && !isValidEmail(email)) ||
       !password ||
@@ -299,67 +291,23 @@ export default function App() {
                     ) : (
                       /* --- ФОРМА РЕГИСТРАЦИИ --- */
                       <View>
-                        <FormAlert
-                          variant={alert?.variant}
-                          message={alert?.message}
-                          onClose={() => setAlert(null)}
-                        />
                         <TextInput
-                          placeholder="Иванов"
-                          placeholderTextColor={fieldErrors?.regLastName ? '#F23030' : '#D6D6D6'}
-                          value={regLastName}
+                          placeholder="Имя пользователя"
+                          placeholderTextColor={fieldErrors?.regUsername ? '#F23030' : '#D6D6D6'}
+                          value={regUsername}
                           onChangeText={(v) => {
-                            setRegLastName(v);
-                            clearFieldError('regLastName');
+                            setRegUsername(v);
+                            clearFieldError('regUsername');
                           }}
-                          onFocus={() => clearFieldError('regLastName')}
-                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regLastName ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regLastName ? 'mb-0' : 'mb-[10px]'}`}
+                          onFocus={() => clearFieldError('regUsername')}
+                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regUsername ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regUsername ? 'mb-0' : 'mb-[10px]'}`}
                         />
-                        {fieldErrors?.regLastName ? (
-                          <Text style={{ lineHeight: 22, textAlignVertical: 'center', includeFontPadding: false }} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">{fieldErrors.regLastName}</Text>
+                        {fieldErrors?.regUsername ? (
+                          <Text style={{ lineHeight: 22, textAlignVertical: 'center', includeFontPadding: false }} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">{fieldErrors.regUsername}</Text>
                         ) : null}
                         
                         <TextInput
-                          placeholder="Иван"
-                          placeholderTextColor={fieldErrors?.regFirstName ? '#F23030' : '#D6D6D6'}
-                          value={regFirstName}
-                          onChangeText={(v) => {
-                            setRegFirstName(v);
-                            clearFieldError('regFirstName');
-                          }}
-                          onFocus={() => clearFieldError('regFirstName')}
-                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regFirstName ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regFirstName ? 'mb-0' : 'mb-[10px]'}`}
-                        />
-                        {fieldErrors?.regFirstName ? (
-                          <Text style={{ lineHeight: 22, textAlignVertical: 'center', includeFontPadding: false }} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">{fieldErrors.regFirstName}</Text>
-                        ) : null}
-                        
-                        <TextInput
-                          placeholder="Иванович"
-                          placeholderTextColor="#D6D6D6"
-                          value={regMiddleName}
-                          onChangeText={setRegMiddleName}
-                          className="w-full h-[56px] border border-[#EAEBED] px-[16px] rounded-[8px] font-roboto text-[16px] mb-[10px]"
-                        />
-                        
-                        <TextInput
-                          placeholder="+7 (999) 99-99-999"
-                          placeholderTextColor={fieldErrors?.regPhone ? '#F23030' : '#D6D6D6'}
-                          keyboardType="phone-pad"
-                          value={regPhone}
-                          onChangeText={(v) => {
-                            setRegPhone(v);
-                            clearFieldError('regPhone');
-                          }}
-                          onFocus={() => clearFieldError('regPhone')}
-                          className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regPhone ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regPhone ? 'mb-0' : 'mb-[10px]'}`}
-                        />
-                        {fieldErrors?.regPhone ? (
-                          <Text style={{ lineHeight: 22, textAlignVertical: 'center', includeFontPadding: false }} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">{fieldErrors.regPhone}</Text>
-                        ) : null}
-                        
-                        <TextInput
-                          placeholder="testmail@yandex.ru"
+                          placeholder="Email"
                           placeholderTextColor={fieldErrors?.regEmail ? '#F23030' : '#D6D6D6'}
                           keyboardType="email-address"
                           autoCapitalize="none"
@@ -407,7 +355,20 @@ export default function App() {
                           <Text style={{ lineHeight: 22, textAlignVertical: 'center', includeFontPadding: false }} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">{fieldErrors.regPassword2}</Text>
                         ) : null}
 
-                        <TouchableOpacity onPress={handleRegister} className="bg-[#7700FF] w-full h-[56px] rounded-[8px] items-center justify-center mb-[16px]">
+                        <TouchableOpacity
+                          onPress={() => setRegCreator((prev) => !prev)}
+                          activeOpacity={0.8}
+                          className="flex-row items-center mb-[10px]"
+                        >
+                          <View
+                            className={`w-[22px] h-[22px] rounded-[6px] items-center justify-center mr-[10px] ${regCreator ? 'bg-[#76113A]' : 'border border-[#76113A] bg-white'}`}
+                          >
+                            {regCreator ? <Text className="text-white text-[16px] leading-[18px]">✓</Text> : null}
+                          </View>
+                          <Text className="font-roboto text-[16px] text-[#252525]">Создатель Хайпа</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={handleRegister} className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center mb-[16px]">
                           <Text className="font-roboto text-[16px] text-white font-medium">Зарегистрироваться</Text>
                         </TouchableOpacity>
                       </View>
