@@ -3,19 +3,24 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingVi
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useFonts, Roboto_400Regular, Roboto_300Light } from '@expo-google-fonts/roboto';
 import * as SplashScreen from 'expo-splash-screen';
+import HomeScreen from './src/screens/HomeScreen';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [isLogin, setIsLogin] = useState(false); // По умолчанию поставил false, чтобы сразу видеть Регистрацию
   const [fontsLoaded] = useFonts({ Roboto_400Regular, Roboto_300Light });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   if (!fontsLoaded) return null;
   else SplashScreen.hideAsync();
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      {isLoggedIn ? (
+        <HomeScreen />
+      ) : (
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
         
         {/* Шары на фоне */}
         <View className="absolute w-full h-full" pointerEvents="none">
@@ -48,7 +53,7 @@ export default function App() {
                 >
                   {/* Кнопка Войти */}
                   <TouchableOpacity 
-                    onPress={() => setIsLogin(true)}
+                    onPress={() => setIsLoggedIn(true)}
                     className="py-[4px] px-[2px] justify-center items-center"
                   >
                     <Text 
@@ -146,7 +151,8 @@ export default function App() {
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </SafeAreaView>
+        </SafeAreaView>
+      )}
     </SafeAreaProvider>
   );
 }
