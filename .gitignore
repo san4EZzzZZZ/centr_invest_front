@@ -1,0 +1,13 @@
+# Logs
+*.log
+*.out.log
+*.err.log
+
+# Dependencies
+node_modules/
+
+# Env
+.env*
+ 
+# macOS
+.DS_Store

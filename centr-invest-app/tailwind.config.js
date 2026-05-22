@@ -24,6 +24,8 @@ module.exports = {
       fontFamily: {
         roboto: ["Roboto_400Regular"],
         robotoLight: ["Roboto_300Light"], // Добавляем эту строку
+        robotoMedium: ["Roboto_500Medium"],
+        robotoBold: ["Roboto_700Bold"],
       },
     },
   },
