@@ -182,9 +182,20 @@ export default function App() {
               </View>
 
               {/* ОБЩИЙ БОКС */}
-              <View style={styles.shadowContainer}>
-                <View className="bg-white rounded-[12px] border border-[#EAEBED] overflow-hidden">
-                  <View style={styles.cardContent}>
+              <View style={styles.shadowWrap}>
+                {Platform.OS === 'android' ? (
+                  <>
+                    <View pointerEvents="none" style={styles.androidShadowLeftSoft} />
+                    <View pointerEvents="none" style={styles.androidShadowLeft} />
+                    <View pointerEvents="none" style={styles.androidShadowRightSoft} />
+                    <View pointerEvents="none" style={styles.androidShadowRight} />
+                  </>
+                ) : null}
+
+                <View style={Platform.OS === 'ios' ? styles.shadowIOSLeft : null}>
+                  <View style={Platform.OS === 'ios' ? styles.shadowIOSRight : null}>
+                  <View className="bg-white rounded-[12px] border border-[#EAEBED] overflow-hidden">
+                    <View style={styles.cardContent}>
                   
               {/* ТАБЫ: Исправленное центрирование без обрезки */}
               <View style={styles.tabsBlock} className="items-center">
@@ -281,8 +292,8 @@ export default function App() {
                         >
                           <Text className="font-roboto text-[16px] text-white font-medium">Войти</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity className="items-center pt-[10px]">
-                          <Text className="text-[#F23030] text-[14px] underline font-robotoLight">Забыли пароль?</Text>
+                        <TouchableOpacity className="items-center pt-[10px] pb-[16px]">
+                          <Text style={{ lineHeight: 22, textAlignVertical: 'center', includeFontPadding: false }} className="text-[#F23030] text-[14px] underline font-robotoLight">Забыли пароль?</Text>
                         </TouchableOpacity>
                       </View>
                     ) : (
@@ -403,10 +414,11 @@ export default function App() {
                     )}
                   </View>
 
+                    </View>
+                  </View>
                   </View>
                 </View>
               </View>
-
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -417,28 +429,89 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  shadowContainer: {
+  shadowWrap: {
     marginTop: 20,
     width: '100%',
     maxWidth: 370,
+    position: 'relative',
     ...Platform.select({
       ios: {
-        shadowColor: '#F2EFFF',
-        shadowOffset: { width: -6, height: 6 },
-        shadowOpacity: 0.8,
-        shadowRadius: 5,
+        // iOS shadow рисуем на вложенных врапперах (shadowIOSLeft/shadowIOSRight)
+        shadowOpacity: 0,
       },
       android: {
-        elevation: 8,
+        // Цветной blur-shadow на Android ограничен, поэтому рисуем "подложки" (см. androidShadow*)
+        elevation: 0,
       },
       web: {
-        boxShadow: '-6px 6px 5px 0px rgba(242, 239, 255, 0.75)',
+        boxShadow:
+          '-6px 10px 14px 0px rgba(242, 239, 255, 0.45), 6px 10px 12px 0px rgba(242, 239, 255, 0.45)',
       }
     }),
   },
+  shadowIOSLeft: {
+    width: '100%',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#F2EFFF',
+        shadowOffset: { width: -6, height: 10 },
+        shadowOpacity: 0.35,
+        shadowRadius: 14,
+      },
+      default: {},
+    }),
+  },
+  shadowIOSRight: {
+    width: '100%',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#F2EFFF',
+        shadowOffset: { width: 6, height: 10 },
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+      },
+      default: {},
+    }),
+  },
+  androidShadowLeftSoft: {
+    position: 'absolute',
+    left: -14,
+    top: 12,
+    right: 0,
+    bottom: -10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(242, 239, 255, 0.18)',
+  },
+  androidShadowLeft: {
+    position: 'absolute',
+    left: -6,
+    top: 10,
+    right: 0,
+    bottom: -6,
+    borderRadius: 16,
+    backgroundColor: 'rgba(242, 239, 255, 0.28)',
+  },
+  androidShadowRightSoft: {
+    position: 'absolute',
+    left: 14,
+    top: 12,
+    right: -14,
+    bottom: -10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(242, 239, 255, 0.18)',
+  },
+  androidShadowRight: {
+    position: 'absolute',
+    left: 6,
+    top: 10,
+    right: -6,
+    bottom: -6,
+    borderRadius: 16,
+    backgroundColor: 'rgba(242, 239, 255, 0.28)',
+  },
   cardContent: {
     paddingTop: 15,
-    paddingBottom: 16,
+    paddingBottom: 0,
     paddingHorizontal: 16,
     rowGap: 10,
     minHeight: 281,
