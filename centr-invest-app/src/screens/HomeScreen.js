@@ -6,11 +6,16 @@ import QuizScreen from './QuizScreen';
 import QuizResultScreen from './QuizResultScreen';
 import { QUIZZES } from '../data/quizzes';
 
+const PROFILE_DATA = {
+  name: 'Admin',
+  email: 'yourmail@mail.com',
+  role: 'Администратор',
+};
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const bottomInset = insets.bottom;
   const NAV_HEIGHT = 64;
-  const NAV_SIDE = 0;
 
   const [route, setRoute] = useState({ name: 'home' });
 
@@ -42,8 +47,19 @@ export default function HomeScreen() {
     );
   }
 
+  if (route.name === 'profile') {
+    return (
+      <ProfileScreen
+        bottomInset={bottomInset}
+        navHeight={NAV_HEIGHT}
+        onGoHome={() => setRoute({ name: 'home' })}
+        onOpenProfile={() => setRoute({ name: 'profile' })}
+      />
+    );
+  }
+
   return (
-    <SafeAreaView edges={['top']} style={styles.screen}>
+    <SafeAreaView edges={['top']} style={[styles.screen, styles.homeScreen]}>
       {/* ГЛАВНЫЙ КОНТЕЙНЕР (Без горизонтального padding) */}
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -136,30 +152,86 @@ export default function HomeScreen() {
       </ScrollView>
 
     {/* --- ОБНОВЛЕННЫЙ BOTTOM NAVIGATION --- */}
-        <View
-          pointerEvents="box-none"
-          style={[styles.bottomNavContainer, { paddingHorizontal: NAV_SIDE }]}
-        >
-            <View style={styles.bottomNavShadow}>
-              <View style={[styles.bottomNav, { height: NAV_HEIGHT + bottomInset, paddingBottom: bottomInset }]}>
-                {/* Кнопка Домой (Активная) */}
-                <TouchableOpacity style={styles.bottomNavBtn}>
-                    <Ionicons name="home" size={28} color="#7A1136" />
-                </TouchableOpacity>
-
-                {/* Кнопка Избранное */}
-                <TouchableOpacity style={styles.bottomNavBtn}>
-                    <Ionicons name="heart-outline" size={30} color="#D1D1D1" />
-                </TouchableOpacity>
-
-                {/* Кнопка Профиль */}
-                <TouchableOpacity style={styles.bottomNavBtn}>
-                    <Ionicons name="person-outline" size={30} color="#D1D1D1" />
-                </TouchableOpacity>
-              </View>
-            </View>
-        </View>
+        <BottomNav
+          bottomInset={bottomInset}
+          navHeight={NAV_HEIGHT}
+          activeTab="home"
+          onGoHome={() => setRoute({ name: 'home' })}
+          onOpenProfile={() => setRoute({ name: 'profile' })}
+        />
     </SafeAreaView>
+  );
+}
+
+function ProfileScreen({ bottomInset, navHeight, onGoHome, onOpenProfile }) {
+  return (
+    <SafeAreaView edges={['top']} style={[styles.screen, styles.profileScreen]}>
+      <View style={styles.profileShell}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.profileScrollContent, { paddingBottom: navHeight + bottomInset + 24 }]}
+        >
+          <Text style={styles.profileTitle}>Профиль</Text>
+
+          <View style={styles.profileCard}>
+            <View style={styles.avatarFrame}>
+              <Image source={require('../../assets/icon.png')} style={styles.avatarImage} />
+            </View>
+
+            <ProfileField label="Имя пользователя" value={PROFILE_DATA.name} />
+            <ProfileField label="Email" value={PROFILE_DATA.email} />
+            <ProfileField label="Должность" value={PROFILE_DATA.role} />
+
+            <TouchableOpacity activeOpacity={0.85} style={styles.logoutBtn}>
+              <Text style={styles.logoutText}>Выйти</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
+
+      <BottomNav
+        bottomInset={bottomInset}
+        navHeight={navHeight}
+        activeTab="profile"
+        onGoHome={onGoHome}
+        onOpenProfile={onOpenProfile}
+      />
+    </SafeAreaView>
+  );
+}
+
+function ProfileField({ label, value }) {
+  return (
+    <View style={styles.profileField}>
+      <Text style={styles.profileFieldLabel}>{label}</Text>
+      <Text style={styles.profileFieldValue}>{value}</Text>
+    </View>
+  );
+}
+
+function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenProfile }) {
+  return (
+    <View pointerEvents="box-none" style={styles.bottomNavContainer}>
+      <View style={styles.bottomNavShadow}>
+        <View style={[styles.bottomNav, { height: navHeight + bottomInset, paddingBottom: bottomInset }]}>
+          <TouchableOpacity style={styles.bottomNavBtn} onPress={onGoHome} activeOpacity={0.8}>
+            <Ionicons name="home" size={28} color={activeTab === 'home' ? '#7A1136' : '#D1D1D1'} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.bottomNavBtn} activeOpacity={0.8}>
+            <Ionicons name="heart-outline" size={30} color="#D1D1D1" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenProfile} activeOpacity={0.8}>
+            <Ionicons name="person-outline" size={30} color={activeTab === 'profile' ? '#7A1136' : '#D1D1D1'} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.bottomNavBtn} activeOpacity={0.8}>
+            <Ionicons name="add" size={32} color="#D1D1D1" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -190,10 +262,102 @@ function RecentCard({ title, questions, status, statusVariant, iconColor, onPres
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+  },
+  homeScreen: {
     backgroundColor: '#F5F5F5',
+  },
+  profileScreen: {
+    backgroundColor: '#6B6B6B',
   },
   scrollContent: {
     paddingBottom: 120, // перезаписывается динамически с учетом safe-area
+  },
+  profileShell: {
+    flex: 1,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 0,
+    borderRadius: 26,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+  },
+  profileScrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    alignItems: 'center',
+  },
+  profileTitle: {
+    fontFamily: 'Roboto',
+    fontWeight: '700',
+    fontSize: 22,
+    lineHeight: 26,
+    color: '#252525',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  profileCard: {
+    width: '100%',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#EFE7FF',
+    backgroundColor: '#FFFFFF',
+    paddingTop: 28,
+    paddingBottom: 24,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    shadowColor: '#F1EFFF',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 14,
+    elevation: 3,
+  },
+  avatarFrame: {
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E8E8E8',
+    marginBottom: 18,
+    backgroundColor: '#F4F4F4',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  profileField: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  profileFieldLabel: {
+    fontFamily: 'Roboto',
+    fontWeight: '400',
+    fontSize: 18,
+    lineHeight: 22,
+    color: '#595959',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  profileFieldValue: {
+    fontFamily: 'Roboto',
+    fontWeight: '700',
+    fontSize: 18,
+    lineHeight: 22,
+    color: '#111111',
+    textAlign: 'center',
+  },
+  logoutBtn: {
+    marginTop: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+  },
+  logoutText: {
+    fontFamily: 'Roboto',
+    fontWeight: '400',
+    fontSize: 16,
+    lineHeight: 20,
+    color: '#FF5D2E',
   },
   header: {
     flexDirection: 'row',
@@ -356,6 +520,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'transparent',
+    paddingHorizontal: 0,
   },
   bottomNav: {
     overflow: 'hidden',
