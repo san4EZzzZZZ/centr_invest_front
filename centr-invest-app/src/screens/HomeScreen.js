@@ -269,10 +269,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   homeScreen: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#FFFFFF',
   },
   profileScreen: {
-    backgroundColor: '#6B6B6B',
+    backgroundColor: '#FFFFFF',
   },
   scrollContent: {
     paddingBottom: 120,

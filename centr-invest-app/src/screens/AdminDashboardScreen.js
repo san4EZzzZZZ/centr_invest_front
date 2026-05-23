@@ -93,7 +93,7 @@ export default function AdminDashboardScreen({ quizzes, onBack, onCreate, onEdit
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#6B6B6B',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 16,
     lineHeight: 20,
-    color: '#FFFFFF',
+    color: '#252525',
     textAlign: 'left',
   },
   headerRight: {
