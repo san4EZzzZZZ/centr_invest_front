@@ -6,6 +6,19 @@
 # Dependencies
 node_modules/
 
+# Expo
+.expo/
+dist/
+web-build/
+
+# IDEs
+.vscode/
+.idea/
+
+# Root clutter
+/package.json
+/package-lock.json
+
 # Env
 .env*
  
