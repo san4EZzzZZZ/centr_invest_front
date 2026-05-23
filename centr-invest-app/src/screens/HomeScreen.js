@@ -13,7 +13,7 @@ const SEARCH_SVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" 
 </svg>`;
 
 const PROFESSIONS = [
-  { id: 1, title: 'PHP', icon: 'https://img.icons8.com/officel/80/php-logo.png' },
+  { id: 1, title: 'PHP', icon: 'https://img.icons8.com/?size=96&id=JybIpZjjXT0F&format=png' },
   { id: 2, title: 'Java', icon: 'https://img.icons8.com/color/96/java-coffee-cup-logo.png' },
   { id: 3, title: 'Python', icon: 'https://img.icons8.com/color/96/python--v1.png' },
 ];
@@ -144,8 +144,8 @@ export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout 
                 key={quiz.id}
                 title={quiz.title}
                 questions={`${quiz.questions?.length ?? 0} вопросов`}
-                status={quiz.status === 'draft' ? 'Черновик' : index === 0 ? 'Новый' : 'Опубликован'}
-                statusVariant={quiz.status === 'draft' ? 'draft' : index === 0 ? 'not_passed' : 'passed'}
+                status={quiz.status === 'draft' ? 'Черновик' : index === 0 ? 'Пройдено' : 'Не пройдено'}
+                statusVariant={quiz.status === 'draft' ? 'draft' : index === 0 ? 'passed' : 'not_passed'}
                 iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
                 onPress={() => setRoute({ name: 'quiz', quiz })}
               />
@@ -499,20 +499,18 @@ const styles = StyleSheet.create({
   recentIcon: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 6,
     marginRight: 16,
   },
   recentTitle: {
-    fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontFamily: 'Roboto_500Medium',
     fontSize: 12,
     lineHeight: 12,
     color: '#252525',
   },
   recentQuestions: {
     marginTop: 6,
-    fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontFamily: 'Roboto_500Medium',
     fontSize: 10,
     lineHeight: 10,
     color: '#8A8983',
@@ -538,8 +536,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFE7FF',
   },
   statusText: {
-    fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontFamily: 'Roboto_500Medium',
     fontSize: 12,
     lineHeight: 12,
   },

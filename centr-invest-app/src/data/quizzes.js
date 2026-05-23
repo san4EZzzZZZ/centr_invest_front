@@ -177,6 +177,46 @@ export function createQuizTemplate(title = 'Новый тест') {
 
 export const QUIZZES = [
   {
+    id: 'python_junior',
+    title: 'Python Junior',
+    status: 'published',
+    questions: Array.from({ length: 12 }).map((_, idx) => {
+      const questionNumber = idx + 1;
+      const options = Array.from({ length: 4 }).map((__, optIdx) => ({
+        id: `q${questionNumber}_o${optIdx + 1}`,
+        label: optIdx === 0 ? 'placeholder' : `Вариант ${optIdx + 1}`,
+      }));
+
+      return {
+        id: `q${questionNumber}`,
+        type: 'single',
+        text: LONG_TEXT,
+        options,
+        correctOptionId: options[0]?.id ?? null,
+      };
+    }),
+  },
+  {
+    id: 'java_developer',
+    title: 'Java developer',
+    status: 'published',
+    questions: Array.from({ length: 12 }).map((_, idx) => {
+      const questionNumber = idx + 1;
+      const options = Array.from({ length: 4 }).map((__, optIdx) => ({
+        id: `java_q${questionNumber}_o${optIdx + 1}`,
+        label: optIdx === 0 ? 'placeholder' : `Вариант ${optIdx + 1}`,
+      }));
+
+      return {
+        id: `java_q${questionNumber}`,
+        type: 'single',
+        text: LONG_TEXT,
+        options,
+        correctOptionId: options[0]?.id ?? null,
+      };
+    }),
+  },
+  {
     id: 'java_senior',
     title: 'Java Senior',
     status: 'published',
@@ -206,25 +246,5 @@ export const QUIZZES = [
       buildTextQuestion('q11', 'stream'),
       buildSingleQuestion('q12', 'single'),
     ],
-  },
-  {
-    id: 'python_junior',
-    title: 'Python Junior',
-    status: 'published',
-    questions: Array.from({ length: 12 }).map((_, idx) => {
-      const questionNumber = idx + 1;
-      const options = Array.from({ length: 4 }).map((__, optIdx) => ({
-        id: `q${questionNumber}_o${optIdx + 1}`,
-        label: optIdx === 0 ? 'placeholder' : `Вариант ${optIdx + 1}`,
-      }));
-
-      return {
-        id: `q${questionNumber}`,
-        type: 'single',
-        text: LONG_TEXT,
-        options,
-        correctOptionId: options[0]?.id ?? null,
-      };
-    }),
   },
 ];
