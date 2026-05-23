@@ -520,6 +520,7 @@ export default function App() {
           onLogout={() => {
             setIsLoggedIn(false);
             setCurrentUser(null);
+            setAlert(null);
             setAuthMode('login');
             setLoginEmail(TEST_ACCOUNT.email);
             setLoginPassword(TEST_ACCOUNT.password);
