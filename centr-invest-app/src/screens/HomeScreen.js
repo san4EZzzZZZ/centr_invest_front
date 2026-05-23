@@ -111,8 +111,23 @@ export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout 
         bottomInset={bottomInset}
         navHeight={NAV_HEIGHT}
         onGoHome={() => setRoute({ name: 'home' })}
+        onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
         onLogout={onLogout}
+      />
+    );
+  }
+
+  if (route.name === 'favorites') {
+    return (
+      <FavoritesScreen
+        quizzes={visibleQuizzes}
+        bottomInset={bottomInset}
+        navHeight={NAV_HEIGHT}
+        onGoHome={() => setRoute({ name: 'home' })}
+        onOpenFavorites={() => setRoute({ name: 'favorites' })}
+        onOpenProfile={() => setRoute({ name: 'profile' })}
+        onOpenQuiz={(quiz) => setRoute({ name: 'quiz', quiz })}
       />
     );
   }
@@ -183,6 +198,7 @@ export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout 
         navHeight={NAV_HEIGHT}
         activeTab="home"
         onGoHome={() => setRoute({ name: 'home' })}
+        onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
         onOpenAdmin={() => {
           if (currentUser?.role === 'Администратор') setRoute({ name: 'admin' });
@@ -193,7 +209,7 @@ export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout 
   );
 }
 
-function ProfileScreen({ currentUser, bottomInset, navHeight, onGoHome, onOpenProfile, onLogout }) {
+function ProfileScreen({ currentUser, bottomInset, navHeight, onGoHome, onOpenFavorites, onOpenProfile, onLogout }) {
   return (
     <SafeAreaView edges={['top']} style={[styles.screen, styles.profileScreen]}>
       <View style={styles.profileShell}>
@@ -224,6 +240,74 @@ function ProfileScreen({ currentUser, bottomInset, navHeight, onGoHome, onOpenPr
         navHeight={navHeight}
         activeTab="profile"
         onGoHome={onGoHome}
+        onOpenFavorites={onOpenFavorites}
+        onOpenProfile={onOpenProfile}
+        onOpenAdmin={() => {}}
+        isAdmin={false}
+      />
+    </SafeAreaView>
+  );
+}
+
+function FavoritesScreen({ quizzes, bottomInset, navHeight, onGoHome, onOpenFavorites, onOpenProfile, onOpenQuiz }) {
+  const favoriteItems = quizzes.slice(0, 3).map((quiz, index) => ({
+    quiz,
+    id: quiz.id,
+    title: quiz.title,
+    questions: `${quiz.questions?.length ?? 0} вопросов`,
+    accent: index === 0 ? '#F7D76D' : index === 1 ? '#F6D85F' : '#F3C95A',
+  }));
+
+  return (
+    <SafeAreaView edges={['top']} style={[styles.screen, styles.favoritesScreen]}>
+      <View style={styles.favoritesShell}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.favoritesScrollContent, { paddingBottom: navHeight + bottomInset + 24 }]}
+        >
+          <View style={styles.favoritesHeader}>
+            <TouchableOpacity onPress={onGoHome} activeOpacity={0.8} style={styles.backBtn}>
+              <Ionicons name="chevron-back" size={18} color="#252525" />
+            </TouchableOpacity>
+            <Text style={styles.favoritesTitle}>Избранное</Text>
+          </View>
+
+          <View style={styles.favoritesList}>
+            {favoriteItems.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                activeOpacity={0.9}
+                style={styles.recentCard}
+                onPress={() => onOpenQuiz?.(item.quiz)}
+              >
+                <View style={styles.recentLeft}>
+                  <View style={[styles.recentIcon, { backgroundColor: item.accent }]} />
+
+                  <View>
+                    <Text numberOfLines={1} style={styles.recentTitle}>
+                      {item.title}
+                    </Text>
+                    <Text style={styles.recentQuestions}>{item.questions}</Text>
+                  </View>
+                </View>
+
+                <View style={[styles.statusPill, styles.statusPillPassed]}>
+                  <Text numberOfLines={1} style={[styles.statusText, styles.statusTextPassed]}>
+                    В избранном
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
+
+      <BottomNav
+        bottomInset={bottomInset}
+        navHeight={navHeight}
+        activeTab="favorites"
+        onGoHome={onGoHome}
+        onOpenFavorites={onOpenFavorites}
         onOpenProfile={onOpenProfile}
         onOpenAdmin={() => {}}
         isAdmin={false}
@@ -241,7 +325,7 @@ function ProfileField({ label, value }) {
   );
 }
 
-function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenProfile, onOpenAdmin, isAdmin }) {
+function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, isAdmin }) {
   return (
     <View pointerEvents="box-none" style={styles.bottomNavContainer}>
       <View style={styles.bottomNavShadowWrap}>
@@ -264,7 +348,7 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenProfile,
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.bottomNavBtn} activeOpacity={0.8}>
+              <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenFavorites} activeOpacity={0.8}>
                 <SvgXml
                   xml={activeTab === 'favorites' ? HEART_ACTIVE_SVG : HEART_INACTIVE_SVG}
                   width="32"
@@ -336,8 +420,42 @@ const styles = StyleSheet.create({
   profileScreen: {
     backgroundColor: '#FFFFFF',
   },
+  favoritesScreen: {
+    backgroundColor: '#FFFFFF',
+  },
   scrollContent: {
     paddingBottom: 120,
+  },
+  favoritesShell: {
+    flex: 1,
+    marginHorizontal: 16,
+    marginTop: 0,
+    marginBottom: 0,
+    borderRadius: 26,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+  },
+  favoritesScrollContent: {
+    paddingTop: 24,
+  },
+  favoritesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  backBtn: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  favoritesTitle: {
+    fontFamily: 'Roboto_500Medium',
+    fontSize: 20,
+    lineHeight: 24,
+    color: '#252525',
+  },
+  favoritesList: {
+    gap: 16,
   },
   profileShell: {
     flex: 1,
