@@ -324,7 +324,6 @@ function ResetRequestScreen({
   onBackToLogin,
   onSupportPress,
   onCloseAlert,
-  isSubmitting,
 }) {
   return (
     <View style={styles.resetStepWrap}>

@@ -1,0 +1,26 @@
+# Logs
+*.log
+*.out.log
+*.err.log
+
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# IDEs
+.vscode/
+.idea/
+
+# Root clutter
+/package.json
+/package-lock.json
+
+# Env
+.env*
+
+# macOS
+.DS_Store

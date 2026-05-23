@@ -1,23 +1,47 @@
-<<<<<<< Updated upstream
-import React, { useMemo, useState } from 'react';
-import { View, Text, TextInput, ScrollView, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons, Feather } from '@expo/vector-icons';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import QuizScreen from './QuizScreen';
-import QuizResultScreen from './QuizResultScreen';
-import { QUIZZES } from '../data/quizzes';
-
-export default function HomeScreen() {
-=======
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { ActivityIndicator, Alert, View, Text, TextInput, ScrollView, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { SvgXml } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import QuizScreen from './QuizScreen';
 import QuizResultScreen from './QuizResultScreen';
 import AdminDashboardScreen from './AdminDashboardScreen';
 import QuizEditorScreen from './QuizEditorScreen';
 import { adminApi, contentApi, profileApi } from '../api/client';
+
+const SEARCH_SVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M9.5 16C7.68333 16 6.146 15.3707 4.888 14.112C3.63 12.8533 3.00067 11.316 3 9.5C2.99933 7.684 3.62867 6.14667 4.888 4.888C6.14733 3.62933 7.68467 3 9.5 3C11.3153 3 12.853 3.62933 14.113 4.888C15.373 6.14667 16.002 7.684 16 9.5C16 10.2333 15.8833 10.925 15.65 11.575C15.4167 12.225 15.1 12.8 14.7 13.3L20.3 18.9C20.4833 19.0833 20.575 19.3167 20.575 19.6C20.575 19.8833 20.4833 20.1167 20.3 20.3C20.1167 20.4833 19.8833 20.575 19.6 20.575C19.3167 20.575 19.0833 20.4833 18.9 20.3L13.3 14.7C12.8 15.1 12.225 15.4167 11.575 15.65C10.925 15.8833 10.2333 16 9.5 16ZM9.5 14C10.75 14 11.8127 13.5627 12.688 12.688C13.5633 11.8133 14.0007 10.7507 14 9.5C13.9993 8.24933 13.562 7.187 12.688 6.313C11.814 5.439 10.7513 5.00133 9.5 5C8.24867 4.99867 7.18633 5.43633 6.313 6.313C5.43967 7.18967 5.002 8.252 5 9.5C4.998 10.748 5.43567 11.8107 6.313 12.688C7.19033 13.5653 8.25267 14.0027 9.5 14Z" fill="#7C7C7C"/>
+</svg>`;
+
+const HOME_ACTIVE_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M28 26.6664C28 27.02 27.8595 27.3592 27.6095 27.6092C27.3594 27.8593 27.0203 27.9997 26.6667 27.9997H5.33333C4.97971 27.9997 4.64057 27.8593 4.39052 27.6092C4.14048 27.3592 4 27.02 4 26.6664V12.6531C3.99986 12.4499 4.04616 12.2494 4.13535 12.0668C4.22455 11.8843 4.35429 11.7245 4.51467 11.5997L15.1813 3.30241C15.4154 3.12034 15.7035 3.02148 16 3.02148C16.2965 3.02148 16.5846 3.12034 16.8187 3.30241L27.4853 11.5997C27.6457 11.7245 27.7754 11.8843 27.8646 12.0668C27.9538 12.2494 28.0001 12.4499 28 12.6531V26.6664Z" fill="#76113A"/>
+</svg>`;
+
+const HOME_INACTIVE_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M28 26.6664C28 27.02 27.8595 27.3592 27.6095 27.6092C27.3594 27.8593 27.0203 27.9997 26.6667 27.9997H5.33333C4.97971 27.9997 4.64057 27.8593 4.39052 27.6092C4.14048 27.3592 4 27.02 4 26.6664V12.6531C3.99986 12.4499 4.04616 12.2494 4.13535 12.0668C4.22455 11.8843 4.35429 11.7245 4.51467 11.5997L15.1813 3.30241C15.4154 3.12034 15.7035 3.02148 16 3.02148C16.2965 3.02148 16.5846 3.12034 16.8187 3.30241L27.4853 11.5997C27.6457 11.7245 27.7754 11.8843 27.8646 12.0668C27.9538 12.2494 28.0001 12.4499 28 12.6531V26.6664Z" fill="#CECECE"/>
+</svg>`;
+
+const HEART_ACTIVE_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M15.0533 27.5466C15.32 27.8133 15.6533 27.9333 16 27.9333C16.3467 27.9333 16.68 27.7999 16.9467 27.5466L26.9467 17.5466C30.08 14.4133 30.08 9.47993 26.9467 6.33326C23.88 3.29326 19.1467 3.19993 16 6.0666C12.8533 3.19993 8.12 3.27993 5.05334 6.33326C1.92001 9.47993 1.92001 14.4133 5.05334 17.5466L15.0533 27.5466ZM6.94667 8.21326C8 7.17326 9.33334 6.65326 10.68 6.65326C12.0267 6.65326 13.36 7.17326 14.4 8.21326L15.0667 8.87993C15.5867 9.39993 16.4267 9.39993 16.9467 8.87993L17.6133 8.21326C19.6933 6.13326 22.9733 6.13326 25.0667 8.21326C27.1467 10.3066 27.1467 13.5733 25.0667 15.6533L16.0133 24.7066L6.96 15.6533C6.46575 15.168 6.07316 14.5891 5.80516 13.9504C5.53716 13.3116 5.39913 12.6259 5.39913 11.9333C5.39913 11.2406 5.53716 10.5549 5.80516 9.91617C6.07316 9.27745 6.46575 8.69854 6.96 8.21326H6.94667Z" fill="#76113A"/>
+</svg>`;
+
+const HEART_INACTIVE_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M15.0533 27.5466C15.32 27.8133 15.6533 27.9333 16 27.9333C16.3467 27.9333 16.68 27.7999 16.9467 27.5466L26.9467 17.5466C30.08 14.4133 30.08 9.47993 26.9467 6.33326C23.88 3.29326 19.1467 3.19993 16 6.0666C12.8533 3.19993 8.12 3.27993 5.05334 6.33326C1.92001 9.47993 1.92001 14.4133 5.05334 17.5466L15.0533 27.5466ZM6.94667 8.21326C8 7.17326 9.33334 6.65326 10.68 6.65326C12.0267 6.65326 13.36 7.17326 14.4 8.21326L15.0667 8.87993C15.5867 9.39993 16.4267 9.39993 16.9467 8.87993L17.6133 8.21326C19.6933 6.13326 22.9733 6.13326 25.0667 8.21326C27.1467 10.3066 27.1467 13.5733 25.0667 15.6533L16.0133 24.7066L6.96 15.6533C6.46575 15.168 6.07316 14.5891 5.80516 13.9504C5.53716 13.3116 5.39913 12.6259 5.39913 11.9333C5.39913 11.2406 5.53716 10.5549 5.80516 9.91617C6.07316 9.27745 6.46575 8.69854 6.96 8.21326H6.94667Z" fill="#CECECE"/>
+</svg>`;
+
+const PROFILE_ACTIVE_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M8 28V25.3333C8 23.9188 8.5619 22.5623 9.5621 21.5621C10.5623 20.5619 11.9188 20 13.3333 20H18.6667C20.0812 20 21.4377 20.5619 22.4379 21.5621C23.4381 22.5623 24 23.9188 24 25.3333V28M10.6667 9.33333C10.6667 10.7478 11.2286 12.1044 12.2288 13.1046C13.229 14.1048 14.5855 14.6667 16 14.6667C17.4145 14.6667 18.771 14.1048 19.7712 13.1046C20.7714 12.1044 21.3333 10.7478 21.3333 9.33333C21.3333 7.91885 20.7714 6.56229 19.7712 5.5621C18.771 4.5619 17.4145 4 16 4C14.5855 4 13.229 4.5619 12.2288 5.5621C11.2286 6.56229 10.6667 7.91885 10.6667 9.33333Z" stroke="#76113A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+const PROFILE_INACTIVE_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M8 28V25.3333C8 23.9188 8.5619 22.5623 9.5621 21.5621C10.5623 20.5619 11.9188 20 13.3333 20H18.6667C20.0812 20 21.4377 20.5619 22.4379 21.5621C23.4381 22.5623 24 23.9188 24 25.3333V28M10.6667 9.33333C10.6667 10.7478 11.2286 12.1044 12.2288 13.1046C13.229 14.1048 14.5855 14.6667 16 14.6667C17.4145 14.6667 18.771 14.1048 19.7712 13.1046C20.7714 12.1044 21.3333 10.7478 21.3333 9.33333C21.3333 7.91885 20.7714 6.56229 19.7712 5.5621C18.771 4.5619 17.4145 4 16 4C14.5855 4 13.229 4.5619 12.2288 5.5621C11.2286 6.56229 10.6667 7.91885 10.6667 9.33333Z" stroke="#CECECE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+const PROFESSIONS = [
+  { id: 1, title: 'PHP', icon: 'https://img.icons8.com/?size=96&id=JybIpZjjXT0F&format=png' },
+  { id: 2, title: 'Java', icon: 'https://img.icons8.com/color/96/java-coffee-cup-logo.png' },
+  { id: 3, title: 'Python', icon: 'https://img.icons8.com/color/96/python--v1.png' },
+];
 
 const FALLBACK_ICON = 'https://img.icons8.com/color/96/source-code.png';
 const DEFAULT_READ_MORE_URL = 'https://developer.mozilla.org/';
@@ -183,10 +207,9 @@ function toAdminPayload(quiz, fallbackProfessionId) {
 }
 
 export default function HomeScreen({ currentUser, onLogout }) {
->>>>>>> Stashed changes
   const insets = useSafeAreaInsets();
+  const bottomInset = insets.bottom;
   const NAV_HEIGHT = 64;
-  const NAV_SIDE = 0;
 
   const [route, setRoute] = useState({ name: 'home' });
   const [professions, setProfessions] = useState([]);
@@ -200,14 +223,11 @@ export default function HomeScreen({ currentUser, onLogout }) {
   const [error, setError] = useState(null);
   const homeRequestId = useRef(0);
 
-<<<<<<< Updated upstream
-  const quizzesByTitle = useMemo(() => {
-    const map = new Map();
-    for (const q of QUIZZES) map.set(q.title, q);
-    return map;
-  }, []);
-=======
   const isAdmin = currentUser?.roleCode === 'ADMIN' || currentUser?.role === 'Администратор';
+  const favoriteIds = useMemo(() => new Set(favorites.map((item) => item.testId)), [favorites]);
+  const displayUser = profile?.user
+    ? { ...currentUser, email: profile.user.email, name: profile.user.username }
+    : currentUser;
 
   async function loadHomeData(query = search) {
     const requestId = homeRequestId.current + 1;
@@ -234,9 +254,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
       if (requestId !== homeRequestId.current) return;
 
       setProfessions(nextProfessions);
-      if (!query) {
-        setAllProfessions(nextProfessions);
-      }
+      if (!query) setAllProfessions(nextProfessions);
       setTests(nextTests);
       setProfile(profileResponse);
       setFavorites(profileResponse?.favoriteTests ?? []);
@@ -268,6 +286,21 @@ export default function HomeScreen({ currentUser, onLogout }) {
     setRoute({ name: 'home' });
   }
 
+  async function toggleFavorite(test) {
+    try {
+      if (favoriteIds.has(test.id)) {
+        await profileApi.removeFavorite(test.id);
+      } else {
+        await profileApi.addFavorite(test.id);
+      }
+      const nextProfile = await profileApi.get();
+      setProfile(nextProfile);
+      setFavorites(nextProfile?.favoriteTests ?? []);
+    } catch (favoriteError) {
+      Alert.alert('Ошибка', favoriteError.message || 'Не удалось обновить избранное');
+    }
+  }
+
   useEffect(() => {
     loadHomeData('');
   }, []);
@@ -286,27 +319,6 @@ export default function HomeScreen({ currentUser, onLogout }) {
     }
   }, [route.name]);
 
-  const favoriteIds = useMemo(() => new Set(favorites.map((item) => item.testId)), [favorites]);
-  const displayUser = profile?.user
-    ? { ...currentUser, email: profile.user.email, name: profile.user.username }
-    : currentUser;
-
-  async function toggleFavorite(test) {
-    try {
-      if (favoriteIds.has(test.id)) {
-        await profileApi.removeFavorite(test.id);
-      } else {
-        await profileApi.addFavorite(test.id);
-      }
-      const nextProfile = await profileApi.get();
-      setProfile(nextProfile);
-      setFavorites(nextProfile?.favoriteTests ?? []);
-    } catch (favoriteError) {
-      Alert.alert('Ошибка', favoriteError.message || 'Не удалось обновить избранное');
-    }
-  }
->>>>>>> Stashed changes
-
   if (route.name === 'quiz') {
     return (
       <QuizScreen
@@ -323,33 +335,11 @@ export default function HomeScreen({ currentUser, onLogout }) {
         quizTitle={route.quiz?.title}
         result={route.result}
         attemptId={route.attemptId}
-        onGoHome={() => {
-          goHomeWithRefresh();
-        }}
+        onGoHome={goHomeWithRefresh}
       />
     );
   }
 
-<<<<<<< Updated upstream
-  return (
-    <SafeAreaView edges={['top']} style={styles.screen}>
-      {/* ГЛАВНЫЙ КОНТЕЙНЕР (Без горизонтального padding) */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: NAV_HEIGHT + bottomInset + 24 }]}
-      >
-        
-        {/* HEADER (Отступ px-5 задаем внутри) */}
-        <View style={styles.header}>
-          <Image 
-            source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }}
-            style={styles.avatar}
-          />
-          <View>
-            <Text style={styles.headerTitle}>Привет, User</Text>
-            <Text style={styles.headerSubtitle}>Готов учиться</Text>
-          </View>
-=======
   if (route.name === 'admin') {
     return (
       <AdminDashboardScreen
@@ -405,72 +395,62 @@ export default function HomeScreen({ currentUser, onLogout }) {
 
   if (route.name === 'profile') {
     return (
-      <Shell bottomInset={insets.bottom} navHeight={NAV_HEIGHT} activeTab="profile" isAdmin={isAdmin} setRoute={setRoute} onGoHome={goHomeWithRefresh}>
-        <View style={styles.profileCard}>
-          <Image source={require('../../assets/icon.png')} style={styles.profileAvatar} />
-          <ProfileField label="Имя пользователя" value={displayUser?.name ?? 'Пользователь'} />
-          <ProfileField label="Email" value={displayUser?.email ?? 'unknown@mail.com'} />
-          <ProfileField label="Роль" value={displayUser?.role ?? 'Пользователь'} />
-          <TouchableOpacity activeOpacity={0.85} style={styles.logoutBtn} onPress={onLogout}>
-            <Text style={styles.logoutText}>Выйти</Text>
-          </TouchableOpacity>
-        </View>
-      </Shell>
+      <ProfileScreen
+        currentUser={displayUser}
+        bottomInset={bottomInset}
+        navHeight={NAV_HEIGHT}
+        onGoHome={goHomeWithRefresh}
+        onOpenFavorites={() => setRoute({ name: 'favorites' })}
+        onOpenProfile={() => setRoute({ name: 'profile' })}
+        onLogout={onLogout}
+      />
     );
   }
 
   if (route.name === 'favorites') {
     return (
-      <Shell bottomInset={insets.bottom} navHeight={NAV_HEIGHT} activeTab="favorites" isAdmin={isAdmin} setRoute={setRoute} onGoHome={goHomeWithRefresh}>
-        <HeaderTitle title="Избранное" />
-        <View style={styles.list}>
-          {favorites.length ? (
-            favorites.map((item) => (
-              <TestCard
-                key={item.testId}
-                title={item.testTitle}
-                description={item.testShortDescription || item.testDescription}
-                meta={item.professionTitle}
-                favorite
-                onFavorite={() => toggleFavorite({ id: item.testId })}
-                onPress={() => setRoute({ name: 'quiz', quiz: { id: item.testId, title: item.testTitle } })}
-              />
-            ))
-          ) : (
-            <Text style={styles.mutedText}>В избранном пока пусто</Text>
-          )}
-        </View>
-      </Shell>
+      <FavoritesScreen
+        favorites={favorites}
+        bottomInset={bottomInset}
+        navHeight={NAV_HEIGHT}
+        onGoHome={goHomeWithRefresh}
+        onOpenFavorites={() => setRoute({ name: 'favorites' })}
+        onOpenProfile={() => setRoute({ name: 'profile' })}
+        onOpenQuiz={(test) => setRoute({ name: 'quiz', quiz: test })}
+        onFavorite={toggleFavorite}
+      />
     );
   }
 
   return (
-    <Shell bottomInset={insets.bottom} navHeight={NAV_HEIGHT} activeTab="home" isAdmin={isAdmin} setRoute={setRoute} onGoHome={goHomeWithRefresh}>
-      <View style={styles.header}>
-        <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }} style={styles.avatar} />
-        <View>
-          <Text style={styles.headerTitle}>Привет, {displayUser?.name ?? 'User'}</Text>
-          <Text style={styles.headerSubtitle}>Готов учиться</Text>
->>>>>>> Stashed changes
+    <SafeAreaView edges={['top']} style={[styles.screen, styles.homeScreen]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: NAV_HEIGHT + bottomInset + 24 }]}
+      >
+        <View style={styles.header}>
+          <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }} style={styles.avatar} />
+          <View>
+            <Text style={styles.headerTitle}>Привет, {displayUser?.name ?? 'User'}</Text>
+            <Text style={styles.headerSubtitle}>Готов учиться</Text>
+          </View>
         </View>
-      </View>
 
-<<<<<<< Updated upstream
-        {/* SEARCH BAR (px-5) */}
         <View style={styles.searchWrap}>
           <View style={styles.searchBar}>
-            <Feather name="search" size={20} color="#7C7C7C" />
-            <TextInput 
+            <SvgXml xml={SEARCH_SVG} width="24" height="24" />
+            <TextInput
               placeholder="Поиск теста"
               placeholderTextColor="#7C7C7C"
+              value={search}
+              onChangeText={setSearch}
+              onSubmitEditing={() => loadHomeData(search)}
               style={styles.searchInput}
             />
           </View>
         </View>
 
-        {/* --- СЕКЦИЯ ПРОФЕССИИ (Edge-to-Edge Scroll) --- */}
         <View style={styles.section}>
-          {/* Заголовок с отступом 16 */}
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Профессии</Text>
             <TouchableOpacity>
@@ -479,167 +459,166 @@ export default function HomeScreen({ currentUser, onLogout }) {
           </View>
 
           <View style={styles.horizontalListWrap}>
-          {/* Сам скролл БЕЗ внешнего padding */}
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false} 
-            contentContainerStyle={styles.horizontalListContent}
-          >
-            {[1, 2, 3, 4].map((item) => (
-              <View 
-                key={item} 
-                style={styles.professionCard}
-              />
-            ))}
-          </ScrollView>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalListContent}>
+              {(professions.length ? professions : PROFESSIONS).map((item) => (
+                <TouchableOpacity key={item.id} style={styles.professionCard} activeOpacity={0.8}>
+                  <Image source={{ uri: item.icon ?? FALLBACK_ICON }} style={styles.professionIcon} />
+                  <Text numberOfLines={2} style={styles.professionName}>{item.title}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </View>
 
-        {/* СЕКЦИЯ НЕДАВНИЕ (px-5) */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Недавние</Text>
+            <Text style={styles.sectionTitle}>Тесты</Text>
           </View>
           <View style={styles.recentList}>
-            <RecentCard 
-              title="Python Junior" 
-              questions="12 вопросов" 
-              status="Пройдено" 
-              statusVariant="passed"
-              iconColor="#FDE68A"
-              onPress={() => setRoute({ name: 'quiz', quiz: quizzesByTitle.get('Python Junior') ?? QUIZZES[0] })}
-            />
-            <RecentCard 
-              title="Java developer" 
-              questions="12 вопросов" 
-              status="Пройдено" 
-              statusVariant="passed"
-              iconColor="#FDE68A"
-              onPress={() => setRoute({ name: 'quiz', quiz: quizzesByTitle.get('Java Senior') ?? QUIZZES[0] })}
-            />
-            <RecentCard 
-              title="Java Senior" 
-              questions="12 вопросов" 
-              status="Не пройдено" 
-              statusVariant="not_passed"
-              iconColor="#D17E7E"
-              onPress={() => setRoute({ name: 'quiz', quiz: quizzesByTitle.get('Java Senior') ?? QUIZZES[0] })}
-            />
+            {isLoading ? (
+              <ActivityIndicator color="#7A1136" />
+            ) : error ? (
+              <Text style={styles.errorText}>{error}</Text>
+            ) : tests.length ? (
+              tests.map((test, index) => (
+                <RecentCard
+                  key={test.id}
+                  title={test.title}
+                  questions={`${test.questionCount ?? 0} вопросов`}
+                  status={test.professionTitle ?? 'Профессия'}
+                  statusVariant={favoriteIds.has(test.id) ? 'passed' : 'not_passed'}
+                  iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
+                  onPress={() => setRoute({ name: 'quiz', quiz: test })}
+                />
+              ))
+            ) : (
+              <Text style={styles.errorText}>Тесты не найдены</Text>
+            )}
           </View>
         </View>
       </ScrollView>
 
-    {/* --- ОБНОВЛЕННЫЙ BOTTOM NAVIGATION --- */}
-        <View
-          pointerEvents="box-none"
-          style={[styles.bottomNavContainer, { paddingHorizontal: NAV_SIDE }]}
-        >
-            <View style={styles.bottomNavShadow}>
-              <View style={[styles.bottomNav, { height: NAV_HEIGHT + bottomInset, paddingBottom: bottomInset }]}>
-                {/* Кнопка Домой (Активная) */}
-                <TouchableOpacity style={styles.bottomNavBtn}>
-                    <Ionicons name="home" size={28} color="#7A1136" />
-                </TouchableOpacity>
-
-                {/* Кнопка Избранное */}
-                <TouchableOpacity style={styles.bottomNavBtn}>
-                    <Ionicons name="heart-outline" size={30} color="#D1D1D1" />
-                </TouchableOpacity>
-
-                {/* Кнопка Профиль */}
-                <TouchableOpacity style={styles.bottomNavBtn}>
-                    <Ionicons name="person-outline" size={30} color="#D1D1D1" />
-                </TouchableOpacity>
-              </View>
-            </View>
-        </View>
-    </SafeAreaView>
-  );
-}
-
-// Компонент карточки
-function RecentCard({ title, questions, status, statusVariant, iconColor, onPress }) {
-  const isPassed = statusVariant === 'passed';
-=======
-      <View style={styles.searchBar}>
-        <Feather name="search" size={20} color="#7C7C7C" />
-        <TextInput
-          placeholder="Поиск теста"
-          placeholderTextColor="#7C7C7C"
-          value={search}
-          onChangeText={setSearch}
-          onSubmitEditing={() => loadHomeData(search)}
-          style={styles.searchInput}
-        />
-      </View>
-
-      <SectionTitle title="Профессии" />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.professionList}>
-        {professions.map((profession) => (
-          <View key={profession.id} style={styles.professionCard}>
-            <Image source={{ uri: FALLBACK_ICON }} style={styles.professionIcon} />
-            <Text numberOfLines={2} style={styles.professionName}>{profession.title}</Text>
-          </View>
-        ))}
-      </ScrollView>
-
-      <SectionTitle title="Тесты" />
-      {isLoading ? (
-        <View style={styles.centerRow}>
-          <ActivityIndicator color="#7A1136" />
-        </View>
-      ) : error ? (
-        <Text style={styles.errorText}>{error}</Text>
-      ) : (
-        <View style={styles.list}>
-          {tests.length ? (
-            tests.map((test, index) => (
-              <TestCard
-                key={test.id}
-                title={test.title}
-                description={test.shortDescription || test.description}
-                meta={`${test.questionCount ?? 0} вопросов · ${test.professionTitle ?? 'Профессия'}`}
-                iconColor={index % 2 === 0 ? '#FFB58F' : '#FDE68A'}
-                favorite={favoriteIds.has(test.id)}
-                onFavorite={() => toggleFavorite(test)}
-                onPress={() => setRoute({ name: 'quiz', quiz: test })}
-              />
-            ))
-          ) : (
-            <Text style={styles.mutedText}>Тесты не найдены</Text>
-          )}
-        </View>
-      )}
-    </Shell>
-  );
-}
-
-function Shell({ children, bottomInset, navHeight, activeTab, isAdmin, setRoute, onGoHome }) {
-  return (
-    <SafeAreaView edges={['top']} style={styles.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: navHeight + bottomInset + 24 }]}>
-        {children}
-      </ScrollView>
       <BottomNav
         bottomInset={bottomInset}
-        navHeight={navHeight}
-        activeTab={activeTab}
-        isAdmin={isAdmin}
-        onGoHome={onGoHome}
+        navHeight={NAV_HEIGHT}
+        activeTab="home"
+        onGoHome={goHomeWithRefresh}
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
-        onOpenAdmin={() => setRoute({ name: 'admin' })}
+        onOpenAdmin={() => {
+          if (isAdmin) setRoute({ name: 'admin' });
+        }}
+        isAdmin={isAdmin}
       />
     </SafeAreaView>
   );
 }
 
-function HeaderTitle({ title }) {
-  return <Text style={styles.pageTitle}>{title}</Text>;
+function ProfileScreen({ currentUser, bottomInset, navHeight, onGoHome, onOpenFavorites, onOpenProfile, onLogout }) {
+  return (
+    <SafeAreaView edges={['top']} style={[styles.screen, styles.profileScreen]}>
+      <View style={styles.profileShell}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.profileScrollContent, { paddingBottom: navHeight + bottomInset + 24 }]}
+        >
+          <Text style={styles.profileTitle}>Профиль</Text>
+
+          <View style={styles.profileCard}>
+            <View style={styles.avatarFrame}>
+              <Image source={require('../../assets/icon.png')} style={styles.avatarImage} />
+            </View>
+
+            <ProfileField label="Имя пользователя" value={currentUser?.name ?? 'Пользователь'} />
+            <ProfileField label="Email" value={currentUser?.email ?? 'unknown@mail.com'} />
+            <ProfileField label="Должность" value={currentUser?.role ?? 'Пользователь'} />
+
+            <TouchableOpacity activeOpacity={0.85} style={styles.logoutBtn} onPress={onLogout}>
+              <Text style={styles.logoutText}>Выйти</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
+
+      <BottomNav
+        bottomInset={bottomInset}
+        navHeight={navHeight}
+        activeTab="profile"
+        onGoHome={onGoHome}
+        onOpenFavorites={onOpenFavorites}
+        onOpenProfile={onOpenProfile}
+        onOpenAdmin={() => {}}
+        isAdmin={false}
+      />
+    </SafeAreaView>
+  );
 }
 
-function SectionTitle({ title }) {
-  return <Text style={styles.sectionTitle}>{title}</Text>;
+function FavoritesScreen({ favorites, bottomInset, navHeight, onGoHome, onOpenFavorites, onOpenProfile, onOpenQuiz }) {
+  const favoriteItems = favorites.map((item, index) => ({
+    quiz: { id: item.testId, title: item.testTitle, questionCount: item.questionCount },
+    id: item.testId,
+    title: item.testTitle,
+    questions: item.professionTitle ?? 'Профессия',
+    accent: index === 0 ? '#F7D76D' : index === 1 ? '#F6D85F' : '#F3C95A',
+  }));
+
+  return (
+    <SafeAreaView edges={['top']} style={[styles.screen, styles.favoritesScreen]}>
+      <View style={styles.favoritesShell}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.favoritesScrollContent, { paddingBottom: navHeight + bottomInset + 24 }]}
+        >
+          <View style={styles.favoritesHeader}>
+            <TouchableOpacity onPress={onGoHome} activeOpacity={0.8} style={styles.backBtn}>
+              <Ionicons name="chevron-back" size={18} color="#252525" />
+            </TouchableOpacity>
+            <Text style={styles.favoritesTitle}>Избранное</Text>
+          </View>
+
+          <View style={styles.favoritesList}>
+            {favoriteItems.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                activeOpacity={0.9}
+                style={styles.recentCard}
+                onPress={() => onOpenQuiz?.(item.quiz)}
+              >
+                <View style={styles.recentLeft}>
+                  <View style={[styles.recentIcon, { backgroundColor: item.accent }]} />
+
+                  <View>
+                    <Text numberOfLines={1} style={styles.recentTitle}>
+                      {item.title}
+                    </Text>
+                    <Text style={styles.recentQuestions}>{item.questions}</Text>
+                  </View>
+                </View>
+
+                <View style={[styles.statusPill, styles.statusPillPassed]}>
+                  <Text numberOfLines={1} style={[styles.statusText, styles.statusTextPassed]}>
+                    В избранном
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
+
+      <BottomNav
+        bottomInset={bottomInset}
+        navHeight={navHeight}
+        activeTab="favorites"
+        onGoHome={onGoHome}
+        onOpenFavorites={onOpenFavorites}
+        onOpenProfile={onOpenProfile}
+        onOpenAdmin={() => {}}
+        isAdmin={false}
+      />
+    </SafeAreaView>
+  );
 }
 
 function ProfileField({ label, value }) {
@@ -651,134 +630,274 @@ function ProfileField({ label, value }) {
   );
 }
 
-function TestCard({ title, description, meta, iconColor = '#FDE68A', favorite, onFavorite, onPress }) {
+function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, isAdmin }) {
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.testCard}>
-      <View style={[styles.testIcon, { backgroundColor: iconColor }]} />
-      <View style={styles.testBody}>
-        <Text numberOfLines={1} style={styles.testTitle}>{title}</Text>
-        {description ? <Text numberOfLines={2} style={styles.testDescription}>{description}</Text> : null}
-        <Text numberOfLines={1} style={styles.testMeta}>{meta}</Text>
+    <View pointerEvents="box-none" style={styles.bottomNavContainer}>
+      <View style={styles.bottomNavShadowWrap}>
+        {Platform.OS === 'android' && (
+          <>
+            <View pointerEvents="none" style={styles.androidShadowLeftSoft} />
+            <View pointerEvents="none" style={styles.androidShadowLeft} />
+            <View pointerEvents="none" style={styles.androidShadowRightSoft} />
+            <View pointerEvents="none" style={styles.androidShadowRight} />
+          </>
+        )}
+        <View style={styles.bottomNavShadow}>
+          <View style={Platform.OS === 'ios' ? styles.bottomNavShadowInner : null}>
+            <View style={[styles.bottomNav, { height: navHeight + bottomInset, paddingBottom: bottomInset }]}>
+              <TouchableOpacity style={styles.bottomNavBtn} onPress={onGoHome} activeOpacity={0.8}>
+                <SvgXml
+                  xml={activeTab === 'home' ? HOME_ACTIVE_SVG : HOME_INACTIVE_SVG}
+                  width="32"
+                  height="32"
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenFavorites} activeOpacity={0.8}>
+                <SvgXml
+                  xml={activeTab === 'favorites' ? HEART_ACTIVE_SVG : HEART_INACTIVE_SVG}
+                  width="32"
+                  height="32"
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenProfile} activeOpacity={0.8}>
+                <SvgXml
+                  xml={activeTab === 'profile' ? PROFILE_ACTIVE_SVG : PROFILE_INACTIVE_SVG}
+                  width="32"
+                  height="32"
+                />
+              </TouchableOpacity>
+
+              {isAdmin ? (
+                <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenAdmin} activeOpacity={0.8}>
+                  <Ionicons name="add" size={32} color="#7A1136" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </View>
+        </View>
       </View>
-      <TouchableOpacity onPress={onFavorite} hitSlop={10} style={styles.favoriteBtn}>
-        <Ionicons name={favorite ? 'heart' : 'heart-outline'} size={24} color={favorite ? '#76113A' : '#CECECE'} />
-      </TouchableOpacity>
-    </TouchableOpacity>
+    </View>
   );
 }
 
-function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, isAdmin }) {
->>>>>>> Stashed changes
+function RecentCard({ title, questions, status, statusVariant, iconColor, onPress }) {
+  const isPassed = statusVariant === 'passed';
+  const isDraft = statusVariant === 'draft';
+
   return (
-    <View style={styles.bottomNavContainer}>
-      <View style={[styles.bottomNav, { height: navHeight + bottomInset, paddingBottom: bottomInset }]}>
-        <TouchableOpacity style={styles.bottomNavBtn} onPress={onGoHome}>
-          <Ionicons name="home" size={28} color={activeTab === 'home' ? '#76113A' : '#CECECE'} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenFavorites}>
-          <Ionicons name={activeTab === 'favorites' ? 'heart' : 'heart-outline'} size={30} color={activeTab === 'favorites' ? '#76113A' : '#CECECE'} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenProfile}>
-          <Ionicons name={activeTab === 'profile' ? 'person' : 'person-outline'} size={30} color={activeTab === 'profile' ? '#76113A' : '#CECECE'} />
-        </TouchableOpacity>
-        {isAdmin ? (
-          <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenAdmin}>
-            <Ionicons name="add" size={32} color="#76113A" />
-          </TouchableOpacity>
-        ) : null}
+    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.recentCard}>
+      <View style={styles.recentLeft}>
+        <View style={[styles.recentIcon, { backgroundColor: iconColor }]} />
+        <View>
+          <Text style={styles.recentTitle}>{title}</Text>
+          <Text style={styles.recentQuestions}>{questions}</Text>
+        </View>
       </View>
-<<<<<<< Updated upstream
-      <View style={[styles.statusPill, isPassed ? styles.statusPillPassed : styles.statusPillNotPassed]}>
+      <View
+        style={[
+          styles.statusPill,
+          isDraft ? styles.statusPillDraft : isPassed ? styles.statusPillPassed : styles.statusPillNotPassed,
+        ]}
+      >
         <Text
           numberOfLines={1}
-          style={[styles.statusText, isPassed ? styles.statusTextPassed : styles.statusTextNotPassed]}
+          style={[
+            styles.statusText,
+            isDraft ? styles.statusTextDraft : isPassed ? styles.statusTextPassed : styles.statusTextNotPassed,
+          ]}
         >
           {status}
         </Text>
       </View>
     </TouchableOpacity>
-=======
-    </View>
->>>>>>> Stashed changes
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-<<<<<<< Updated upstream
-    backgroundColor: '#F5F5F5',
   },
-  scrollContent: {
-    paddingBottom: 120, // перезаписывается динамически с учетом safe-area
-=======
+  homeScreen: {
     backgroundColor: '#FFFFFF',
   },
-  content: {
-    paddingHorizontal: 16,
+  profileScreen: {
+    backgroundColor: '#FFFFFF',
+  },
+  favoritesScreen: {
+    backgroundColor: '#FFFFFF',
+  },
+  scrollContent: {
+    paddingBottom: 120,
+  },
+  favoritesShell: {
+    flex: 1,
+    marginHorizontal: 16,
+    marginTop: 0,
+    marginBottom: 0,
+    borderRadius: 26,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+  },
+  favoritesScrollContent: {
     paddingTop: 24,
->>>>>>> Stashed changes
+  },
+  favoritesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  backBtn: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  favoritesTitle: {
+    fontFamily: 'Roboto_500Medium',
+    fontSize: 20,
+    lineHeight: 24,
+    color: '#252525',
+  },
+  favoritesList: {
+    gap: 16,
+  },
+  profileShell: {
+    flex: 1,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 0,
+    borderRadius: 26,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+  },
+  profileScrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    alignItems: 'center',
+  },
+  profileTitle: {
+    fontFamily: 'Roboto',
+    fontWeight: '700',
+    fontSize: 22,
+    lineHeight: 26,
+    color: '#252525',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  profileCard: {
+    width: '100%',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#EFE7FF',
+    backgroundColor: '#FFFFFF',
+    paddingTop: 28,
+    paddingBottom: 24,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    shadowColor: '#F1EFFF',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 14,
+    elevation: 3,
+  },
+  avatarFrame: {
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#E6E3C3',
+    marginBottom: 18,
+    backgroundColor: '#F4F4F4',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  profileField: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  profileFieldLabel: {
+    fontFamily: 'Roboto',
+    fontWeight: '400',
+    fontSize: 18,
+    lineHeight: 22,
+    color: '#595959',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  profileFieldValue: {
+    fontFamily: 'Roboto',
+    fontWeight: '700',
+    fontSize: 18,
+    lineHeight: 22,
+    color: '#111111',
+    textAlign: 'center',
+  },
+  logoutBtn: {
+    marginTop: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+  },
+  logoutText: {
+    fontFamily: 'Roboto',
+    fontWeight: '400',
+    fontSize: 16,
+    lineHeight: 20,
+    color: '#FF5D2E',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    paddingBottom: 16,
   },
   avatar: {
     width: 52,
     height: 52,
     borderRadius: 26,
     marginRight: 16,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderWidth: 2,
+    borderColor: '#E6E3C3',
   },
   headerTitle: {
-    fontFamily: 'Roboto',
-    fontWeight: '500',
-    fontSize: 14,
-    lineHeight: 14,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 16,
+    lineHeight: 20,
     color: '#252525',
   },
   headerSubtitle: {
-    marginTop: 6,
-    fontFamily: 'Roboto',
-    fontWeight: '500',
+    marginTop: 2,
+    fontFamily: 'Roboto_500Medium',
     fontSize: 12,
-    lineHeight: 14,
+    lineHeight: 12,
     color: '#8A8983',
   },
-<<<<<<< Updated upstream
   searchWrap: {
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: 0,
   },
-=======
->>>>>>> Stashed changes
   searchBar: {
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: '#EAEAEA',
     flexDirection: 'row',
     alignItems: 'center',
-<<<<<<< Updated upstream
     backgroundColor: '#EAEAEA',
     borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 44,
-=======
-    paddingHorizontal: 10,
->>>>>>> Stashed changes
+    paddingHorizontal: 8,
+    height: 40,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 12,
-    fontFamily: 'Roboto',
-    fontWeight: '500',
-    fontSize: 12,
-    lineHeight: 12,
+    marginLeft: 8,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 14,
     color: '#252525',
+    paddingVertical: 0,
+    textAlignVertical: 'center',
   },
-<<<<<<< Updated upstream
   section: {
     marginBottom: 0,
   },
@@ -787,105 +906,82 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    marginBottom: 16,
+    marginVertical: 16,
   },
   sectionTitle: {
-    fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontFamily: 'Roboto_500Medium',
     fontSize: 14,
     lineHeight: 14,
     color: '#252525',
   },
   sectionAction: {
-    fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontFamily: 'Roboto_500Medium',
     fontSize: 14,
     lineHeight: 14,
     color: '#76113A',
   },
   horizontalListWrap: {
-    paddingBottom: 16,
+    paddingBottom: 0,
   },
   horizontalListContent: {
     paddingHorizontal: 16,
-    gap: 16,
-=======
-  pageTitle: {
-    fontFamily: 'Roboto_700Bold',
-    fontSize: 22,
-    lineHeight: 28,
-    color: '#252525',
-    marginBottom: 18,
-  },
-  sectionTitle: {
-    marginTop: 18,
-    marginBottom: 14,
-    fontFamily: 'Roboto_500Medium',
-    fontSize: 15,
-    lineHeight: 18,
-    color: '#252525',
-  },
-  professionList: {
-    gap: 12,
->>>>>>> Stashed changes
+    gap: 12, // Уменьшил зазор между карточками
   },
   professionCard: {
-    width: 130,
+    width: 148,
     height: 100,
-<<<<<<< Updated upstream
-    backgroundColor: '#D9D9D9',
-    borderRadius: 16,
-=======
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1.5,
     borderColor: '#F2F2F2',
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    backgroundColor: '#FFFFFF',
+    alignItems: 'center', // Вернул центрирование для надежности
+    paddingLeft: 19.5,
+    paddingRight: 4,
   },
   professionIcon: {
-    width: 42,
-    height: 42,
-    marginRight: 10,
+    width: 44,
+    height: 44,
+    resizeMode: 'contain',
+    marginRight: 10, // Немного увеличил отступ от иконки до текста
   },
   professionName: {
-    flex: 1,
-    fontFamily: 'Roboto_700Bold',
-    fontSize: 17,
-    lineHeight: 20,
+    fontFamily: 'Roboto_700Bold', // Попробую Bold, возможно Medium недостаточно жирный для Semibold
+    fontSize: 20,
     color: '#252525',
->>>>>>> Stashed changes
   },
-  list: {
-    gap: 14,
+  recentList: {
+    paddingHorizontal: 16,
+    gap: 16,
   },
-  testCard: {
-    minHeight: 82,
-    borderRadius: 16,
+  recentCard: {
     backgroundColor: '#FFFEEE',
-    padding: 14,
+    borderRadius: 16,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  testIcon: {
+  recentLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
+  },
+  recentIcon: {
     width: 48,
     height: 48,
-<<<<<<< Updated upstream
-    borderRadius: 12,
+    borderRadius: 6,
     marginRight: 16,
   },
   recentTitle: {
-    fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontFamily: 'Roboto_500Medium',
     fontSize: 12,
     lineHeight: 12,
     color: '#252525',
   },
   recentQuestions: {
     marginTop: 6,
-    fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontFamily: 'Roboto_500Medium',
     fontSize: 10,
     lineHeight: 10,
     color: '#8A8983',
@@ -907,146 +1003,127 @@ const styles = StyleSheet.create({
   statusPillNotPassed: {
     backgroundColor: '#FFEE8F',
   },
+  statusPillDraft: {
+    backgroundColor: '#EFE7FF',
+  },
   statusText: {
-    fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontFamily: 'Roboto_500Medium',
     fontSize: 12,
     lineHeight: 12,
-=======
-    borderRadius: 8,
-    marginRight: 14,
   },
-  testBody: {
-    flex: 1,
-    paddingRight: 10,
+  statusTextPassed: {
+    color: '#26A144',
   },
-  testTitle: {
-    fontFamily: 'Roboto_500Medium',
-    fontSize: 13,
-    lineHeight: 16,
-    color: '#252525',
+  statusTextNotPassed: {
+    color: '#FFA600',
   },
-  testDescription: {
-    marginTop: 4,
-    fontFamily: 'Roboto_400Regular',
-    fontSize: 11,
-    lineHeight: 14,
-    color: '#8A8983',
+  statusTextDraft: {
+    color: '#7A1136',
   },
-  testMeta: {
-    marginTop: 5,
-    fontFamily: 'Roboto_500Medium',
-    fontSize: 11,
-    lineHeight: 14,
-    color: '#76113A',
->>>>>>> Stashed changes
-  },
-  favoriteBtn: {
-    width: 34,
-    height: 34,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  centerRow: {
-    paddingVertical: 20,
-  },
-<<<<<<< Updated upstream
-=======
-  mutedText: {
-    fontFamily: 'Roboto_400Regular',
-    fontSize: 14,
-    lineHeight: 18,
-    color: '#8A8983',
-  },
-  errorText: {
-    fontFamily: 'Roboto_400Regular',
-    fontSize: 14,
-    lineHeight: 18,
-    color: '#F23030',
-  },
-  profileCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#EFE7FF',
-    padding: 20,
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-  profileAvatar: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
-    marginBottom: 18,
-  },
-  profileField: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  profileFieldLabel: {
-    fontFamily: 'Roboto_400Regular',
-    fontSize: 16,
-    lineHeight: 20,
-    color: '#595959',
-    marginBottom: 6,
-  },
-  profileFieldValue: {
-    fontFamily: 'Roboto_700Bold',
-    fontSize: 16,
-    lineHeight: 20,
-    color: '#111111',
-    textAlign: 'center',
-  },
-  logoutBtn: {
-    marginTop: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-  },
-  logoutText: {
-    fontFamily: 'Roboto_400Regular',
-    fontSize: 16,
-    lineHeight: 20,
-    color: '#FF5D2E',
-  },
->>>>>>> Stashed changes
   bottomNavContainer: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
     backgroundColor: 'transparent',
+    paddingHorizontal: 0,
   },
   bottomNav: {
+    overflow: 'hidden',
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
     width: '100%',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-<<<<<<< Updated upstream
-    paddingHorizontal: 24,
+    gap: 64,
+  },
+  bottomNavShadowWrap: {
+    width: '100%',
+    position: 'relative',
+    ...Platform.select({
+      web: {
+        boxShadow: '-6px 10px 14px 0px rgba(242, 239, 255, 0.45), 6px 10px 12px 0px rgba(242, 239, 255, 0.45)',
+      },
+    }),
   },
   bottomNavShadow: {
     width: '100%',
-    borderRadius: 24,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     backgroundColor: '#FFFFFF',
-    // Тень для объема (на внешнем контейнере, чтобы не было "квадратных углов" у контента)
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    elevation: 12,
-=======
-    gap: 50,
-    shadowColor: '#F2EFFF',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 8,
->>>>>>> Stashed changes
+    ...Platform.select({
+      ios: {
+        shadowColor: '#F2EFFF',
+        shadowOffset: { width: -2, height: -3 },
+        shadowOpacity: 1.0,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
+  },
+  bottomNavShadowInner: {
+    width: '100%',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: '#FFFFFF',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#F2EFFF',
+        shadowOffset: { width: 2, height: -3 },
+        shadowOpacity: 1.0,
+        shadowRadius: 3,
+      },
+      default: {},
+    }),
+  },
+  androidShadowLeftSoft: {
+    position: 'absolute',
+    left: -4,
+    top: -4,
+    right: 0,
+    bottom: 30,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: 'rgba(242, 239, 255, 0.5)',
+  },
+  androidShadowLeft: {
+    position: 'absolute',
+    left: -2,
+    top: -3,
+    right: 0,
+    bottom: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: 'rgba(242, 239, 255, 0.6)',
+  },
+  androidShadowRightSoft: {
+    position: 'absolute',
+    left: 4,
+    top: -4,
+    right: -4,
+    bottom: 30,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: 'rgba(242, 239, 255, 0.5)',
+  },
+  androidShadowRight: {
+    position: 'absolute',
+    left: 2,
+    top: -3,
+    right: -2,
+    bottom: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: 'rgba(242, 239, 255, 0.6)',
   },
   bottomNavBtn: {
-    width: 48,
+    width: 56,
     alignItems: 'center',
     justifyContent: 'center',
   },
