@@ -614,9 +614,9 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 0,
     width: '100%',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    gap: 64,
   },
   bottomNavShadowWrap: {
     width: '100%',
