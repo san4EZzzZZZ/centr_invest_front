@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
   },
   searchWrap: {
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: 0,
   },
   searchBar: {
     flexDirection: 'row',
@@ -426,24 +426,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    marginBottom: 16,
+    marginVertical: 16,
   },
   sectionTitle: {
-    fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontFamily: 'Roboto_500Medium',
     fontSize: 14,
     lineHeight: 14,
     color: '#252525',
   },
   sectionAction: {
-    fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontFamily: 'Roboto_500Medium',
     fontSize: 14,
     lineHeight: 14,
     color: '#76113A',
   },
   horizontalListWrap: {
-    paddingBottom: 16,
+    paddingBottom: 0,
   },
   horizontalListContent: {
     paddingHorizontal: 16,
