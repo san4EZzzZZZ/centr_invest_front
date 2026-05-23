@@ -4,26 +4,19 @@ import { Ionicons, Feather } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import QuizScreen from './QuizScreen';
 import QuizResultScreen from './QuizResultScreen';
-import { QUIZZES } from '../data/quizzes';
+import AdminDashboardScreen from './AdminDashboardScreen';
+import QuizEditorScreen from './QuizEditorScreen';
 
-const PROFILE_DATA = {
-  name: 'Admin',
-  email: 'yourmail@mail.com',
-  role: 'Администратор',
-};
-
-export default function HomeScreen() {
+export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout }) {
   const insets = useSafeAreaInsets();
   const bottomInset = insets.bottom;
   const NAV_HEIGHT = 64;
 
   const [route, setRoute] = useState({ name: 'home' });
 
-  const quizzesByTitle = useMemo(() => {
-    const map = new Map();
-    for (const q of QUIZZES) map.set(q.title, q);
-    return map;
-  }, []);
+  const visibleQuizzes = useMemo(() => {
+    return quizzes.filter((quiz) => quiz.status !== 'draft');
+  }, [quizzes]);
 
   if (route.name === 'quiz') {
     return (
@@ -47,52 +40,70 @@ export default function HomeScreen() {
     );
   }
 
+  if (route.name === 'admin') {
+    return (
+      <AdminDashboardScreen
+        quizzes={quizzes}
+        onBack={() => setRoute({ name: 'home' })}
+        onCreate={() => setRoute({ name: 'editor', quiz: null })}
+        onEdit={(quiz) => setRoute({ name: 'editor', quiz })}
+        onDelete={(quizId) => setQuizzes((prev) => prev.filter((quiz) => quiz.id !== quizId))}
+      />
+    );
+  }
+
+  if (route.name === 'editor') {
+    return (
+      <QuizEditorScreen
+        quiz={route.quiz}
+        onCancel={() => setRoute({ name: 'admin' })}
+        onSave={(nextQuiz) => {
+          setQuizzes((prev) => {
+            const exists = prev.some((quiz) => quiz.id === nextQuiz.id);
+            if (exists) return prev.map((quiz) => (quiz.id === nextQuiz.id ? nextQuiz : quiz));
+            return [nextQuiz, ...prev];
+          });
+          setRoute({ name: 'admin' });
+        }}
+      />
+    );
+  }
+
   if (route.name === 'profile') {
     return (
       <ProfileScreen
+        currentUser={currentUser}
         bottomInset={bottomInset}
         navHeight={NAV_HEIGHT}
         onGoHome={() => setRoute({ name: 'home' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
+        onLogout={onLogout}
       />
     );
   }
 
   return (
     <SafeAreaView edges={['top']} style={[styles.screen, styles.homeScreen]}>
-      {/* ГЛАВНЫЙ КОНТЕЙНЕР (Без горизонтального padding) */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: NAV_HEIGHT + bottomInset + 24 }]}
       >
-        
-        {/* HEADER (Отступ px-5 задаем внутри) */}
         <View style={styles.header}>
-          <Image 
-            source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }}
-            style={styles.avatar}
-          />
+          <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }} style={styles.avatar} />
           <View>
-            <Text style={styles.headerTitle}>Привет, User</Text>
+            <Text style={styles.headerTitle}>Привет, {currentUser?.name ?? 'User'}</Text>
             <Text style={styles.headerSubtitle}>Готов учиться</Text>
           </View>
         </View>
 
-        {/* SEARCH BAR (px-5) */}
         <View style={styles.searchWrap}>
           <View style={styles.searchBar}>
             <Feather name="search" size={20} color="#7C7C7C" />
-            <TextInput 
-              placeholder="Поиск теста"
-              placeholderTextColor="#7C7C7C"
-              style={styles.searchInput}
-            />
+            <TextInput placeholder="Поиск теста" placeholderTextColor="#7C7C7C" style={styles.searchInput} />
           </View>
         </View>
 
-        {/* --- СЕКЦИЯ ПРОФЕССИИ (Edge-to-Edge Scroll) --- */}
         <View style={styles.section}>
-          {/* Заголовок с отступом 16 */}
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Профессии</Text>
             <TouchableOpacity>
@@ -101,69 +112,50 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.horizontalListWrap}>
-          {/* Сам скролл БЕЗ внешнего padding */}
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false} 
-            contentContainerStyle={styles.horizontalListContent}
-          >
-            {[1, 2, 3, 4].map((item) => (
-              <View 
-                key={item} 
-                style={styles.professionCard}
-              />
-            ))}
-          </ScrollView>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalListContent}>
+              {[1, 2, 3, 4].map((item) => (
+                <View key={item} style={styles.professionCard} />
+              ))}
+            </ScrollView>
           </View>
         </View>
 
-        {/* СЕКЦИЯ НЕДАВНИЕ (px-5) */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Недавние</Text>
           </View>
           <View style={styles.recentList}>
-            <RecentCard 
-              title="Смешанный тест" 
-              questions="12 вопросов" 
-              status="Новый" 
-              statusVariant="not_passed"
-              iconColor="#FFB58F"
-              onPress={() => setRoute({ name: 'quiz', quiz: quizzesByTitle.get('Java Senior') ?? QUIZZES[0] })}
-            />
-            <RecentCard 
-              title="Python Junior" 
-              questions="12 вопросов" 
-              status="Пройдено" 
-              statusVariant="passed"
-              iconColor="#FDE68A"
-              onPress={() => setRoute({ name: 'quiz', quiz: quizzesByTitle.get('Python Junior') ?? QUIZZES[0] })}
-            />
-            <RecentCard 
-              title="Java Senior" 
-              questions="12 вопросов" 
-              status="Не пройдено" 
-              statusVariant="not_passed"
-              iconColor="#D17E7E"
-              onPress={() => setRoute({ name: 'quiz', quiz: quizzesByTitle.get('Java Senior') ?? QUIZZES[0] })}
-            />
+            {visibleQuizzes.slice(0, 3).map((quiz, index) => (
+              <RecentCard
+                key={quiz.id}
+                title={quiz.title}
+                questions={`${quiz.questions?.length ?? 0} вопросов`}
+                status={quiz.status === 'draft' ? 'Черновик' : index === 0 ? 'Новый' : 'Опубликован'}
+                statusVariant={quiz.status === 'draft' ? 'draft' : index === 0 ? 'not_passed' : 'passed'}
+                iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
+                onPress={() => setRoute({ name: 'quiz', quiz })}
+              />
+            ))}
           </View>
         </View>
       </ScrollView>
 
-    {/* --- ОБНОВЛЕННЫЙ BOTTOM NAVIGATION --- */}
-        <BottomNav
-          bottomInset={bottomInset}
-          navHeight={NAV_HEIGHT}
-          activeTab="home"
-          onGoHome={() => setRoute({ name: 'home' })}
-          onOpenProfile={() => setRoute({ name: 'profile' })}
-        />
+      <BottomNav
+        bottomInset={bottomInset}
+        navHeight={NAV_HEIGHT}
+        activeTab="home"
+        onGoHome={() => setRoute({ name: 'home' })}
+        onOpenProfile={() => setRoute({ name: 'profile' })}
+        onOpenAdmin={() => {
+          if (currentUser?.role === 'Администратор') setRoute({ name: 'admin' });
+        }}
+        isAdmin={currentUser?.role === 'Администратор'}
+      />
     </SafeAreaView>
   );
 }
 
-function ProfileScreen({ bottomInset, navHeight, onGoHome, onOpenProfile }) {
+function ProfileScreen({ currentUser, bottomInset, navHeight, onGoHome, onOpenProfile, onLogout }) {
   return (
     <SafeAreaView edges={['top']} style={[styles.screen, styles.profileScreen]}>
       <View style={styles.profileShell}>
@@ -178,11 +170,11 @@ function ProfileScreen({ bottomInset, navHeight, onGoHome, onOpenProfile }) {
               <Image source={require('../../assets/icon.png')} style={styles.avatarImage} />
             </View>
 
-            <ProfileField label="Имя пользователя" value={PROFILE_DATA.name} />
-            <ProfileField label="Email" value={PROFILE_DATA.email} />
-            <ProfileField label="Должность" value={PROFILE_DATA.role} />
+            <ProfileField label="Имя пользователя" value={currentUser?.name ?? 'Пользователь'} />
+            <ProfileField label="Email" value={currentUser?.email ?? 'unknown@mail.com'} />
+            <ProfileField label="Должность" value={currentUser?.role ?? 'Пользователь'} />
 
-            <TouchableOpacity activeOpacity={0.85} style={styles.logoutBtn}>
+            <TouchableOpacity activeOpacity={0.85} style={styles.logoutBtn} onPress={onLogout}>
               <Text style={styles.logoutText}>Выйти</Text>
             </TouchableOpacity>
           </View>
@@ -195,6 +187,8 @@ function ProfileScreen({ bottomInset, navHeight, onGoHome, onOpenProfile }) {
         activeTab="profile"
         onGoHome={onGoHome}
         onOpenProfile={onOpenProfile}
+        onOpenAdmin={() => {}}
+        isAdmin={false}
       />
     </SafeAreaView>
   );
@@ -209,7 +203,7 @@ function ProfileField({ label, value }) {
   );
 }
 
-function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenProfile }) {
+function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenProfile, onOpenAdmin, isAdmin }) {
   return (
     <View pointerEvents="box-none" style={styles.bottomNavContainer}>
       <View style={styles.bottomNavShadow}>
@@ -226,8 +220,8 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenProfile 
             <Ionicons name="person-outline" size={30} color={activeTab === 'profile' ? '#7A1136' : '#D1D1D1'} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.bottomNavBtn} activeOpacity={0.8}>
-            <Ionicons name="add" size={32} color="#D1D1D1" />
+          <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenAdmin} activeOpacity={0.8}>
+            <Ionicons name="add" size={32} color={isAdmin ? '#7A1136' : '#D1D1D1'} />
           </TouchableOpacity>
         </View>
       </View>
@@ -235,9 +229,10 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenProfile 
   );
 }
 
-// Компонент карточки
 function RecentCard({ title, questions, status, statusVariant, iconColor, onPress }) {
   const isPassed = statusVariant === 'passed';
+  const isDraft = statusVariant === 'draft';
+
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.recentCard}>
       <View style={styles.recentLeft}>
@@ -247,10 +242,18 @@ function RecentCard({ title, questions, status, statusVariant, iconColor, onPres
           <Text style={styles.recentQuestions}>{questions}</Text>
         </View>
       </View>
-      <View style={[styles.statusPill, isPassed ? styles.statusPillPassed : styles.statusPillNotPassed]}>
+      <View
+        style={[
+          styles.statusPill,
+          isDraft ? styles.statusPillDraft : isPassed ? styles.statusPillPassed : styles.statusPillNotPassed,
+        ]}
+      >
         <Text
           numberOfLines={1}
-          style={[styles.statusText, isPassed ? styles.statusTextPassed : styles.statusTextNotPassed]}
+          style={[
+            styles.statusText,
+            isDraft ? styles.statusTextDraft : isPassed ? styles.statusTextPassed : styles.statusTextNotPassed,
+          ]}
         >
           {status}
         </Text>
@@ -270,7 +273,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#6B6B6B',
   },
   scrollContent: {
-    paddingBottom: 120, // перезаписывается динамически с учетом safe-area
+    paddingBottom: 120,
   },
   profileShell: {
     flex: 1,
@@ -502,6 +505,9 @@ const styles = StyleSheet.create({
   statusPillNotPassed: {
     backgroundColor: '#FFEE8F',
   },
+  statusPillDraft: {
+    backgroundColor: '#EFE7FF',
+  },
   statusText: {
     fontFamily: 'Roboto',
     fontWeight: '500',
@@ -513,6 +519,9 @@ const styles = StyleSheet.create({
   },
   statusTextNotPassed: {
     color: '#FFA600',
+  },
+  statusTextDraft: {
+    color: '#7A1136',
   },
   bottomNavContainer: {
     position: 'absolute',
@@ -539,7 +548,6 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 24,
     backgroundColor: '#FFFFFF',
-    // Тень для объема (на внешнем контейнере, чтобы не было "квадратных углов" у контента)
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.12,
