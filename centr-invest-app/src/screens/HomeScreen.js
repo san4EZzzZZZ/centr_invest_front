@@ -220,9 +220,11 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenProfile,
             <Ionicons name="person-outline" size={30} color={activeTab === 'profile' ? '#7A1136' : '#D1D1D1'} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenAdmin} activeOpacity={0.8}>
-            <Ionicons name="add" size={32} color={isAdmin ? '#7A1136' : '#D1D1D1'} />
-          </TouchableOpacity>
+          {isAdmin ? (
+            <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenAdmin} activeOpacity={0.8}>
+              <Ionicons name="add" size={32} color="#7A1136" />
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
     </View>
