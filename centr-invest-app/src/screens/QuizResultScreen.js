@@ -1,15 +1,48 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { attemptsApi } from '../api/client';
 
-export default function QuizResultScreen({ quizTitle, score, total, onGoHome, onReview }) {
-  const safeScore = typeof score === 'number' ? score : 0;
-  const safeTotal = typeof total === 'number' ? total : 0;
+export default function QuizResultScreen({ quizTitle, result, attemptId, onGoHome }) {
+  const [review, setReview] = useState(null);
+  const [isReviewLoading, setIsReviewLoading] = useState(false);
+  const [reviewError, setReviewError] = useState(null);
+
+  const safeScore = typeof result?.correctAnswers === 'number' ? result.correctAnswers : 0;
+  const safeTotal = typeof result?.totalQuestions === 'number' ? result.totalQuestions : 0;
+  const title = result?.testTitle || quizTitle || 'Тест';
+  const reviewAttemptId = result?.attemptId ?? attemptId;
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadReview() {
+      if (!reviewAttemptId) return;
+
+      setIsReviewLoading(true);
+      setReviewError(null);
+
+      try {
+        const response = await attemptsApi.aiReview(reviewAttemptId);
+        if (!ignore) setReview(response);
+      } catch (error) {
+        if (!ignore) setReviewError(error.message || 'Не удалось загрузить разбор');
+      } finally {
+        if (!ignore) setIsReviewLoading(false);
+      }
+    }
+
+    loadReview();
+
+    return () => {
+      ignore = true;
+    };
+  }, [reviewAttemptId]);
 
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
-      <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.decor}>
           <Ionicons name="star-outline" size={22} color="#FF7A45" style={[styles.star, { top: 10, left: 30 }]} />
           <Ionicons name="star-outline" size={16} color="#FF7A45" style={[styles.star, { top: 48, right: 44 }]} />
@@ -27,24 +60,39 @@ export default function QuizResultScreen({ quizTitle, score, total, onGoHome, on
           </View>
         </View>
 
-        <Text style={styles.recordLabel}>Твой Рекорд</Text>
+        <Text style={styles.recordLabel}>Твой результат</Text>
         <Text style={styles.recordValue}>
           {safeScore}/{safeTotal}
         </Text>
 
-        <Text style={styles.congrats}>Поздравляем!</Text>
-        <Text style={styles.subtitle}>Хорошая работа, User! Ты справился отлично</Text>
+        <Text style={styles.congrats}>{title}</Text>
+        <Text style={styles.subtitle}>{result?.recommendation || 'Тест завершен'}</Text>
 
-        <TouchableOpacity onPress={onReview} activeOpacity={0.8} style={styles.reviewBtn}>
-          <Text style={styles.reviewText}>Перейти к разбору</Text>
-        </TouchableOpacity>
+        {result?.weakTopics?.length ? <Text style={styles.weakTopics}>Повторить: {result.weakTopics.join(', ')}</Text> : null}
+
+        <View style={styles.reviewCard}>
+          {isReviewLoading ? (
+            <>
+              <ActivityIndicator color="#7A1136" />
+              <Text style={styles.reviewText}>Готовим персональный разбор...</Text>
+            </>
+          ) : review ? (
+            <>
+              <Text style={styles.reviewTitle}>{review.generatedByAi ? 'AI-разбор' : 'Разбор'}</Text>
+              <Text style={styles.reviewText}>{review.summary}</Text>
+              {review.nextStep ? <Text style={styles.reviewText}>{review.nextStep}</Text> : null}
+            </>
+          ) : reviewError ? (
+            <Text style={styles.reviewText}>{reviewError}</Text>
+          ) : null}
+        </View>
 
         <View style={styles.bottom}>
           <TouchableOpacity onPress={onGoHome} activeOpacity={0.9} style={styles.homeBtn}>
             <Text style={styles.homeBtnText}>На главную</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -55,8 +103,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   container: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: 16,
+    paddingBottom: 104,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -105,50 +154,68 @@ const styles = StyleSheet.create({
   },
   recordLabel: {
     marginTop: 18,
-    fontFamily: 'Roboto',
-    fontWeight: '400',
+    fontFamily: 'Roboto_400Regular',
     fontSize: 14,
-    lineHeight: 14,
+    lineHeight: 16,
     color: '#252525',
   },
   recordValue: {
     marginTop: 8,
-    fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontFamily: 'Roboto_500Medium',
     fontSize: 28,
     lineHeight: 28,
     color: '#7A1136',
   },
   congrats: {
     marginTop: 14,
-    fontFamily: 'Roboto',
-    fontWeight: '500',
-    fontSize: 32,
-    lineHeight: 34,
+    fontFamily: 'Roboto_500Medium',
+    fontSize: 26,
+    lineHeight: 30,
     color: '#7A1136',
     textAlign: 'center',
   },
   subtitle: {
     marginTop: 14,
-    fontFamily: 'Roboto',
-    fontWeight: '400',
+    fontFamily: 'Roboto_400Regular',
     fontSize: 14,
     lineHeight: 18,
     color: '#8A8983',
     textAlign: 'center',
-    maxWidth: 300,
+    maxWidth: 320,
   },
-  reviewBtn: {
-    marginTop: 46,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+  weakTopics: {
+    marginTop: 12,
+    fontFamily: 'Roboto_500Medium',
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#FF5D2E',
+    textAlign: 'center',
+    maxWidth: 320,
+  },
+  reviewCard: {
+    marginTop: 24,
+    width: '100%',
+    maxWidth: 340,
+    minHeight: 78,
+    borderRadius: 16,
+    backgroundColor: '#FFFEEE',
+    padding: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reviewTitle: {
+    fontFamily: 'Roboto_500Medium',
+    fontSize: 16,
+    lineHeight: 20,
+    color: '#7A1136',
   },
   reviewText: {
-    fontFamily: 'Roboto',
-    fontWeight: '400',
-    fontSize: 14,
-    lineHeight: 14,
-    color: '#FF7A45',
+    marginTop: 8,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#252525',
+    textAlign: 'center',
   },
   bottom: {
     position: 'absolute',
@@ -164,11 +231,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   homeBtnText: {
-    fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontFamily: 'Roboto_500Medium',
     fontSize: 16,
     lineHeight: 16,
     color: '#FFFFFF',
   },
 });
-

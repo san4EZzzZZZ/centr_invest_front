@@ -4,12 +4,17 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useFonts, Roboto_400Regular, Roboto_300Light } from '@expo-google-fonts/roboto';
 import * as SplashScreen from 'expo-splash-screen';
 import HomeScreen from './src/screens/HomeScreen';
+<<<<<<< Updated upstream
+=======
+import AuthScreen from './src/screens/AuthScreen';
+import { authApi, clearToken, setToken } from './src/api/client';
+>>>>>>> Stashed changes
 
 SplashScreen.preventAutoHideAsync();
 
 const TEST_ACCOUNT = {
-  email: 'test@centrinvest.app',
-  password: 'CentrInvest#2026',
+  email: 'admin@example.com',
+  password: 'admin123',
 };
 
 function isValidEmail(value) {
@@ -18,6 +23,7 @@ function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 }
 
+<<<<<<< Updated upstream
 function FormAlert({ variant = 'error', message, onClose }) {
   if (!message) return null;
 
@@ -38,14 +44,28 @@ function FormAlert({ variant = 'error', message, onClose }) {
       ) : null}
     </View>
   );
+=======
+function toAppUser(user) {
+  return {
+    ...user,
+    name: user?.username ?? user?.email ?? 'User',
+    roleCode: user?.role,
+    role: user?.role === 'ADMIN' ? 'Администратор' : 'Пользователь',
+  };
+>>>>>>> Stashed changes
 }
 
 export default function App() {
   const [isLogin, setIsLogin] = useState(true); // По умолчанию показываем форму входа
   const [fontsLoaded] = useFonts({ Roboto_400Regular, Roboto_300Light });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+<<<<<<< Updated upstream
+=======
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+>>>>>>> Stashed changes
 
-  const [alert, setAlert] = useState(null); // { variant: 'error' | 'success', message: string }
+  const [alert, setAlert] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
 
   const [loginEmail, setLoginEmail] = useState(TEST_ACCOUNT.email);
@@ -82,7 +102,7 @@ export default function App() {
     resetFormErrors();
   }
 
-  function handleLogin() {
+  async function handleLogin() {
     resetFormErrors();
 
     const email = String(loginEmail || '').trim();
@@ -106,6 +126,7 @@ export default function App() {
       return;
     }
 
+<<<<<<< Updated upstream
     if (email.toLowerCase() !== TEST_ACCOUNT.email.toLowerCase()) {
       setFieldError('loginEmail', 'Пользователь не найден');
       setAlert({ variant: 'error', message: 'Пользователь не найден' });
@@ -120,9 +141,23 @@ export default function App() {
 
     setAlert({ variant: 'success', message: 'Успешный вход' });
     setIsLoggedIn(true);
+=======
+    setIsSubmitting(true);
+    try {
+      const auth = await authApi.login(email, password);
+      setToken(auth.token);
+      setCurrentUser(toAppUser(auth.user));
+      setAlert({ variant: 'success', message: 'Успешный вход' });
+      setIsLoggedIn(true);
+    } catch (error) {
+      setFieldError('loginPassword', error.message || 'Не удалось войти');
+    } finally {
+      setIsSubmitting(false);
+    }
+>>>>>>> Stashed changes
   }
 
-  function handleRegister() {
+  async function handleRegister() {
     resetFormErrors();
 
     const lastName = String(regLastName || '').trim();
@@ -155,6 +190,7 @@ export default function App() {
       (password && password.length < 8) ||
       (password && password2 && password !== password2);
 
+<<<<<<< Updated upstream
     if (hasAnyError || shouldFail) {
       setAlert({ variant: 'error', message: 'Проверьте поля формы' });
       return;
@@ -417,6 +453,142 @@ export default function App() {
         </KeyboardAvoidingView>
         </SafeAreaView>
       )}
+=======
+    if (shouldFail) return;
+
+    setIsSubmitting(true);
+    try {
+      const auth = await authApi.register({ email, username, password });
+      setToken(auth.token);
+      setCurrentUser(toAppUser(auth.user));
+      setAlert({ variant: 'success', message: 'Регистрация успешна' });
+      setIsLoggedIn(true);
+    } catch (error) {
+      setAlert({ variant: 'error', message: error.message || 'Не удалось зарегистрироваться' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  function handleRequestReset() {
+    resetFormErrors();
+
+    const email = String(resetEmail || '').trim();
+    if (!email) {
+      setFieldError('resetEmail', 'Введите Email');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setFieldError('resetEmail', 'Некорректный Email');
+      return;
+    }
+
+    setResetEmail(email);
+    setAuthMode('reset-confirm');
+  }
+
+  function handleSendResetEmail() {
+    resetFormErrors();
+    setAuthMode('reset-new');
+  }
+
+  function handleSaveNewPassword() {
+    resetFormErrors();
+
+    const code = String(resetCode || '').trim();
+    const password = String(resetNewPassword || '');
+    const password2 = String(resetNewPassword2 || '');
+
+    if (!code) setFieldError('resetCode', 'Введите код подтверждения');
+    if (!password) setFieldError('resetNewPassword', 'Введите пароль');
+    if (!password2) setFieldError('resetNewPassword2', 'Повторите пароль');
+    if (password && password.length < 8) setFieldError('resetNewPassword', 'Пароль должен быть не короче 8 символов');
+    if (password && password2 && password !== password2) setFieldError('resetNewPassword2', 'Пароли не совпадают');
+
+    const shouldFail =
+      !code ||
+      !password ||
+      !password2 ||
+      (password && password.length < 8) ||
+      (password && password2 && password !== password2);
+
+    if (shouldFail) return;
+
+    setAuthMode('reset-success');
+  }
+
+  function handleBackToLogin() {
+    setAuthMode('login');
+    resetFormErrors();
+  }
+
+  function handleLogout() {
+    clearToken();
+    setIsLoggedIn(false);
+    setCurrentUser(null);
+    setAlert(null);
+    setAuthMode('login');
+    setLoginEmail(TEST_ACCOUNT.email);
+    setLoginPassword(TEST_ACCOUNT.password);
+  }
+
+  function handleSupportPress() {
+    // no-op: backend password reset is not part of the API yet.
+  }
+
+  if (!fontsLoaded) return null;
+
+  if (isLoggedIn) {
+    return (
+      <SafeAreaProvider>
+        <HomeScreen currentUser={currentUser} onLogout={handleLogout} />
+      </SafeAreaProvider>
+    );
+  }
+
+  return (
+    <SafeAreaProvider>
+      <AuthScreen
+        authMode={authMode}
+        alert={alert}
+        fieldErrors={fieldErrors}
+        loginEmail={loginEmail}
+        loginPassword={loginPassword}
+        setLoginEmail={setLoginEmail}
+        setLoginPassword={setLoginPassword}
+        regUsername={regUsername}
+        regEmail={regEmail}
+        regPassword={regPassword}
+        regPassword2={regPassword2}
+        regCreator={regCreator}
+        setRegUsername={setRegUsername}
+        setRegEmail={setRegEmail}
+        setRegPassword={setRegPassword}
+        setRegPassword2={setRegPassword2}
+        setRegCreator={setRegCreator}
+        resetEmail={resetEmail}
+        resetCode={resetCode}
+        resetNewPassword={resetNewPassword}
+        resetNewPassword2={resetNewPassword2}
+        setResetEmail={setResetEmail}
+        setResetCode={setResetCode}
+        setResetNewPassword={setResetNewPassword}
+        setResetNewPassword2={setResetNewPassword2}
+        clearFieldError={clearFieldError}
+        onSwitch={handleSwitch}
+        onOpenResetFlow={handleOpenResetFlow}
+        onBackToLogin={handleBackToLogin}
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+        onRequestReset={handleRequestReset}
+        onSendResetEmail={handleSendResetEmail}
+        onSaveNewPassword={handleSaveNewPassword}
+        onSupportPress={handleSupportPress}
+        onCloseAlert={() => setAlert(null)}
+        isSubmitting={isSubmitting}
+      />
+>>>>>>> Stashed changes
     </SafeAreaProvider>
   );
 }
