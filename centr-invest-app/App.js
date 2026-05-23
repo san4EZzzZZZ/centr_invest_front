@@ -326,7 +326,7 @@ export default function App() {
               >
                 {authMode === 'reset-request' ? (
                   <View style={styles.resetStepWrap}>
-                    <Text style={styles.resetTitle} className="font-roboto text-[18px] text-[#000000] text-center mb-[10px] mt-[16px]">
+                    <Text style={styles.resetTitle} className="font-roboto text-[18px] text-[#000000] text-center mt-[16px]">
                       Восстановление доступа
                     </Text>
                     <FormAlert
@@ -356,12 +356,14 @@ export default function App() {
                       onPress={handleRequestReset}
                       className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center"
                     >
-                      <Text className="font-robotoMedium text-[16px] text-white">Восстановить доступ</Text>
+                      <Text className="font-roboto text-[16px] text-white">Восстановить доступ</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={handleBackToLogin} style={styles.backLinkWrap} className="items-center pt-[14px]">
+                    <TouchableOpacity onPress={handleBackToLogin} style={styles.backLinkWrap} className="items-center">
                       <View style={styles.backLinkRow} className="flex-row items-center">
-                        <Feather name="arrow-left" size={16} color="#F23030" style={{ marginRight: 8 }} />
-                        <Text style={styles.backLinkText} className="text-[#F23030] text-[14px] font-robotoLight">Вернуться к входу</Text>
+                        <Feather name="arrow-left" size={16} color="#F23030" marginTop={3} style={{ marginRight: 8 }} />
+                        <Text style={styles.backLinkText} className="text-[#F23030] text-[14px] font-robotoLight mt-[3px]">
+                          Вернуться к входу
+                        </Text>
                       </View>
                     </TouchableOpacity>
                   </View>
@@ -369,8 +371,8 @@ export default function App() {
 
                 {authMode === 'reset-confirm' ? (
                   <View style={styles.resetStepWrap}>
-                    <Text style={styles.resetTitle} className="font-roboto text-[14px] text-[#333333] text-center mb-[15px] mt-[16px]">
-                      Подтверждение восстановления доступа
+                    <Text style={styles.resetTitle} className="font-roboto text-[14px] text-[#333333] text-center mt-[16px]">
+                      Подтверждение восстановления{"\n"}доступа
                     </Text>
                     <FormAlert
                       variant={alert?.variant}
@@ -384,8 +386,8 @@ export default function App() {
                       {maskEmail(resetEmail)}.
                     </Text>
                     <Text style={styles.resetBodyText} className="font-roboto text-[14px] text-[#D6D6D6] text-center mt-[15px]">
-                      Письмо с ссылкой восстановления будет отправлено на эту почту. Если у вас нет доступа к этой почте, пожалуйста,
-                      {' '}
+                      Письмо с ссылкой восстановления будет отправлено на эту почту. Если у вас нет{"\n"}доступа к этой почте, пожалуйста,{"\n"}
+                      {" "}
                       <Text onPress={handleSupportPress} style={styles.supportLinkText}>
                         свяжитесь с поддержкой
                       </Text>
@@ -395,7 +397,7 @@ export default function App() {
                       onPress={handleSendResetEmail}
                       className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center"
                     >
-                      <Text className="font-robotoMedium text-[16px] text-white">Отправить письмо</Text>
+                      <Text className="font-roboto text-[16px] text-white">Отправить письмо</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleBackToLogin} style={styles.backLinkWrap} className="items-center">
                       <View style={styles.backLinkRow} className="flex-row items-center">
@@ -408,7 +410,7 @@ export default function App() {
 
                 {authMode === 'reset-new' ? (
                   <View style={styles.resetStepWrap}>
-                    <Text style={styles.resetTitle} className="font-roboto text-[18px] text-[#000000] text-center mt-[16px] mb-[10px]">
+                    <Text style={styles.resetTitle} className="font-roboto text-[18px] text-[#000000] text-center mt-[16px]">
                       Восстановление доступа
                     </Text>
                     <FormAlert
@@ -470,9 +472,9 @@ export default function App() {
                       onPress={handleSaveNewPassword}
                       className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center"
                     >
-                      <Text className="font-robotoMedium text-[16px] text-white">Сохранить новый пароль</Text>
+                      <Text className="font-roboto text-[16px] text-white">Сохранить новый пароль</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={handleBackToLogin} style={styles.backLinkWrap} className="items-center pt-[14px]">
+                    <TouchableOpacity onPress={handleBackToLogin} style={styles.backLinkWrap} className="items-center">
                       <View style={styles.backLinkRow} className="flex-row items-center">
                         <Feather name="arrow-left" size={14} color="#FF4F12" style={{ marginRight: 4 }} />
                         <Text style={styles.backLinkText} className="text-[#FF4F12] text-[14px] font-robotoLight">Вернуться к входу</Text>
@@ -483,7 +485,7 @@ export default function App() {
 
                 {authMode === 'reset-success' ? (
                   <View className="items-center">
-                    <Text style={styles.successTitle} className="font-roboto text-[18px] text-[#000000] text-center">
+                    <Text style={styles.successTitle} className="font-roboto text-[18px] text-[#000000] text-center mt-[16px]">
                       Восстановление доступа
                     </Text>
                     <Text className="font-robotoLight text-[14px] text-[#000000] text-center mb-[10px]">
@@ -496,7 +498,7 @@ export default function App() {
                       onPress={handleBackToLogin}
                       className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center"
                     >
-                      <Text className="font-robotoMedium text-[16px] text-white">Вернуться к входу</Text>
+                      <Text className="font-roboto text-[16px] text-white">Вернуться к входу</Text>
                     </TouchableOpacity>
                   </View>
                 ) : null}
@@ -644,7 +646,7 @@ export default function App() {
                                       onPress={handleLogin}
                                       className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center"
                                     >
-                                      <Text className="font-robotoMedium text-[16px] text-white">Войти</Text>
+                                      <Text className="font-roboto text-[16px] text-white">Войти</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity onPress={handleOpenResetFlow} className="items-center pt-[14px] pb-[14px]">
                                       <Text style={styles.forgotLinkText} className="text-[#F23030] text-[14px] font-robotoLight">
@@ -742,7 +744,7 @@ export default function App() {
                                     </TouchableOpacity>
 
                                     <TouchableOpacity onPress={handleRegister} className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center mb-[16px]">
-                                      <Text className="font-robotoMedium text-[16px] text-white">Зарегистрироваться</Text>
+                                      <Text className="font-roboto text-[16px] text-white">Зарегистрироваться</Text>
                                     </TouchableOpacity>
                                   </View>
                                 )}
@@ -851,7 +853,7 @@ const styles = StyleSheet.create({
   },
   resetCardContent: {
     minHeight: 346,
-    paddingTop: 10,
+    paddingTop: 0,
     paddingBottom: 16,
   },
   newPasswordCardContent: {
@@ -862,7 +864,7 @@ const styles = StyleSheet.create({
   confirmCardContent: {
     // "hug" height: don't force the card taller than its content
     minHeight: 0,
-    paddingTop: 10,
+    paddingTop: 0,
     paddingBottom: 16,
   },
   requestCardContent: {
@@ -872,7 +874,7 @@ const styles = StyleSheet.create({
   },
   successCardContent: {
     minHeight: 223,
-    paddingTop: 10,
+    paddingTop: 0,
     paddingBottom: 16,
   },
   tabsBlock: {
@@ -885,8 +887,8 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 10,
     paddingHorizontal: 12,
-    marginTop: 10,
-    marginBottom: 10,
+    marginTop: 0,
+    marginBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -914,11 +916,14 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   resetTitle: {
+    lineHeight: 22,
+    marginBottom: 16,
     textAlignVertical: 'center',
     includeFontPadding: false,
   },
   successTitle: {
-    marginBottom: 10,
+    lineHeight: 22,
+    marginBottom: 16,
   },
   resetMutedText: {
     lineHeight: 26,
@@ -931,7 +936,7 @@ const styles = StyleSheet.create({
   },
   resetBodyText: {
     lineHeight: 24,
-    marginBottom: 12,
+    marginBottom: 10,
     textAlign: 'center',
     textAlignVertical: 'center',
     includeFontPadding: false,
