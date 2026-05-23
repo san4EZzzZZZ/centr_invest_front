@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, TextInput, ScrollView, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, ScrollView, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -244,37 +244,49 @@ function ProfileField({ label, value }) {
 function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenProfile, onOpenAdmin, isAdmin }) {
   return (
     <View pointerEvents="box-none" style={styles.bottomNavContainer}>
-      <View style={styles.bottomNavShadow}>
-        <View style={[styles.bottomNav, { height: navHeight + bottomInset, paddingBottom: bottomInset }]}>
-          <TouchableOpacity style={styles.bottomNavBtn} onPress={onGoHome} activeOpacity={0.8}>
-            <SvgXml
-              xml={activeTab === 'home' ? HOME_ACTIVE_SVG : HOME_INACTIVE_SVG}
-              width="32"
-              height="32"
-            />
-          </TouchableOpacity>
+      <View style={styles.bottomNavShadowWrap}>
+        {Platform.OS === 'android' && (
+          <>
+            <View pointerEvents="none" style={styles.androidShadowLeftSoft} />
+            <View pointerEvents="none" style={styles.androidShadowLeft} />
+            <View pointerEvents="none" style={styles.androidShadowRightSoft} />
+            <View pointerEvents="none" style={styles.androidShadowRight} />
+          </>
+        )}
+        <View style={styles.bottomNavShadow}>
+          <View style={Platform.OS === 'ios' ? styles.bottomNavShadowInner : null}>
+            <View style={[styles.bottomNav, { height: navHeight + bottomInset, paddingBottom: bottomInset }]}>
+              <TouchableOpacity style={styles.bottomNavBtn} onPress={onGoHome} activeOpacity={0.8}>
+                <SvgXml
+                  xml={activeTab === 'home' ? HOME_ACTIVE_SVG : HOME_INACTIVE_SVG}
+                  width="32"
+                  height="32"
+                />
+              </TouchableOpacity>
 
-          <TouchableOpacity style={styles.bottomNavBtn} activeOpacity={0.8}>
-            <SvgXml
-              xml={activeTab === 'favorites' ? HEART_ACTIVE_SVG : HEART_INACTIVE_SVG}
-              width="32"
-              height="32"
-            />
-          </TouchableOpacity>
+              <TouchableOpacity style={styles.bottomNavBtn} activeOpacity={0.8}>
+                <SvgXml
+                  xml={activeTab === 'favorites' ? HEART_ACTIVE_SVG : HEART_INACTIVE_SVG}
+                  width="32"
+                  height="32"
+                />
+              </TouchableOpacity>
 
-          <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenProfile} activeOpacity={0.8}>
-            <SvgXml
-              xml={activeTab === 'profile' ? PROFILE_ACTIVE_SVG : PROFILE_INACTIVE_SVG}
-              width="32"
-              height="32"
-            />
-          </TouchableOpacity>
+              <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenProfile} activeOpacity={0.8}>
+                <SvgXml
+                  xml={activeTab === 'profile' ? PROFILE_ACTIVE_SVG : PROFILE_INACTIVE_SVG}
+                  width="32"
+                  height="32"
+                />
+              </TouchableOpacity>
 
-          {isAdmin ? (
-            <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenAdmin} activeOpacity={0.8}>
-              <Ionicons name="add" size={32} color="#7A1136" />
-            </TouchableOpacity>
-          ) : null}
+              {isAdmin ? (
+                <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenAdmin} activeOpacity={0.8}>
+                  <Ionicons name="add" size={32} color="#7A1136" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </View>
         </View>
       </View>
     </View>
@@ -606,15 +618,86 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
   },
+  bottomNavShadowWrap: {
+    width: '100%',
+    position: 'relative',
+    ...Platform.select({
+      web: {
+        boxShadow: '-6px 10px 14px 0px rgba(242, 239, 255, 0.45), 6px 10px 12px 0px rgba(242, 239, 255, 0.45)',
+      },
+    }),
+  },
   bottomNavShadow: {
     width: '100%',
-    borderRadius: 24,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    elevation: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#F2EFFF',
+        shadowOffset: { width: -2, height: -3 },
+        shadowOpacity: 1.0,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
+  },
+  bottomNavShadowInner: {
+    width: '100%',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: '#FFFFFF',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#F2EFFF',
+        shadowOffset: { width: 2, height: -3 },
+        shadowOpacity: 1.0,
+        shadowRadius: 3,
+      },
+      default: {},
+    }),
+  },
+  androidShadowLeftSoft: {
+    position: 'absolute',
+    left: -4,
+    top: -4,
+    right: 0,
+    bottom: 30,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: 'rgba(242, 239, 255, 0.5)',
+  },
+  androidShadowLeft: {
+    position: 'absolute',
+    left: -2,
+    top: -3,
+    right: 0,
+    bottom: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: 'rgba(242, 239, 255, 0.6)',
+  },
+  androidShadowRightSoft: {
+    position: 'absolute',
+    left: 4,
+    top: -4,
+    right: -4,
+    bottom: 30,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: 'rgba(242, 239, 255, 0.5)',
+  },
+  androidShadowRight: {
+    position: 'absolute',
+    left: 2,
+    top: -3,
+    right: -2,
+    bottom: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: 'rgba(242, 239, 255, 0.6)',
   },
   bottomNavBtn: {
     width: 56,
