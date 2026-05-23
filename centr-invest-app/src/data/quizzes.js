@@ -3,6 +3,21 @@ const LONG_TEXT =
 
 const SOURCE_URL = 'https://get-color.ru/image/';
 
+export const QUESTION_TYPE_OPTIONS = [
+  { value: 'single', label: 'С одним правильным ответом' },
+  { value: 'multi', label: 'С несколькими правильными ответами' },
+  { value: 'matching', label: 'Установление соответствия' },
+  { value: 'text', label: 'С кратким текстовым ответом' },
+];
+
+export function getQuestionTypeLabel(type) {
+  return QUESTION_TYPE_OPTIONS.find((option) => option.value === type)?.label ?? 'Тип вопроса';
+}
+
+export function cloneQuiz(quiz) {
+  return quiz ? JSON.parse(JSON.stringify(quiz)) : null;
+}
+
 function buildOptions(count) {
   return Array.from({ length: count }).map((_, idx) => ({
     id: `o${idx + 1}`,
@@ -87,10 +102,84 @@ function buildTextQuestion(id, answer) {
   };
 }
 
+function buildDefaultOptions(questionId) {
+  return buildOptions(4).map((option, idx) => ({
+    ...option,
+    id: `${questionId}_o${idx + 1}`,
+    label: idx === 0 ? 'Вариант 1' : option.label,
+  }));
+}
+
+export function createQuestionTemplate(type = 'single', id = `q_${Date.now()}`) {
+  const options = buildDefaultOptions(id);
+
+  if (type === 'multi') {
+    return {
+      id,
+      type: 'multi',
+      text: LONG_TEXT,
+      options,
+      correctOptionIds: [options[0]?.id, options[1]?.id].filter(Boolean),
+    };
+  }
+
+  if (type === 'matching') {
+    return {
+      id,
+      type: 'matching',
+      text: LONG_TEXT,
+      initialOpenRowId: `${id}_java`,
+      rows: [
+        {
+          id: `${id}_java`,
+          label: 'Java -',
+          options,
+          correctOptionId: options[0]?.id ?? null,
+        },
+        {
+          id: `${id}_php`,
+          label: 'PHP -',
+          options,
+          correctOptionId: options[1]?.id ?? null,
+        },
+        {
+          id: `${id}_python`,
+          label: 'Python -',
+          options,
+          correctOptionId: options[2]?.id ?? null,
+        },
+      ],
+    };
+  }
+
+  if (type === 'text') {
+    return buildTextQuestion(id, 'ответ');
+  }
+
+  return {
+    id,
+    type: 'single',
+    text: LONG_TEXT,
+    options,
+    correctOptionId: options[0]?.id ?? null,
+  };
+}
+
+export function createQuizTemplate(title = 'Новый тест') {
+  const quizId = `quiz_${Date.now()}`;
+  return {
+    id: quizId,
+    title,
+    status: 'draft',
+    questions: [createQuestionTemplate('single', `${quizId}_q1`)],
+  };
+}
+
 export const QUIZZES = [
   {
     id: 'java_senior',
     title: 'Java Senior',
+    status: 'published',
     questions: [
       buildSingleQuestion('q1', 'single'),
       {
@@ -121,6 +210,7 @@ export const QUIZZES = [
   {
     id: 'python_junior',
     title: 'Python Junior',
+    status: 'published',
     questions: Array.from({ length: 12 }).map((_, idx) => {
       const questionNumber = idx + 1;
       const options = Array.from({ length: 4 }).map((__, optIdx) => ({

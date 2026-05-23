@@ -5,6 +5,7 @@ import { useFonts, Roboto_300Light, Roboto_400Regular, Roboto_500Medium, Roboto_
 import * as SplashScreen from 'expo-splash-screen';
 import { Feather } from '@expo/vector-icons';
 import HomeScreen from './src/screens/HomeScreen';
+import { QUIZZES, cloneQuiz } from './src/data/quizzes';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -12,6 +13,22 @@ const TEST_ACCOUNT = {
   email: 'test@centrinvest.app',
   password: 'CentrInvest#2026',
 };
+
+const ADMIN_ACCOUNT = {
+  email: 'admin@centrinvest.app',
+  password: 'Admin#2026',
+  name: 'Admin',
+  role: 'Администратор',
+};
+
+const TEST_ACCOUNTS = [
+  {
+    ...TEST_ACCOUNT,
+    name: 'User',
+    role: 'Пользователь',
+  },
+  ADMIN_ACCOUNT,
+];
 
 function isValidEmail(value) {
   if (!value) return false;
@@ -87,6 +104,8 @@ export default function App() {
   const [authMode, setAuthMode] = useState('login');
   const [fontsLoaded] = useFonts({ Roboto_300Light, Roboto_400Regular, Roboto_500Medium, Roboto_700Bold });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [quizzes, setQuizzes] = useState(() => QUIZZES.map((quiz) => ({ ...cloneQuiz(quiz), status: quiz.status ?? 'published' })));
 
   const [alert, setAlert] = useState(null); // { variant: 'error' | 'success', message: string }
   const [fieldErrors, setFieldErrors] = useState({});
@@ -158,18 +177,25 @@ export default function App() {
       return;
     }
 
-    if (email.toLowerCase() !== TEST_ACCOUNT.email.toLowerCase()) {
+    const matchedAccount = TEST_ACCOUNTS.find((account) => account.email.toLowerCase() === email.toLowerCase());
+
+    if (!matchedAccount) {
       setFieldError('loginPassword', 'Пользователь не найден');
       return;
     }
 
-    if (password !== TEST_ACCOUNT.password) {
+    if (password !== matchedAccount.password) {
       setFieldError('loginPassword', 'Неверный пароль');
       return;
     }
 
     setAlert({ variant: 'success', message: 'Успешный вход' });
     setIsLoggedIn(true);
+    setCurrentUser({
+      email: matchedAccount.email,
+      name: matchedAccount.name,
+      role: matchedAccount.role,
+    });
   }
 
   function handleRegister() {
@@ -485,7 +511,18 @@ export default function App() {
   return (
     <SafeAreaProvider>
       {isLoggedIn ? (
-        <HomeScreen />
+        <HomeScreen
+          currentUser={currentUser}
+          quizzes={quizzes}
+          setQuizzes={setQuizzes}
+          onLogout={() => {
+            setIsLoggedIn(false);
+            setCurrentUser(null);
+            setAuthMode('login');
+            setLoginEmail(TEST_ACCOUNT.email);
+            setLoginPassword(TEST_ACCOUNT.password);
+          }}
+        />
       ) : (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
           <KeyboardAvoidingView
