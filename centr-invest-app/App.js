@@ -326,7 +326,7 @@ export default function App() {
               >
                 {authMode === 'reset-request' ? (
                   <View style={styles.resetStepWrap}>
-                    <Text style={styles.resetTitle} className="font-roboto text-[24px] text-[#111111] text-center">
+                    <Text style={styles.resetTitle} className="font-roboto text-[18px] text-[#000000] text-center mb-[10px] mt-[16px]">
                       Восстановление доступа
                     </Text>
                     <FormAlert
@@ -647,7 +647,7 @@ export default function App() {
                                       <Text className="font-robotoMedium text-[16px] text-white">Войти</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity onPress={handleOpenResetFlow} className="items-center pt-[14px] pb-[14px]">
-                                      <Text style={styles.forgotLinkText} className="text-[#F23030] text-[14px] underline font-robotoLight">
+                                      <Text style={styles.forgotLinkText} className="text-[#F23030] text-[14px] font-robotoLight">
                                         Забыли пароль?
                                       </Text>
                                     </TouchableOpacity>
@@ -867,7 +867,7 @@ const styles = StyleSheet.create({
   },
   requestCardContent: {
     minHeight: 215,
-    paddingTop: 10,
+    paddingTop: 0,
     paddingBottom: 16,
   },
   successCardContent: {
