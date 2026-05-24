@@ -224,16 +224,25 @@ export default function App() {
 
     if (shouldFail) return;
 
+    setRegEmail(email);
+    setRegCode('');
+    setAuthMode('register-confirm');
+  }
+
+  async function handleSendRegisterCode() {
+    const email = String(regEmail || '').trim();
+    const username = String(regUsername || '').trim();
+    const password = String(regPassword || '');
+
     setIsSubmitting(true);
     try {
       await authApi.register({ email, username, password });
-      setRegEmail(email);
-      setRegCode('');
-      setAuthMode('register-confirm');
+      setAuthMode('register-code');
     } catch (error) {
       const msg = error.message || '';
       if (msg.includes('Email is already registered') || msg.includes('409') || msg.includes('exists')) {
         setFieldError('regEmail', 'Этот Email уже зарегистрирован');
+        setAuthMode('register');
       } else {
         setAlert({ variant: 'error', message: error.message || 'Не удалось зарегистрироваться. Попробуйте снова.' });
       }
@@ -458,6 +467,7 @@ export default function App() {
         onBackToLogin={handleBackToLogin}
         onLogin={handleLogin}
         onRegister={handleRegisterV2}
+        onSendRegisterCode={handleSendRegisterCode}
         onConfirmRegister={handleConfirmRegister}
         onRequestReset={handleRequestResetV2}
         onSendResetEmail={handleSendResetEmail}

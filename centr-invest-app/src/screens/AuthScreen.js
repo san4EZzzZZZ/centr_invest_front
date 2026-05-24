@@ -308,6 +308,42 @@ function RegisterForm({
 
 function RegisterConfirmForm({
   alert,
+  regEmail,
+  onSendRegisterCode,
+  onBackToLogin,
+  onCloseAlert,
+  isSubmitting,
+}) {
+  return (
+    <View>
+      <Text style={styles.confirmTitle}>Подтверждение Email</Text>
+
+      <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
+
+      <Text style={styles.confirmSubTitle}>На почту будет отправлено письмо для подтверждения.</Text>
+      <Text style={styles.confirmEmailText}>{maskEmail(regEmail)}</Text>
+
+      <TouchableOpacity
+        disabled={isSubmitting}
+        onPress={onSendRegisterCode}
+        className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center"
+      >
+        <Text className="font-roboto text-[16px] text-white">
+          {isSubmitting ? 'Отправка...' : 'Отправить письмо'}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={onBackToLogin} style={styles.confirmBackLinkWrap}>
+        <View style={styles.backLinkRow} className="flex-row items-center justify-center">
+          <Text style={styles.confirmBackLinkText}>← Вернуться к входу</Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function RegisterCodeForm({
+  alert,
   fieldErrors,
   regCode,
   setRegCode,
@@ -627,6 +663,7 @@ export default function AuthScreen({
   onRegister,
   onConfirmRegister,
   onRequestReset,
+  onSendRegisterCode,
   onSendResetEmail,
   onSaveNewPassword,
   onSupportPress,
@@ -635,6 +672,7 @@ export default function AuthScreen({
 }) {
   const isResetFlow = authMode.startsWith('reset-');
   const isRegisterConfirm = authMode === 'register-confirm';
+  const isRegisterCode = authMode === 'register-code';
   const isRegisterSuccess = authMode === 'register-success';
 
   return (
@@ -666,7 +704,7 @@ export default function AuthScreen({
                   onCloseAlert={onCloseAlert}
                 />
               </>
-            ) : isRegisterConfirm || isRegisterSuccess ? (
+            ) : isRegisterConfirm || isRegisterCode || isRegisterSuccess ? (
               <>
                 <Image
                   source={require('../../assets/centr_test.png')}
@@ -678,8 +716,16 @@ export default function AuthScreen({
                   {isRegisterConfirm ? (
                     <RegisterConfirmForm
                       alert={alert}
-                      fieldErrors={fieldErrors}
                       regEmail={regEmail}
+                      onSendRegisterCode={onSendRegisterCode}
+                      onBackToLogin={onBackToLogin}
+                      onCloseAlert={onCloseAlert}
+                      isSubmitting={isSubmitting}
+                    />
+                  ) : isRegisterCode ? (
+                    <RegisterCodeForm
+                      alert={alert}
+                      fieldErrors={fieldErrors}
                       regCode={regCode}
                       setRegCode={setRegCode}
                       clearFieldError={clearFieldError}
@@ -917,7 +963,7 @@ const styles = StyleSheet.create({
   },
   confirmTitle: {
     fontFamily: 'Roboto_400Regular',
-    fontSize: 14,
+    fontSize: 18,
     color: '#333333',
     textAlign: 'center',
     marginTop: 16,
@@ -950,7 +996,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 45,
   },
   confirmBackLinkText: {
-    fontFamily: 'Roboto_400Regular',
+    fontFamily: 'Roboto_300Light',
     fontSize: 14,
     color: '#FF4F12',
     textAlign: 'center',
@@ -985,9 +1031,10 @@ const styles = StyleSheet.create({
   },
   backLinkWrap: {
     marginTop: 10,
-    marginBottom: 0,
+    marginBottom: 16,
   },
   backLinkText: {
+    fontFamily: 'Roboto_300Light',
     includeFontPadding: false,
   },
   resetStepWrap: {},
