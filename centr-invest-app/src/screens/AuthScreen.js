@@ -212,11 +212,13 @@ function RegisterForm({
   regPassword,
   regPassword2,
   regCreator,
+  regCode,
   setRegUsername,
   setRegEmail,
   setRegPassword,
   setRegPassword2,
   setRegCreator,
+  setRegCode,
   clearFieldError,
   onRegister,
   onCloseAlert,
@@ -309,6 +311,58 @@ function RegisterForm({
 
       <TouchableOpacity disabled={isSubmitting} onPress={onRegister} className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center mb-[16px]">
         <Text className="font-roboto text-[16px] text-white">{isSubmitting ? 'Регистрация...' : 'Зарегистрироваться'}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function RegisterConfirmForm({
+  alert,
+  fieldErrors,
+  regEmail,
+  regCode,
+  setRegCode,
+  clearFieldError,
+  onConfirmRegister,
+  onBackToLogin,
+  onCloseAlert,
+  isSubmitting,
+}) {
+  return (
+    <View>
+      <Text style={styles.resetTitle} className="font-roboto text-[18px] text-[#000000] text-center mt-[16px]">
+        Подтверждение регистрации
+      </Text>
+      <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
+      <Text style={styles.resetEmailText} className="font-roboto text-[14px] text-[#6B6B6B] text-center ">
+        {maskEmail(regEmail)}
+      </Text>
+      <TextInput
+        placeholder="Код подтверждения"
+        placeholderTextColor={fieldErrors?.regCode ? '#F23030' : '#D6D6D6'}
+        value={regCode}
+        onChangeText={(v) => {
+          setRegCode(v);
+          clearFieldError('regCode');
+        }}
+        onFocus={() => clearFieldError('regCode')}
+        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regCode ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regCode ? 'mb-0' : 'mb-[10px]'}`}
+      />
+      {fieldErrors?.regCode ? (
+        <Text style={styles.formErrorText} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">
+          {fieldErrors.regCode}
+        </Text>
+      ) : null}
+      <TouchableOpacity disabled={isSubmitting} onPress={onConfirmRegister} className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center">
+        <Text className="font-roboto text-[16px] text-white">{isSubmitting ? 'Проверка...' : 'Подтвердить'}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={onBackToLogin} style={styles.backLinkWrap} className="items-center">
+        <View style={styles.backLinkRow} className="flex-row items-center">
+          <Feather name="arrow-left" size={14} color="#FF4F12" style={{ marginRight: 4 }} />
+          <Text style={styles.backLinkText} className="text-[#FF4F12] text-[14px] font-robotoLight">
+            Вернуться ко входу
+          </Text>
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -561,6 +615,7 @@ export default function AuthScreen({
   onBackToLogin,
   onLogin,
   onRegister,
+  onConfirmRegister,
   onRequestReset,
   onSendResetEmail,
   onSaveNewPassword,
@@ -569,6 +624,7 @@ export default function AuthScreen({
   isSubmitting,
 }) {
   const isResetFlow = authMode.startsWith('reset-');
+  const isRegisterConfirm = authMode === 'register-confirm';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
@@ -598,6 +654,28 @@ export default function AuthScreen({
                   onSupportPress={onSupportPress}
                   onCloseAlert={onCloseAlert}
                 />
+              </>
+            ) : isRegisterConfirm ? (
+              <>
+                <View style={{ width: 190, height: 67 }} className="mt-[242.5px] self-center items-center justify-center flex-row">
+                  <View className="w-8 h-10 bg-[#7700FF] rounded-tr-xl rounded-bl-xl mr-2" />
+                  <Text className="text-2xl font-bold text-[#182030]">РўРµСЃС‚</Text>
+                </View>
+
+                <AuthCardShell contentStyle={styles.mainCardContent}>
+                  <RegisterConfirmForm
+                    alert={alert}
+                    fieldErrors={fieldErrors}
+                    regEmail={regEmail}
+                    regCode={regCode}
+                    setRegCode={setRegCode}
+                    clearFieldError={clearFieldError}
+                    onConfirmRegister={onConfirmRegister}
+                    onBackToLogin={onBackToLogin}
+                    onCloseAlert={onCloseAlert}
+                    isSubmitting={isSubmitting}
+                  />
+                </AuthCardShell>
               </>
             ) : (
               <>

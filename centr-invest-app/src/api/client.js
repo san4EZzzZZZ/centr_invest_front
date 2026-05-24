@@ -52,8 +52,9 @@ export function clearToken() {
 export async function apiFetch(path, options = {}) {
   const token = getToken();
   const headers = new Headers(options.headers);
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
 
-  if (options.body && !headers.has('Content-Type')) {
+  if (options.body && !isFormData && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
@@ -97,16 +98,35 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify({ email, username, password }),
     }),
+  confirmRegistration: ({ email, code }) =>
+    apiFetch('/auth/register/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    }),
+  logout: () => apiFetch('/auth/logout', { method: 'POST' }),
+  forgotPassword: (email) =>
+    apiFetch('/auth/password/forgot', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: ({ email, code, newPassword }) =>
+    apiFetch('/auth/password/reset', {
+      method: 'POST',
+      body: JSON.stringify({ email, code, newPassword }),
+    }),
+  me: () => apiFetch('/auth/me'),
 };
 
 export const contentApi = {
-  getProfessions: ({ title, profession } = {}) => {
+  getLanguages: ({ title, language, profession } = {}) => {
     const params = new URLSearchParams();
     if (title) params.set('title', title);
-    if (profession) params.set('profession', profession);
+    if (language) params.set('language', language);
+    if (!language && profession) params.set('language', profession);
     const query = params.toString();
-    return apiFetch(`/professions${query ? `?${query}` : ''}`);
+    return apiFetch(`/languages${query ? `?${query}` : ''}`);
   },
+  getProfessions: (params) => contentApi.getLanguages(params),
   getTest: (testId) => apiFetch(`/tests/${testId}`),
 };
 
@@ -127,13 +147,41 @@ export const profileApi = {
   getFavorites: () => apiFetch('/profile/favorites'),
   addFavorite: (testId) => apiFetch(`/profile/favorites/tests/${testId}`, { method: 'POST' }),
   removeFavorite: (testId) => apiFetch(`/profile/favorites/tests/${testId}`, { method: 'DELETE' }),
+  updateName: (username) =>
+    apiFetch('/profile/name', {
+      method: 'PATCH',
+      body: JSON.stringify({ username }),
+    }),
+  requestEmailChange: (newEmail) =>
+    apiFetch('/profile/email/change/request', {
+      method: 'POST',
+      body: JSON.stringify({ newEmail }),
+    }),
+  confirmEmailChange: ({ newEmail, code }) =>
+    apiFetch('/profile/email/change/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ newEmail, code }),
+    }),
+  requestPasswordChange: () => apiFetch('/profile/password/change/request', { method: 'POST' }),
+  confirmPasswordChange: ({ code, newPassword }) =>
+    apiFetch('/profile/password/change/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ code, newPassword }),
+    }),
+  uploadAvatar: (formData) =>
+    apiFetch('/profile/avatar', {
+      method: 'POST',
+      body: formData,
+    }),
+  deleteAvatar: () => apiFetch('/profile/avatar', { method: 'DELETE' }),
 };
 
 export const adminApi = {
-  getTests: ({ title, profession } = {}) => {
+  getTests: ({ title, language, profession } = {}) => {
     const params = new URLSearchParams();
     if (title) params.set('title', title);
-    if (profession) params.set('profession', profession);
+    if (language) params.set('language', language);
+    if (!language && profession) params.set('language', profession);
     const query = params.toString();
     return apiFetch(`/admin/tests${query ? `?${query}` : ''}`);
   },
@@ -149,4 +197,15 @@ export const adminApi = {
       body: JSON.stringify(payload),
     }),
   deleteTest: (testId) => apiFetch(`/admin/tests/${testId}`, { method: 'DELETE' }),
+  getUsers: ({ search } = {}) => {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    const query = params.toString();
+    return apiFetch(`/admin/users${query ? `?${query}` : ''}`);
+  },
+  updateUser: (userId, payload) =>
+    apiFetch(`/admin/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
 };

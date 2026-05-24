@@ -304,7 +304,7 @@ export default function QuizScreen({ quiz, onBack, onFinish }) {
                   <Text style={styles.explanationTitle}>Пояснение</Text>
                   <Text style={styles.explanationText}>{answerResponse.explanation}</Text>
                   {answerResponse.checkedByAi ? <Text style={styles.sourceLabel}>AI проверка: {Math.round((answerResponse.aiConfidence ?? 0) * 100)}%</Text> : null}
-                  {answerResponse.aiReason ? <Text style={styles.explanationText}>{answerResponse.aiReason}</Text> : null}
+                  {answerResponse.explanationGeneratedByAi ? <Text style={styles.explanationText}>Пояснение сгенерировано AI</Text> : null}
                   {answerResponse.readMoreUrl ? (
                     <Text style={styles.sourceLink} onPress={() => Linking.openURL(answerResponse.readMoreUrl)}>
                       {answerResponse.readMoreUrl}

@@ -51,8 +51,10 @@ function toEditorQuiz(test) {
 
   return {
     id: test.id,
-    professionId: test.professionId,
-    professionTitle: test.professionTitle,
+    languageId: test.languageId ?? test.professionId,
+    languageTitle: test.languageTitle ?? test.professionTitle,
+    professionId: test.languageId ?? test.professionId,
+    professionTitle: test.languageTitle ?? test.professionTitle,
     title: test.title,
     shortDescription: test.shortDescription,
     description: test.description,
@@ -121,14 +123,14 @@ function getOptionLabel(options, optionId) {
   return options?.find((option) => option.id === optionId)?.label ?? options?.[0]?.label ?? 'Вариант';
 }
 
-function toAdminPayload(quiz, fallbackProfessionId) {
-  const professionId = Number(quiz.professionId ?? fallbackProfessionId);
+function toAdminPayload(quiz, fallbackLanguageId) {
+  const languageId = Number(quiz.languageId ?? quiz.professionId ?? fallbackLanguageId);
   const title = String(quiz.title || '').trim() || 'Новый тест';
   const shortDescription = String(quiz.shortDescription || '').trim() || title;
   const description = String(quiz.description || '').trim() || shortDescription;
 
   return {
-    professionId,
+    languageId,
     title,
     shortDescription,
     description,
@@ -146,8 +148,6 @@ function toAdminPayload(quiz, fallbackProfessionId) {
           topic,
           prompt,
           correctTextAnswer: null,
-          explanation,
-          readMoreUrl,
           options: options.map((option, optionIndex) => ({
             text: String(option.label || '').trim() || `Вариант ${optionIndex + 1}`,
             correct: correctIds.includes(option.id),
@@ -164,8 +164,6 @@ function toAdminPayload(quiz, fallbackProfessionId) {
           topic,
           prompt,
           correctTextAnswer: null,
-          explanation,
-          readMoreUrl,
           options: [],
           matchPairs: rows.map((row, rowIndex) => ({
             leftLabel: String(row.label || '').trim() || `Элемент ${rowIndex + 1}`,
@@ -180,8 +178,6 @@ function toAdminPayload(quiz, fallbackProfessionId) {
           topic,
           prompt,
           correctTextAnswer: String(question.answer || '').trim() || 'ответ',
-          explanation,
-          readMoreUrl,
           options: [],
           matchPairs: [],
         };
@@ -194,8 +190,6 @@ function toAdminPayload(quiz, fallbackProfessionId) {
         topic,
         prompt,
         correctTextAnswer: null,
-        explanation,
-        readMoreUrl,
         options: options.map((option, optionIndex) => ({
           text: String(option.label || '').trim() || `Вариант ${optionIndex + 1}`,
           correct: option.id === correctOptionId,
@@ -223,7 +217,11 @@ export default function HomeScreen({ currentUser, onLogout }) {
   const [error, setError] = useState(null);
   const homeRequestId = useRef(0);
 
-  const isAdmin = currentUser?.roleCode === 'ADMIN' || currentUser?.role === 'Администратор';
+  const isAdmin =
+    currentUser?.roleCode === 'ADMIN' ||
+    currentUser?.roleCode === 'SUPER_ADMIN' ||
+    currentUser?.role === 'Администратор' ||
+    currentUser?.role === 'Супер-администратор';
   const favoriteIds = useMemo(() => new Set(favorites.map((item) => item.testId)), [favorites]);
   const displayUser = profile?.user
     ? { ...currentUser, email: profile.user.email, name: profile.user.username }
@@ -237,7 +235,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
 
     try {
       const [professionsResponse, profileResponse] = await Promise.all([
-        contentApi.getProfessions({ title: query }),
+        contentApi.getLanguages({ title: query }),
         profileApi.get().catch(() => null),
       ]);
 
@@ -245,6 +243,8 @@ export default function HomeScreen({ currentUser, onLogout }) {
       const nextTests = nextProfessions.flatMap((profession) =>
         (profession.tests ?? []).map((test) => ({
           ...test,
+          languageId: profession.id,
+          languageTitle: profession.title,
           professionId: profession.id,
           professionTitle: profession.title,
           status: 'published',
@@ -370,7 +370,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
         onCancel={() => setRoute({ name: 'admin' })}
         onSave={async (nextQuiz) => {
           try {
-            const fallbackProfessionId = route.quiz?.professionId ?? allProfessions[0]?.id ?? professions[0]?.id;
+            const fallbackProfessionId = route.quiz?.languageId ?? route.quiz?.professionId ?? allProfessions[0]?.id ?? professions[0]?.id;
             if (!fallbackProfessionId) {
               Alert.alert('Ошибка', 'Сначала нужна хотя бы одна профессия на сервере');
               return;
@@ -485,7 +485,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
                   key={test.id}
                   title={test.title}
                   questions={`${test.questionCount ?? 0} вопросов`}
-                  status={test.professionTitle ?? 'Профессия'}
+                  status={test.languageTitle ?? test.professionTitle ?? 'Профессия'}
                   statusVariant={favoriteIds.has(test.id) ? 'passed' : 'not_passed'}
                   iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
                   onPress={() => setRoute({ name: 'quiz', quiz: test })}
@@ -559,7 +559,7 @@ function FavoritesScreen({ favorites, bottomInset, navHeight, onGoHome, onOpenFa
     quiz: { id: item.testId, title: item.testTitle, questionCount: item.questionCount },
     id: item.testId,
     title: item.testTitle,
-    questions: item.professionTitle ?? 'Профессия',
+    questions: item.languageTitle ?? item.professionTitle ?? 'Профессия',
     accent: index === 0 ? '#F7D76D' : index === 1 ? '#F6D85F' : '#F3C95A',
   }));
 

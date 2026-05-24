@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { attemptsApi } from '../api/client';
 
 export default function QuizResultScreen({ quizTitle, result, attemptId, onGoHome }) {
-  const [review, setReview] = useState(null);
+  const [review, setReview] = useState(result?.aiReview ?? null);
   const [isReviewLoading, setIsReviewLoading] = useState(false);
   const [reviewError, setReviewError] = useState(null);
 
@@ -18,7 +18,7 @@ export default function QuizResultScreen({ quizTitle, result, attemptId, onGoHom
     let ignore = false;
 
     async function loadReview() {
-      if (!reviewAttemptId) return;
+      if (!reviewAttemptId || result?.aiReview) return;
 
       setIsReviewLoading(true);
       setReviewError(null);
@@ -38,7 +38,7 @@ export default function QuizResultScreen({ quizTitle, result, attemptId, onGoHom
     return () => {
       ignore = true;
     };
-  }, [reviewAttemptId]);
+  }, [reviewAttemptId, result?.aiReview]);
 
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>

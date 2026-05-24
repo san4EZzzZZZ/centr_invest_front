@@ -28,6 +28,22 @@ function toAppUser(user) {
   };
 }
 
+function normalizeAppUser(user) {
+  const roleTitle =
+    user?.role === 'SUPER_ADMIN'
+      ? 'Супер-администратор'
+      : user?.role === 'ADMIN'
+        ? 'Администратор'
+        : 'Пользователь';
+
+  return {
+    ...user,
+    name: user?.username ?? user?.email ?? 'Пользователь',
+    roleCode: user?.role,
+    role: roleTitle,
+  };
+}
+
 export default function App() {
   const [authMode, setAuthMode] = useState('login');
   const [fontsLoaded] = useFonts({ Roboto_300Light, Roboto_400Regular, Roboto_500Medium, Roboto_700Bold });
@@ -46,6 +62,7 @@ export default function App() {
   const [regPassword, setRegPassword] = useState('');
   const [regPassword2, setRegPassword2] = useState('');
   const [regCreator, setRegCreator] = useState(true);
+  const [regCode, setRegCode] = useState('');
 
   const [resetEmail, setResetEmail] = useState(TEST_ACCOUNT.email);
   const [resetCode, setResetCode] = useState('');
@@ -115,7 +132,7 @@ export default function App() {
     try {
       const auth = await authApi.login(email, password);
       setToken(auth.token);
-      setCurrentUser(toAppUser(auth.user));
+      setCurrentUser(normalizeAppUser(auth.user));
       setAlert({ variant: 'success', message: 'Успешный вход' });
       setIsLoggedIn(true);
     } catch (error) {
@@ -161,7 +178,7 @@ export default function App() {
     try {
       const auth = await authApi.register({ email, username, password });
       setToken(auth.token);
-      setCurrentUser(toAppUser(auth.user));
+      setCurrentUser(normalizeAppUser(auth.user));
       setAlert({ variant: 'success', message: 'Регистрация успешна' });
       setIsLoggedIn(true);
     } catch (error) {
@@ -170,6 +187,81 @@ export default function App() {
         setFieldError('regEmail', 'Этот Email уже зарегистрирован');
       } else {
         setAlert({ variant: 'error', message: 'Не удалось зарегистрироваться. Попробуйте снова.' });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleRegisterV2() {
+    resetFormErrors();
+
+    const username = String(regUsername || '').trim();
+    const email = String(regEmail || '').trim();
+    const password = String(regPassword || '');
+    const password2 = String(regPassword2 || '');
+
+    if (!username) setFieldError('regUsername', 'Введите имя пользователя');
+    if (!email) setFieldError('regEmail', 'Введите Email');
+    if (email && !isValidEmail(email)) setFieldError('regEmail', 'Некорректный формат Email');
+    if (!password) setFieldError('regPassword', 'Введите пароль');
+    if (!password2) setFieldError('regPassword2', 'Подтвердите пароль');
+    if (password && password.length < 8) setFieldError('regPassword', 'Пароль должен быть не короче 8 символов');
+    if (password && password2 && password !== password2) setFieldError('regPassword2', 'Пароли не совпадают');
+
+    const shouldFail =
+      !username ||
+      !email ||
+      (email && !isValidEmail(email)) ||
+      !password ||
+      !password2 ||
+      (password && password.length < 8) ||
+      (password && password2 && password !== password2);
+
+    if (shouldFail) return;
+
+    setIsSubmitting(true);
+    try {
+      await authApi.register({ email, username, password });
+      setRegEmail(email);
+      setRegCode('');
+      setAlert({ variant: 'success', message: 'Код подтверждения отправлен на email' });
+      setAuthMode('register-confirm');
+    } catch (error) {
+      const msg = error.message || '';
+      if (msg.includes('Email is already registered') || msg.includes('409') || msg.includes('exists')) {
+        setFieldError('regEmail', 'Этот Email уже зарегистрирован');
+      } else {
+        setAlert({ variant: 'error', message: error.message || 'Не удалось зарегистрироваться. Попробуйте снова.' });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleConfirmRegister() {
+    resetFormErrors();
+
+    const email = String(regEmail || '').trim();
+    const code = String(regCode || '').trim();
+
+    if (!email) setFieldError('regEmail', 'Введите Email');
+    if (!code) setFieldError('regCode', 'Введите код подтверждения');
+    if (!email || !code) return;
+
+    setIsSubmitting(true);
+    try {
+      const auth = await authApi.confirmRegistration({ email, code });
+      setToken(auth.token);
+      setCurrentUser(normalizeAppUser(auth.user));
+      setAlert({ variant: 'success', message: 'Регистрация подтверждена' });
+      setIsLoggedIn(true);
+    } catch (error) {
+      const msg = error.message || '';
+      if (msg.includes('Invalid confirmation code')) {
+        setFieldError('regCode', 'Неверный код подтверждения');
+      } else {
+        setAlert({ variant: 'error', message: error.message || 'Не удалось подтвердить регистрацию' });
       }
     } finally {
       setIsSubmitting(false);
@@ -243,12 +335,91 @@ export default function App() {
     // no-op: password reset is not part of the backend API yet.
   }
 
+  async function handleRequestResetV2() {
+    resetFormErrors();
+
+    const email = String(resetEmail || '').trim();
+    if (!email) {
+      setFieldError('resetEmail', 'Введите Email');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setFieldError('resetEmail', 'Некорректный формат Email');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await authApi.forgotPassword(email);
+      setResetEmail(email);
+      setAuthMode('reset-confirm');
+      setAlert({ variant: 'success', message: 'Код восстановления отправлен на email' });
+    } catch (error) {
+      setAlert({ variant: 'error', message: error.message || 'Не удалось отправить код восстановления' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleSaveNewPasswordV2() {
+    resetFormErrors();
+
+    const code = String(resetCode || '').trim();
+    const password = String(resetNewPassword || '');
+    const password2 = String(resetNewPassword2 || '');
+
+    if (!code) setFieldError('resetCode', 'Введите код подтверждения');
+    if (!password) setFieldError('resetNewPassword', 'Введите пароль');
+    if (!password2) setFieldError('resetNewPassword2', 'Повторите пароль');
+    if (password && password.length < 8) setFieldError('resetNewPassword', 'Пароль должен быть не короче 8 символов');
+    if (password && password2 && password !== password2) setFieldError('resetNewPassword2', 'Пароли не совпадают');
+
+    const shouldFail =
+      !code ||
+      !password ||
+      !password2 ||
+      (password && password.length < 8) ||
+      (password && password2 && password !== password2);
+
+    if (shouldFail) return;
+
+    setIsSubmitting(true);
+    try {
+      await authApi.resetPassword({
+        email: String(resetEmail || '').trim(),
+        code,
+        newPassword: password,
+      });
+      setAuthMode('reset-success');
+    } catch (error) {
+      const msg = error.message || '';
+      if (msg.includes('Invalid confirmation code')) {
+        setFieldError('resetCode', 'Неверный код подтверждения');
+      } else {
+        setAlert({ variant: 'error', message: error.message || 'Не удалось изменить пароль' });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleLogoutV2() {
+    try {
+      await authApi.logout();
+    } catch {
+      // Local logout should still work if the session is already expired.
+    }
+
+    handleLogout();
+  }
+
   if (!fontsLoaded) return null;
 
   if (isLoggedIn) {
     return (
       <SafeAreaProvider>
-        <HomeScreen currentUser={currentUser} onLogout={handleLogout} />
+        <HomeScreen currentUser={currentUser} onLogout={handleLogoutV2} />
       </SafeAreaProvider>
     );
   }
@@ -268,11 +439,13 @@ export default function App() {
         regPassword={regPassword}
         regPassword2={regPassword2}
         regCreator={regCreator}
+        regCode={regCode}
         setRegUsername={setRegUsername}
         setRegEmail={setRegEmail}
         setRegPassword={setRegPassword}
         setRegPassword2={setRegPassword2}
         setRegCreator={setRegCreator}
+        setRegCode={setRegCode}
         resetEmail={resetEmail}
         resetCode={resetCode}
         resetNewPassword={resetNewPassword}
@@ -286,10 +459,11 @@ export default function App() {
         onOpenResetFlow={handleOpenResetFlow}
         onBackToLogin={handleBackToLogin}
         onLogin={handleLogin}
-        onRegister={handleRegister}
-        onRequestReset={handleRequestReset}
+        onRegister={handleRegisterV2}
+        onConfirmRegister={handleConfirmRegister}
+        onRequestReset={handleRequestResetV2}
         onSendResetEmail={handleSendResetEmail}
-        onSaveNewPassword={handleSaveNewPassword}
+        onSaveNewPassword={handleSaveNewPasswordV2}
         onSupportPress={handleSupportPress}
         onCloseAlert={() => setAlert(null)}
         isSubmitting={isSubmitting}
