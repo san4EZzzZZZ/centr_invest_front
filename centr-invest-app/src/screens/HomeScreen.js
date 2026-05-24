@@ -799,11 +799,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     paddingHorizontal: 20,
     alignItems: 'center',
-    shadowColor: '#F1EFFF',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 1,
-    shadowRadius: 14,
-    elevation: 3,
+    boxShadow: '0px 8px 14px #F1EFFF',
   },
   avatarFrame: {
     width: 92,
@@ -1058,32 +1054,14 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     backgroundColor: '#FFFFFF',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#F2EFFF',
-        shadowOffset: { width: -2, height: -3 },
-        shadowOpacity: 1.0,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 0,
-      },
-    }),
+    boxShadow: '-2px -3px 3px #F2EFFF',
   },
   bottomNavShadowInner: {
     width: '100%',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     backgroundColor: '#FFFFFF',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#F2EFFF',
-        shadowOffset: { width: 2, height: -3 },
-        shadowOpacity: 1.0,
-        shadowRadius: 3,
-      },
-      default: {},
-    }),
+    boxShadow: '2px -3px 3px #F2EFFF',
   },
   androidShadowLeftSoft: {
     position: 'absolute',

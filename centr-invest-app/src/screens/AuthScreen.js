@@ -661,14 +661,11 @@ const styles = StyleSheet.create({
     maxWidth: 370,
     position: 'relative',
     ...Platform.select({
-      ios: {
-        shadowOpacity: 0,
-      },
-      android: {
-        elevation: 0,
-      },
       web: {
         boxShadow: '-6px 10px 14px 0px rgba(242, 239, 255, 0.45), 6px 10px 12px 0px rgba(242, 239, 255, 0.45)',
+      },
+      default: {
+        elevation: 0,
       },
     }),
   },
@@ -676,10 +673,7 @@ const styles = StyleSheet.create({
     width: '100%',
     ...Platform.select({
       ios: {
-        shadowColor: '#F2EFFF',
-        shadowOffset: { width: -6, height: 10 },
-        shadowOpacity: 0.35,
-        shadowRadius: 14,
+        boxShadow: '-6px 10px 14px rgba(242, 239, 255, 0.35)',
       },
       web: {
         boxShadow: '-6px 10px 14px 0px rgba(242, 239, 255, 0.45)',
@@ -691,10 +685,7 @@ const styles = StyleSheet.create({
     width: '100%',
     ...Platform.select({
       ios: {
-        shadowColor: '#F2EFFF',
-        shadowOffset: { width: 6, height: 10 },
-        shadowOpacity: 0.35,
-        shadowRadius: 12,
+        boxShadow: '6px 10px 12px rgba(242, 239, 255, 0.35)',
       },
       web: {
         boxShadow: '6px 10px 12px 0px rgba(242, 239, 255, 0.45)',
