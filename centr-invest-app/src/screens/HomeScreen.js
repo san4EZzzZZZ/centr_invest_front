@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Keyboard, PanResponder, View, Text, ScrollView, Image, StyleSheet, Platform, TextInput, TouchableOpacity, StyleSheet, Platform} from "react-native";
+import { ActivityIndicator, Alert, Animated, Keyboard, PanResponder, View, Text, ScrollView, Image, StyleSheet, Platform } from "react-native";
 import { TouchableOpacity, TextInput } from "../components/SilentTouchables";
 import { SvgXml } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
