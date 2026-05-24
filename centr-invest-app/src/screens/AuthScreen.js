@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -211,12 +212,12 @@ function RegisterForm({
   regEmail,
   regPassword,
   regPassword2,
-  regCreator,
+  regCode,
   setRegUsername,
   setRegEmail,
   setRegPassword,
   setRegPassword2,
-  setRegCreator,
+  setRegCode,
   clearFieldError,
   onRegister,
   onCloseAlert,
@@ -298,17 +299,80 @@ function RegisterForm({
         </Text>
       ) : null}
 
-      <TouchableOpacity onPress={() => setRegCreator((prev) => !prev)} activeOpacity={0.8} className="flex-row items-center mb-[10px]">
-        <View
-          className={`w-[22px] h-[22px] rounded-[6px] items-center justify-center mr-[10px] ${regCreator ? 'bg-[#76113A]' : 'border border-[#76113A] bg-white'}`}
-        >
-          {regCreator ? <CheckMark width={14} height={12} color="#FFFFFF" /> : null}
-        </View>
-        <Text className="font-roboto text-[16px] text-[#252525]">Создатель Хайпа</Text>
-      </TouchableOpacity>
-
       <TouchableOpacity disabled={isSubmitting} onPress={onRegister} className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center mb-[16px]">
         <Text className="font-roboto text-[16px] text-white">{isSubmitting ? 'Регистрация...' : 'Зарегистрироваться'}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function RegisterConfirmForm({
+  alert,
+  fieldErrors,
+  regCode,
+  setRegCode,
+  clearFieldError,
+  onConfirmRegister,
+  onBackToLogin,
+  onCloseAlert,
+  isSubmitting,
+}) {
+  return (
+    <View>
+      <Text style={styles.confirmTitle}>Подтверждение Email</Text>
+
+      <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
+
+      <TextInput
+        placeholder="Код подтверждения"
+        placeholderTextColor={fieldErrors?.regCode ? '#F23030' : '#D6D6D6'}
+        value={regCode}
+        onChangeText={(v) => {
+          setRegCode(v);
+          if (clearFieldError) clearFieldError('regCode');
+        }}
+        onFocus={() => clearFieldError && clearFieldError('regCode')}
+        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regCode ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regCode ? 'mb-0' : 'mb-[10px]'}`}
+      />
+      {fieldErrors?.regCode ? (
+        <Text style={styles.formErrorText} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">
+          {fieldErrors.regCode}
+        </Text>
+      ) : null}
+
+      <TouchableOpacity
+        disabled={isSubmitting}
+        onPress={onConfirmRegister}
+        className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center"
+      >
+        <Text className="font-roboto text-[16px] text-white">{isSubmitting ? 'Подтверждение...' : 'Подтвердить'}</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={onBackToLogin} style={styles.confirmBackLinkWrap}>
+        <View style={styles.backLinkRow} className="flex-row items-center justify-center">
+          <Text style={styles.confirmBackLinkText}>← Вернуться к входу</Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function RegisterSuccessForm({ onBackToLogin }) {
+  return (
+    <View className="items-center">
+      <Text style={styles.confirmTitle}>Подтверждение Email</Text>
+
+      <Text className="font-roboto text-[14px] text-[#333333] text-center mb-[20px]">Вы успешно подтвердили почту</Text>
+
+      <View className="w-[68px] h-[68px] rounded-full bg-[#FF9B72] items-center justify-center mb-[20px]">
+        <CheckMark width={34} height={30} color="#FFFFFF" />
+      </View>
+
+      <TouchableOpacity
+        onPress={onBackToLogin}
+        className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center mb-[16px]"
+      >
+        <Text className="font-roboto text-[16px] text-white">Вернуться к входу</Text>
       </TouchableOpacity>
     </View>
   );
@@ -541,12 +605,12 @@ export default function AuthScreen({
   regEmail,
   regPassword,
   regPassword2,
-  regCreator,
+  regCode,
   setRegUsername,
   setRegEmail,
   setRegPassword,
   setRegPassword2,
-  setRegCreator,
+  setRegCode,
   resetEmail,
   resetCode,
   resetNewPassword,
@@ -561,6 +625,7 @@ export default function AuthScreen({
   onBackToLogin,
   onLogin,
   onRegister,
+  onConfirmRegister,
   onRequestReset,
   onSendResetEmail,
   onSaveNewPassword,
@@ -569,6 +634,8 @@ export default function AuthScreen({
   isSubmitting,
 }) {
   const isResetFlow = authMode.startsWith('reset-');
+  const isRegisterConfirm = authMode === 'register-confirm';
+  const isRegisterSuccess = authMode === 'register-success';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
@@ -599,12 +666,40 @@ export default function AuthScreen({
                   onCloseAlert={onCloseAlert}
                 />
               </>
+            ) : isRegisterConfirm || isRegisterSuccess ? (
+              <>
+                <Image
+                  source={require('../../assets/centr_test.png')}
+                  style={styles.authLogo}
+                  resizeMode="contain"
+                />
+
+                <AuthCardShell contentStyle={styles.confirmCardContent}>
+                  {isRegisterConfirm ? (
+                    <RegisterConfirmForm
+                      alert={alert}
+                      fieldErrors={fieldErrors}
+                      regEmail={regEmail}
+                      regCode={regCode}
+                      setRegCode={setRegCode}
+                      clearFieldError={clearFieldError}
+                      onConfirmRegister={onConfirmRegister}
+                      onBackToLogin={onBackToLogin}
+                      onCloseAlert={onCloseAlert}
+                      isSubmitting={isSubmitting}
+                    />
+                  ) : (
+                    <RegisterSuccessForm onBackToLogin={onBackToLogin} />
+                  )}
+                </AuthCardShell>
+              </>
             ) : (
               <>
-                <View style={{ width: 190, height: 67 }} className="mt-[242.5px] self-center items-center justify-center flex-row">
-                  <View className="w-8 h-10 bg-[#7700FF] rounded-tr-xl rounded-bl-xl mr-2" />
-                  <Text className="text-2xl font-bold text-[#182030]">Тест</Text>
-                </View>
+                <Image
+                  source={require('../../assets/centr_test.png')}
+                  style={styles.authLogo}
+                  resizeMode="contain"
+                />
 
                 <AuthCardShell contentStyle={styles.mainCardContent}>
                   <AuthTabs authMode={authMode} onSwitch={onSwitch} />
@@ -631,12 +726,10 @@ export default function AuthScreen({
                         regEmail={regEmail}
                         regPassword={regPassword}
                         regPassword2={regPassword2}
-                        regCreator={regCreator}
                         setRegUsername={setRegUsername}
                         setRegEmail={setRegEmail}
                         setRegPassword={setRegPassword}
                         setRegPassword2={setRegPassword2}
-                        setRegCreator={setRegCreator}
                         clearFieldError={clearFieldError}
                         onRegister={onRegister}
                         onCloseAlert={onCloseAlert}
@@ -661,14 +754,11 @@ const styles = StyleSheet.create({
     maxWidth: 370,
     position: 'relative',
     ...Platform.select({
-      ios: {
-        shadowOpacity: 0,
-      },
-      android: {
-        elevation: 0,
-      },
       web: {
         boxShadow: '-6px 10px 14px 0px rgba(242, 239, 255, 0.45), 6px 10px 12px 0px rgba(242, 239, 255, 0.45)',
+      },
+      default: {
+        elevation: 0,
       },
     }),
   },
@@ -676,10 +766,7 @@ const styles = StyleSheet.create({
     width: '100%',
     ...Platform.select({
       ios: {
-        shadowColor: '#F2EFFF',
-        shadowOffset: { width: -6, height: 10 },
-        shadowOpacity: 0.35,
-        shadowRadius: 14,
+        boxShadow: '-6px 10px 14px rgba(242, 239, 255, 0.35)',
       },
       web: {
         boxShadow: '-6px 10px 14px 0px rgba(242, 239, 255, 0.45)',
@@ -691,10 +778,7 @@ const styles = StyleSheet.create({
     width: '100%',
     ...Platform.select({
       ios: {
-        shadowColor: '#F2EFFF',
-        shadowOffset: { width: 6, height: 10 },
-        shadowOpacity: 0.35,
-        shadowRadius: 12,
+        boxShadow: '6px 10px 12px rgba(242, 239, 255, 0.35)',
       },
       web: {
         boxShadow: '6px 10px 12px 0px rgba(242, 239, 255, 0.45)',
@@ -754,6 +838,13 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     paddingBottom: 0,
   },
+  authLogo: {
+    width: 224,
+    height: 100,
+    marginTop: 80,
+    marginBottom: 116.5,
+    alignSelf: 'center',
+  },
   resetCardContent: {
     minHeight: 346,
     paddingTop: 0,
@@ -767,7 +858,8 @@ const styles = StyleSheet.create({
   confirmCardContent: {
     minHeight: 0,
     paddingTop: 0,
-    paddingBottom: 16,
+    paddingBottom: 0,
+    paddingHorizontal: 16,
   },
   requestCardContent: {
     minHeight: 215,
@@ -822,6 +914,46 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlignVertical: 'center',
     includeFontPadding: false,
+  },
+  confirmTitle: {
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 14,
+    color: '#333333',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 15,
+    marginHorizontal: 40,
+  },
+  confirmSubTitle: {
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 14,
+    color: '#A9A9A9',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginTop: 0,
+    marginBottom: 15,
+    paddingHorizontal: 16,
+  },
+  confirmEmailText: {
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 14,
+    color: '#6B6B6B',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginTop: 0,
+    marginBottom: 10,
+    marginHorizontal: 45,
+  },
+  confirmBackLinkWrap: {
+    marginTop: 10,
+    marginBottom: 16,
+    marginHorizontal: 45,
+  },
+  confirmBackLinkText: {
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 14,
+    color: '#FF4F12',
+    textAlign: 'center',
   },
   successTitle: {
     lineHeight: 22,
