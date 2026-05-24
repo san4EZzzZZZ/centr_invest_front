@@ -612,8 +612,8 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
   const [testSearch, setTestSearch] = useState('');
   const users = [
     { id: 'user-1', name: 'Пользователь 1' },
-    { id: 'user-2', name: 'Пользователь 1' },
-    { id: 'user-3', name: 'Пользователь 1' },
+    { id: 'user-2', name: 'Пользователь 2' },
+    { id: 'user-3', name: 'Пользователь 3' },
   ];
   const adminTests = [
     { id: 'test-1', title: 'Java Senior', questions: '12 вопросов' },
@@ -708,8 +708,10 @@ function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpen
   const [role, setRole] = useState('');
   const [roleOpen, setRoleOpen] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const userTests = user?.tests ?? [];
   const canSave = name !== initialName || email !== initialEmail || role.length > 0;
-  const roleOptions = ['variant 1', 'variant 2', 'variant 3', 'variant 4'];
+  const roleOptions = ['Администратор', 'Редактор', 'Пользователь', 'Гость'];
+  const canCreateTests = role === 'Администратор' || role === 'Редактор';
 
   return (
     <SafeAreaView edges={['top']} style={[styles.screen, styles.adminPanelScreen]}>
@@ -791,7 +793,13 @@ function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpen
         <View style={styles.userEditDivider} />
         <Text style={styles.userEditTestsTitle}>Тесты</Text>
 
-        <SwipeableUserTestCard />
+        {!canCreateTests ? (
+          <Text style={styles.userEditEmptyTestsText}>У пользователя нет прав для создания теста</Text>
+        ) : userTests.length === 0 ? (
+          <Text style={styles.userEditEmptyTestsText}>Пользователь пока не создал ни одного теста</Text>
+        ) : (
+          <SwipeableUserTestCard />
+        )}
       </ScrollView>
 
       <View style={[styles.userEditActions, { bottom: navHeight + bottomInset + 16 }]}>
@@ -1214,18 +1222,18 @@ const styles = StyleSheet.create({
   userEditSectionTitle: {
     marginTop: 16,
     fontFamily: 'Roboto_400Regular',
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 16,
+    lineHeight: 19,
     color: '#252525',
   },
   userEditDivider: {
     height: 2,
-    marginTop: 12,
+    marginTop: 16,
     borderRadius: 999,
     backgroundColor: '#D9D9D9',
   },
   userEditInput: {
-    height: 48,
+    height: 56,
     marginTop: 16,
     borderWidth: 1,
     borderStyle: 'solid',
@@ -1234,8 +1242,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 0,
     fontFamily: 'Roboto_400Regular',
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 16,
+    lineHeight: 24,
     color: '#252525',
     textAlignVertical: 'center',
   },
@@ -1255,7 +1263,7 @@ const styles = StyleSheet.create({
     borderColor: '#FF7A45',
   },
   userEditRoleSelect: {
-    height: 48,
+    height: 56,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -1282,13 +1290,13 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   userEditRoleOption: {
-    minHeight: 22,
+    minHeight: 19,
     justifyContent: 'center',
   },
   userEditRoleOptionText: {
     fontFamily: 'Roboto_400Regular',
     fontSize: 16,
-    lineHeight: 20,
+    lineHeight: 19,
     color: '#252525',
   },
   userEditRoleOptionDivider: {
@@ -1303,6 +1311,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 18,
     color: '#252525',
+  },
+  userEditEmptyTestsText: {
+    marginTop: 16,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 14,
+    lineHeight: 18,
+    color: '#A9A9A9',
   },
   userEditTestRow: {
     marginTop: 16,
