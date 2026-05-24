@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Keyboard, PanResponder, View, Text, TextInput, ScrollView, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Keyboard, PanResponder, View, Text, ScrollView, Image, StyleSheet, Platform, TextInput, TouchableOpacity, StyleSheet, Platform} from "react-native";
+import { TouchableOpacity, TextInput } from "../components/SilentTouchables";
 import { SvgXml } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -235,6 +236,20 @@ export default function HomeScreen({ currentUser, onLogout }) {
     currentUser?.roleCode === 'SUPER_ADMIN' ||
     currentUser?.role === 'Администратор' ||
     currentUser?.role === 'Супер-администратор';
+
+  const roleName = useMemo(() => {
+    const userRoleCode = displayUser?.roleCode || currentUser?.roleCode;
+    const userRole = displayUser?.role || currentUser?.role;
+
+    if (userRoleCode === 'SUPER_ADMIN' || userRole === 'Супер-администратор') {
+      return 'Администратор';
+    }
+    if (userRoleCode === 'ADMIN' || userRole === 'Администратор') {
+      return 'Редактор';
+    }
+    return 'Ученик';
+  }, [displayUser, currentUser]);
+
   const favoriteIds = useMemo(() => new Set(favorites.map((item) => item.testId)), [favorites]);
   const displayUser = profile?.user
     ? { ...currentUser, email: profile.user.email, name: profile.user.username }
@@ -385,7 +400,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
           try {
             const fallbackProfessionId = route.quiz?.languageId ?? route.quiz?.professionId ?? allProfessions[0]?.id ?? professions[0]?.id;
             if (!fallbackProfessionId) {
-              Alert.alert('Ошибка', 'Сначала нужна хотя бы одна профессия на сервере');
+              Alert.alert('Ошибка', 'Сначала нужен хотя бы один язык на сервере');
               return;
             }
 
@@ -477,14 +492,14 @@ export default function HomeScreen({ currentUser, onLogout }) {
           <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }} style={styles.avatar} />
           <View>
             <Text style={styles.headerTitle}>Привет, {displayUser?.name ?? 'User'}</Text>
-            <Text style={styles.headerSubtitle}>Готов учиться</Text>
+            <Text style={styles.headerSubtitle}>{roleName}</Text>
           </View>
         </View>
 
         <View style={styles.searchWrap}>
           <View style={styles.searchBar}>
             <SvgXml xml={SEARCH_SVG} width="24" height="24" />
-            <TextInput
+            <TextInput 
               placeholder="Поиск теста"
               placeholderTextColor="#7C7C7C"
               value={search}
@@ -506,7 +521,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
           <View style={styles.horizontalListWrap}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalListContent}>
               {(professions.length ? professions : PROFESSIONS).map((item) => (
-                <TouchableOpacity key={item.id} style={styles.professionCard} activeOpacity={0.8}>
+                <TouchableOpacity  key={item.id} style={styles.professionCard} activeOpacity={0.8}>
                   <Image 
                     source={{ uri: item.icon ?? FALLBACK_ICON }} 
                     style={styles.professionIcon} 
@@ -534,14 +549,14 @@ export default function HomeScreen({ currentUser, onLogout }) {
                   key={test.id}
                   title={test.title}
                   questions={`${test.questionCount ?? 0} вопросов`}
-                  status={test.languageTitle ?? test.professionTitle ?? 'Профессия'}
+                  status={test.languageTitle ?? test.professionTitle ?? 'Язык'}
                   statusVariant={favoriteIds.has(test.id) ? 'passed' : 'not_passed'}
                   iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
                   onPress={() => setRoute({ name: 'quiz', quiz: test })}
                 />
               ))
             ) : (
-              <Text style={styles.errorText}>Тесты не найдены</Text>
+              <Text style={styles.errorText}>Вы еще не проходили тесты</Text>
             )}
           </View>
         </View>
@@ -582,7 +597,7 @@ function ProfileScreen({ currentUser, isAdmin, bottomInset, navHeight, onGoHome,
             <ProfileField label="Email" value={currentUser?.email ?? 'unknown@mail.com'} />
             <ProfileField label="Должность" value={currentUser?.role ?? 'Пользователь'} />
 
-            <TouchableOpacity activeOpacity={0.85} style={styles.logoutBtn} onPress={onLogout}>
+            <TouchableOpacity  activeOpacity={0.85} style={styles.logoutBtn} onPress={onLogout}>
               <Text style={styles.logoutText}>Выйти</Text>
             </TouchableOpacity>
           </View>
@@ -826,6 +841,132 @@ function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpen
   );
 }
 
+function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin }) {
+  const initialName = 'User 1';
+  const initialEmail = 'yourmail@mail.com';
+  const [name, setName] = useState(initialName);
+  const [email, setEmail] = useState(initialEmail);
+  const [role, setRole] = useState('');
+  const [roleOpen, setRoleOpen] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
+  const userTests = user?.tests ?? [];
+  const canSave = name !== initialName || email !== initialEmail || role.length > 0;
+  const roleOptions = ['Администратор', 'Редактор', 'Пользователь', 'Гость'];
+  const canCreateTests = role === 'Администратор' || role === 'Редактор';
+
+  return (
+    <SafeAreaView edges={['top']} style={[styles.screen, styles.adminPanelScreen]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[styles.userEditContent, { paddingBottom: navHeight + bottomInset + 112 }]}
+      >
+        <View style={styles.adminPanelHeader}>
+          <TouchableOpacity  onPress={onBack} style={styles.adminPanelBackBtn} hitSlop={12}>
+            <Ionicons name="chevron-back" size={16} color="#252525" />
+          </TouchableOpacity>
+          <Text numberOfLines={1} style={styles.userEditTitle}>Редактирование: {user?.name ?? 'Пользователь 1'}</Text>
+        </View>
+
+        <Text style={styles.userEditSectionTitle}>Основная информация</Text>
+        <View style={styles.userEditDivider} />
+
+        <TextInput 
+          value={name}
+          onChangeText={setName}
+          onFocus={() => {
+            setRoleOpen(false);
+            setFocusedField('name');
+          }}
+          onBlur={() => setFocusedField(null)}
+          style={[styles.userEditInput, focusedField === 'name' ? styles.userEditInputActive : null]}
+          placeholderTextColor="#C9C9C9"
+        />
+
+        <TextInput 
+          value={email}
+          onChangeText={setEmail}
+          onFocus={() => {
+            setRoleOpen(false);
+            setFocusedField('email');
+          }}
+          onBlur={() => setFocusedField(null)}
+          style={[styles.userEditInput, focusedField === 'email' ? styles.userEditInputActive : null]}
+          placeholderTextColor="#C9C9C9"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+
+        <View style={[styles.userEditRoleBox, roleOpen ? styles.userEditRoleBoxOpen : null]}>
+          <TouchableOpacity 
+            activeOpacity={0.85}
+            style={[styles.userEditRoleSelect, roleOpen ? styles.userEditRoleSelectOpen : null]}
+            onPress={() => {
+              Keyboard.dismiss();
+              setFocusedField(null);
+              setRoleOpen((value) => !value);
+            }}
+          >
+            <Text style={[styles.userEditRolePlaceholder, role ? styles.userEditRoleValue : null]}>{role || 'Роль'}</Text>
+            <Ionicons name={roleOpen ? 'chevron-down' : 'chevron-forward'} size={12} color="#252525" />
+          </TouchableOpacity>
+
+          {roleOpen ? (
+            <View style={styles.userEditRoleOptions}>
+              {roleOptions.map((option) => (
+                <TouchableOpacity 
+                  key={option}
+                  activeOpacity={0.85}
+                  style={styles.userEditRoleOption}
+                  onPress={() => {
+                    setRole(option);
+                    setRoleOpen(false);
+                  }}
+                >
+                  <Text style={styles.userEditRoleOptionText}>{option}</Text>
+                  {option !== roleOptions[roleOptions.length - 1] ? <View style={styles.userEditRoleOptionDivider} /> : null}
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+        </View>
+
+        <View style={styles.userEditDivider} />
+        <Text style={styles.userEditTestsTitle}>Тесты</Text>
+
+        {!canCreateTests ? (
+          <Text style={styles.userEditEmptyTestsText}>У пользователя нет прав для создания теста</Text>
+        ) : userTests.length === 0 ? (
+          <Text style={styles.userEditEmptyTestsText}>Пользователь пока не создал ни одного теста</Text>
+        ) : (
+          <SwipeableUserTestCard />
+        )}
+      </ScrollView>
+
+      <View style={[styles.userEditActions, { bottom: navHeight + bottomInset + 16 }]}>
+        <TouchableOpacity  activeOpacity={0.85} style={styles.userEditDeleteBtn}>
+          <Text style={styles.userEditDeleteText}>Удалить пользователя</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity  disabled={!canSave} activeOpacity={0.85} style={[styles.userEditSaveBtn, !canSave ? styles.userEditSaveBtnDisabled : null]}>
+          <Text style={[styles.userEditSaveText, !canSave ? styles.userEditSaveTextDisabled : null]}>Сохранить изменения</Text>
+        </TouchableOpacity>
+      </View>
+
+      <BottomNav
+        bottomInset={bottomInset}
+        navHeight={navHeight}
+        activeTab="profile"
+        onGoHome={onGoHome}
+        onOpenFavorites={onOpenFavorites}
+        onOpenProfile={onOpenProfile}
+        onOpenAdmin={onOpenAdmin}
+        isAdmin
+      />
+    </SafeAreaView>
+  );
+}
+
 function SwipeableUserTestCard() {
   const swipeProgress = useRef(new Animated.Value(0)).current;
   const swipeProgressValue = useRef(0);
@@ -904,7 +1045,7 @@ function FavoritesScreen({ favorites, bottomInset, navHeight, onGoHome, onOpenFa
     quiz: { id: item.testId, title: item.testTitle, questionCount: item.questionCount },
     id: item.testId,
     title: item.testTitle,
-    questions: item.languageTitle ?? item.professionTitle ?? 'Профессия',
+    questions: item.languageTitle ?? item.professionTitle ?? 'Язык',
     accent: index === 0 ? '#F7D76D' : index === 1 ? '#F6D85F' : '#F3C95A',
   }));
 
@@ -916,7 +1057,7 @@ function FavoritesScreen({ favorites, bottomInset, navHeight, onGoHome, onOpenFa
           contentContainerStyle={[styles.favoritesScrollContent, { paddingBottom: navHeight + bottomInset + 24 }]}
         >
           <View style={styles.favoritesHeader}>
-            <TouchableOpacity onPress={onGoHome} activeOpacity={0.8} style={styles.backBtn}>
+            <TouchableOpacity  onPress={onGoHome} activeOpacity={0.8} style={styles.backBtn}>
               <Ionicons name="chevron-back" size={18} color="#252525" />
             </TouchableOpacity>
             <Text style={styles.favoritesTitle}>Избранное</Text>
@@ -924,7 +1065,7 @@ function FavoritesScreen({ favorites, bottomInset, navHeight, onGoHome, onOpenFa
 
           <View style={styles.favoritesList}>
             {favoriteItems.map((item) => (
-              <TouchableOpacity
+              <TouchableOpacity 
                 key={item.id}
                 activeOpacity={0.9}
                 style={styles.recentCard}
@@ -990,7 +1131,7 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
         <View style={styles.bottomNavShadow}>
           <View style={Platform.OS === 'ios' ? styles.bottomNavShadowInner : null}>
             <View style={[styles.bottomNav, { height: navHeight + bottomInset, paddingBottom: bottomInset }]}>
-              <TouchableOpacity style={styles.bottomNavBtn} onPress={onGoHome} activeOpacity={0.8}>
+              <TouchableOpacity  style={styles.bottomNavBtn} onPress={onGoHome} activeOpacity={0.8}>
                 <SvgXml
                   xml={HOME_NAV_SVG}
                   width="32"
@@ -998,7 +1139,7 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenFavorites} activeOpacity={0.8}>
+              <TouchableOpacity  style={styles.bottomNavBtn} onPress={onOpenFavorites} activeOpacity={0.8}>
                 <SvgXml
                   xml={activeTab === 'favorites' ? HEART_ACTIVE_SVG : HEART_INACTIVE_SVG}
                   width="32"
@@ -1006,7 +1147,7 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenProfile} activeOpacity={0.8}>
+              <TouchableOpacity  style={styles.bottomNavBtn} onPress={onOpenProfile} activeOpacity={0.8}>
                 <SvgXml
                   xml={activeTab === 'profile' ? PROFILE_ACTIVE_SVG : PROFILE_INACTIVE_SVG}
                   width="32"
@@ -1032,7 +1173,7 @@ function RecentCard({ title, questions, status, statusVariant, iconColor, onPres
   const isDraft = statusVariant === 'draft';
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.recentCard}>
+    <TouchableOpacity  onPress={onPress} activeOpacity={0.9} style={styles.recentCard}>
       <View style={styles.recentLeft}>
         <View style={[styles.recentIcon, { backgroundColor: iconColor }]} />
         <View>

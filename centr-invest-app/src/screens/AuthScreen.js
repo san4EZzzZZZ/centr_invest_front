@@ -1,15 +1,6 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Image,
-} from 'react-native';
+import { View, Text, Pressable, ScrollView, KeyboardAvoidingView, Platform, StyleSheet, Image } from "react-native";
+import { TouchableOpacity, TextInput } from "../components/SilentTouchables";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 
@@ -158,7 +149,7 @@ function LoginForm({
   return (
     <View>
       <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
-      <TextInput
+      <TextInput 
         placeholder="Введите Email"
         placeholderTextColor={fieldErrors?.loginEmail ? '#F23030' : '#D6D6D6'}
         keyboardType="email-address"
@@ -176,7 +167,7 @@ function LoginForm({
           {fieldErrors.loginEmail}
         </Text>
       ) : null}
-      <TextInput
+      <TextInput 
         placeholder="Введите пароль"
         placeholderTextColor={fieldErrors?.loginPassword ? '#F23030' : '#D6D6D6'}
         secureTextEntry
@@ -227,7 +218,7 @@ function RegisterForm({
     <View>
       <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
 
-      <TextInput
+      <TextInput 
         placeholder="Имя пользователя"
         placeholderTextColor={fieldErrors?.regUsername ? '#F23030' : '#D6D6D6'}
         value={regUsername}
@@ -236,15 +227,15 @@ function RegisterForm({
           clearFieldError('regUsername');
         }}
         onFocus={() => clearFieldError('regUsername')}
-        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regUsername ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regUsername ? 'mb-0' : 'mb-[10px]'}`}
+        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regUsername ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regUsername && fieldErrors.regUsername.trim() ? 'mb-0' : 'mb-[10px]'}`}
       />
-      {fieldErrors?.regUsername ? (
+      {fieldErrors?.regUsername && fieldErrors.regUsername.trim() ? (
         <Text style={styles.formErrorText} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">
           {fieldErrors.regUsername}
         </Text>
       ) : null}
 
-      <TextInput
+      <TextInput 
         placeholder="Email"
         placeholderTextColor={fieldErrors?.regEmail ? '#F23030' : '#D6D6D6'}
         keyboardType="email-address"
@@ -255,15 +246,15 @@ function RegisterForm({
           clearFieldError('regEmail');
         }}
         onFocus={() => clearFieldError('regEmail')}
-        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regEmail ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regEmail ? 'mb-0' : 'mb-[10px]'}`}
+        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regEmail ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regEmail && fieldErrors.regEmail.trim() ? 'mb-0' : 'mb-[10px]'}`}
       />
-      {fieldErrors?.regEmail ? (
+      {fieldErrors?.regEmail && fieldErrors.regEmail.trim() ? (
         <Text style={styles.formErrorText} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">
           {fieldErrors.regEmail}
         </Text>
       ) : null}
 
-      <TextInput
+      <TextInput 
         placeholder="Пароль"
         placeholderTextColor={fieldErrors?.regPassword ? '#F23030' : '#D6D6D6'}
         secureTextEntry
@@ -273,15 +264,15 @@ function RegisterForm({
           clearFieldError('regPassword');
         }}
         onFocus={() => clearFieldError('regPassword')}
-        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regPassword ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regPassword ? 'mb-0' : 'mb-[10px]'}`}
+        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regPassword ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regPassword && fieldErrors.regPassword.trim() ? 'mb-0' : 'mb-[10px]'}`}
       />
-      {fieldErrors?.regPassword ? (
+      {fieldErrors?.regPassword && fieldErrors.regPassword.trim() ? (
         <Text style={styles.formErrorText} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">
           {fieldErrors.regPassword}
         </Text>
       ) : null}
 
-      <TextInput
+      <TextInput 
         placeholder="Подтверждение пароля"
         placeholderTextColor={fieldErrors?.regPassword2 ? '#F23030' : '#D6D6D6'}
         secureTextEntry
@@ -291,11 +282,11 @@ function RegisterForm({
           clearFieldError('regPassword2');
         }}
         onFocus={() => clearFieldError('regPassword2')}
-        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regPassword2 ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regPassword2 ? 'mb-0' : 'mb-[10px]'}`}
+        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regPassword2 && !fieldErrors.regPassword2.startsWith('NO_BORDER:') ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regPassword2 && fieldErrors.regPassword2.trim() ? 'mb-0' : 'mb-[10px]'}`}
       />
-      {fieldErrors?.regPassword2 ? (
+      {fieldErrors?.regPassword2 && fieldErrors.regPassword2.trim() ? (
         <Text style={styles.formErrorText} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">
-          {fieldErrors.regPassword2}
+          {fieldErrors.regPassword2.startsWith('NO_BORDER:') ? fieldErrors.regPassword2.replace('NO_BORDER:', '') : fieldErrors.regPassword2}
         </Text>
       ) : null}
 
@@ -307,6 +298,42 @@ function RegisterForm({
 }
 
 function RegisterConfirmForm({
+  alert,
+  regEmail,
+  onSendRegisterCode,
+  onBackToLogin,
+  onCloseAlert,
+  isSubmitting,
+}) {
+  return (
+    <View>
+      <Text style={styles.confirmTitle}>Подтверждение Email</Text>
+
+      <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
+
+      <Text style={styles.confirmSubTitle}>На почту будет отправлено письмо для подтверждения.</Text>
+      <Text style={styles.confirmEmailText}>{maskEmail(regEmail)}</Text>
+
+      <TouchableOpacity
+        disabled={isSubmitting}
+        onPress={onSendRegisterCode}
+        className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center"
+      >
+        <Text className="font-roboto text-[16px] text-white">
+          {isSubmitting ? 'Отправка...' : 'Отправить письмо'}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={onBackToLogin} style={styles.confirmBackLinkWrap}>
+        <View style={styles.backLinkRow} className="flex-row items-center justify-center">
+          <Text style={styles.confirmBackLinkText}>← Вернуться к входу</Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function RegisterCodeForm({
   alert,
   fieldErrors,
   regCode,
@@ -323,7 +350,7 @@ function RegisterConfirmForm({
 
       <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
 
-      <TextInput
+      <TextInput 
         placeholder="Код подтверждения"
         placeholderTextColor={fieldErrors?.regCode ? '#F23030' : '#D6D6D6'}
         value={regCode}
@@ -395,7 +422,7 @@ function ResetRequestScreen({
         Восстановление доступа
       </Text>
       <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
-      <TextInput
+      <TextInput 
         placeholder="Email"
         placeholderTextColor={fieldErrors?.resetEmail ? '#F23030' : '#D6D6D6'}
         keyboardType="email-address"
@@ -484,7 +511,7 @@ function ResetNewPasswordScreen({
         Восстановление доступа
       </Text>
       <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
-      <TextInput
+      <TextInput 
         placeholder="Код подтверждения"
         placeholderTextColor={fieldErrors?.resetCode ? '#F23030' : '#D6D6D6'}
         value={resetCode}
@@ -500,7 +527,7 @@ function ResetNewPasswordScreen({
           {fieldErrors.resetCode}
         </Text>
       ) : null}
-      <TextInput
+      <TextInput 
         placeholder="Новый пароль"
         placeholderTextColor={fieldErrors?.resetNewPassword ? '#F23030' : '#D6D6D6'}
         secureTextEntry
@@ -517,7 +544,7 @@ function ResetNewPasswordScreen({
           {fieldErrors.resetNewPassword}
         </Text>
       ) : null}
-      <TextInput
+      <TextInput 
         placeholder="Повторите пароль"
         placeholderTextColor={fieldErrors?.resetNewPassword2 ? '#F23030' : '#D6D6D6'}
         secureTextEntry
@@ -627,6 +654,7 @@ export default function AuthScreen({
   onRegister,
   onConfirmRegister,
   onRequestReset,
+  onSendRegisterCode,
   onSendResetEmail,
   onSaveNewPassword,
   onSupportPress,
@@ -635,6 +663,7 @@ export default function AuthScreen({
 }) {
   const isResetFlow = authMode.startsWith('reset-');
   const isRegisterConfirm = authMode === 'register-confirm';
+  const isRegisterCode = authMode === 'register-code';
   const isRegisterSuccess = authMode === 'register-success';
 
   return (
@@ -666,7 +695,7 @@ export default function AuthScreen({
                   onCloseAlert={onCloseAlert}
                 />
               </>
-            ) : isRegisterConfirm || isRegisterSuccess ? (
+            ) : isRegisterConfirm || isRegisterCode || isRegisterSuccess ? (
               <>
                 <Image
                   source={require('../../assets/centr_test.png')}
@@ -678,8 +707,16 @@ export default function AuthScreen({
                   {isRegisterConfirm ? (
                     <RegisterConfirmForm
                       alert={alert}
-                      fieldErrors={fieldErrors}
                       regEmail={regEmail}
+                      onSendRegisterCode={onSendRegisterCode}
+                      onBackToLogin={onBackToLogin}
+                      onCloseAlert={onCloseAlert}
+                      isSubmitting={isSubmitting}
+                    />
+                  ) : isRegisterCode ? (
+                    <RegisterCodeForm
+                      alert={alert}
+                      fieldErrors={fieldErrors}
                       regCode={regCode}
                       setRegCode={setRegCode}
                       clearFieldError={clearFieldError}
@@ -848,12 +885,12 @@ const styles = StyleSheet.create({
   resetCardContent: {
     minHeight: 346,
     paddingTop: 0,
-    paddingBottom: 16,
+    paddingBottom: 8,
   },
   newPasswordCardContent: {
     minHeight: 346,
     paddingTop: 0,
-    paddingBottom: 16,
+    paddingBottom: 8,
   },
   confirmCardContent: {
     minHeight: 0,
@@ -917,7 +954,7 @@ const styles = StyleSheet.create({
   },
   confirmTitle: {
     fontFamily: 'Roboto_400Regular',
-    fontSize: 14,
+    fontSize: 18,
     color: '#333333',
     textAlign: 'center',
     marginTop: 16,
@@ -945,12 +982,12 @@ const styles = StyleSheet.create({
     marginHorizontal: 45,
   },
   confirmBackLinkWrap: {
-    marginTop: 10,
-    marginBottom: 16,
+    marginTop: 8,
+    marginBottom: 4,
     marginHorizontal: 45,
   },
   confirmBackLinkText: {
-    fontFamily: 'Roboto_400Regular',
+    fontFamily: 'Roboto_300Light',
     fontSize: 14,
     color: '#FF4F12',
     textAlign: 'center',
@@ -984,10 +1021,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backLinkWrap: {
-    marginTop: 10,
-    marginBottom: 0,
+    marginTop: 8,
+    marginBottom: 4,
   },
   backLinkText: {
+    fontFamily: 'Roboto_300Light',
     includeFontPadding: false,
   },
   resetStepWrap: {},

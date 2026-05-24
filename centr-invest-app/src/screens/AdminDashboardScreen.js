@@ -1,5 +1,6 @@
 import React from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { TouchableOpacity, TextInput } from "../components/SilentTouchables";
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -25,10 +26,10 @@ function QuizCard({ quiz, onEdit, onDelete }) {
       </View>
 
       <View style={styles.actionsRow}>
-        <TouchableOpacity onPress={onEdit} activeOpacity={0.8} style={styles.actionBtn}>
+        <TouchableOpacity  onPress={onEdit} activeOpacity={0.8} style={styles.actionBtn}>
           <Feather name="edit-3" size={16} color="#9A7B00" />
         </TouchableOpacity>
-        <TouchableOpacity
+        <TouchableOpacity 
           onPress={onDelete}
           activeOpacity={0.8}
           style={[styles.actionBtn, styles.deleteBtn]}
@@ -44,7 +45,7 @@ export default function AdminDashboardScreen({ quizzes, onBack, onCreate, onEdit
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={12}>
+        <TouchableOpacity  onPress={onBack} style={styles.backBtn} hitSlop={12}>
           <Ionicons name="chevron-back" size={22} color="#252525" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Тесты</Text>
@@ -81,7 +82,7 @@ export default function AdminDashboardScreen({ quizzes, onBack, onCreate, onEdit
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Черновики</Text>
 
-          <TouchableOpacity style={styles.createCard} onPress={onCreate} activeOpacity={0.9}>
+          <TouchableOpacity  style={styles.createCard} onPress={onCreate} activeOpacity={0.9}>
             <View style={styles.createIcon}>
               <Feather name="plus" size={18} color="#FFFFFF" />
             </View>
