@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, View, Text, TextInput, ScrollView, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Keyboard, PanResponder, View, Text, TextInput, ScrollView, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,6 +20,10 @@ const HOME_NAV_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none
 
 const PLUS_NAV_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M26.2857 17.7143H17.7143V26.2857C17.7143 26.7404 17.5337 27.1764 17.2122 27.4979C16.8907 27.8194 16.4547 28 16 28C15.5453 28 15.1093 27.8194 14.7878 27.4979C14.4663 27.1764 14.2857 26.7404 14.2857 26.2857V17.7143H5.71429C5.25963 17.7143 4.82359 17.5337 4.5021 17.2122C4.18061 16.8907 4 16.4547 4 16C4 15.5453 4.18061 15.1093 4.5021 14.7878C4.82359 14.4663 5.25963 14.2857 5.71429 14.2857H14.2857V5.71429C14.2857 5.25963 14.4663 4.82359 14.7878 4.5021C15.1093 4.18061 15.5453 4 16 4C16.4547 4 16.8907 4.18061 17.2122 4.5021C17.5337 4.82359 17.7143 5.25963 17.7143 5.71429V14.2857H26.2857C26.7404 14.2857 27.1764 14.4663 27.4979 14.7878C27.8194 15.1093 28 15.5453 28 16C28 16.4547 27.8194 16.8907 27.4979 17.2122C27.1764 17.5337 26.7404 17.7143 26.2857 17.7143Z" fill="#CECECE"/>
+</svg>`;
+
+const BIN_SVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M19 8V19.6C19 20.2365 18.7471 20.847 18.2971 21.2971C17.847 21.7471 17.2365 22 16.6 22H7.4C6.76348 22 6.15303 21.7471 5.70294 21.2971C5.25286 20.847 5 20.2365 5 19.6V8M16 5V3.2C16 2.54 15.46 2 14.8 2H9.2C8.54 2 8 2.54 8 3.2V5M16 5H8M16 5H21M8 5H3M12 11V17M15 11V17M9 11V17" stroke="#E92828" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
 
 const HOME_ACTIVE_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -428,6 +432,22 @@ export default function HomeScreen({ currentUser, onLogout }) {
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
         onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
+        onOpenUser={(user) => setRoute({ name: 'userEdit', user })}
+      />
+    );
+  }
+
+  if (route.name === 'userEdit') {
+    return (
+      <UserEditScreen
+        user={route.user}
+        bottomInset={bottomInset}
+        navHeight={NAV_HEIGHT}
+        onBack={() => setRoute({ name: 'adminPanel' })}
+        onGoHome={goHomeWithRefresh}
+        onOpenFavorites={() => setRoute({ name: 'favorites' })}
+        onOpenProfile={() => setRoute({ name: 'profile' })}
+        onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
       />
     );
   }
@@ -587,7 +607,7 @@ function ProfileScreen({ currentUser, isAdmin, bottomInset, navHeight, onGoHome,
   );
 }
 
-function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin }) {
+function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, onOpenUser }) {
   const [userSearch, setUserSearch] = useState('');
   const [testSearch, setTestSearch] = useState('');
   const users = [
@@ -631,7 +651,7 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
 
         <View style={styles.adminPanelUsersList}>
           {users.map((user) => (
-            <TouchableOpacity key={user.id} activeOpacity={0.85} style={styles.adminPanelUserRow}>
+            <TouchableOpacity key={user.id} activeOpacity={0.85} style={styles.adminPanelUserRow} onPress={() => onOpenUser?.(user)}>
               <Image source={{ uri: PROFESSIONS[2].icon }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
               <Text numberOfLines={1} style={styles.adminPanelUserName}>{user.name}</Text>
               <Ionicons name="chevron-forward" size={12} color="#252525" />
@@ -677,6 +697,197 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
         isAdmin
       />
     </SafeAreaView>
+  );
+}
+
+function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin }) {
+  const initialName = 'User 1';
+  const initialEmail = 'yourmail@mail.com';
+  const [name, setName] = useState(initialName);
+  const [email, setEmail] = useState(initialEmail);
+  const [role, setRole] = useState('');
+  const [roleOpen, setRoleOpen] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
+  const canSave = name !== initialName || email !== initialEmail || role.length > 0;
+  const roleOptions = ['variant 1', 'variant 2', 'variant 3', 'variant 4'];
+
+  return (
+    <SafeAreaView edges={['top']} style={[styles.screen, styles.adminPanelScreen]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[styles.userEditContent, { paddingBottom: navHeight + bottomInset + 112 }]}
+      >
+        <View style={styles.adminPanelHeader}>
+          <TouchableOpacity onPress={onBack} style={styles.adminPanelBackBtn} hitSlop={12}>
+            <Ionicons name="chevron-back" size={16} color="#252525" />
+          </TouchableOpacity>
+          <Text numberOfLines={1} style={styles.userEditTitle}>Редактирование: {user?.name ?? 'Пользователь 1'}</Text>
+        </View>
+
+        <Text style={styles.userEditSectionTitle}>Основная информация</Text>
+        <View style={styles.userEditDivider} />
+
+        <TextInput
+          value={name}
+          onChangeText={setName}
+          onFocus={() => {
+            setRoleOpen(false);
+            setFocusedField('name');
+          }}
+          onBlur={() => setFocusedField(null)}
+          style={[styles.userEditInput, focusedField === 'name' ? styles.userEditInputActive : null]}
+          placeholderTextColor="#C9C9C9"
+        />
+
+        <TextInput
+          value={email}
+          onChangeText={setEmail}
+          onFocus={() => {
+            setRoleOpen(false);
+            setFocusedField('email');
+          }}
+          onBlur={() => setFocusedField(null)}
+          style={[styles.userEditInput, focusedField === 'email' ? styles.userEditInputActive : null]}
+          placeholderTextColor="#C9C9C9"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+
+        <View style={[styles.userEditRoleBox, roleOpen ? styles.userEditRoleBoxOpen : null]}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={[styles.userEditRoleSelect, roleOpen ? styles.userEditRoleSelectOpen : null]}
+            onPress={() => {
+              Keyboard.dismiss();
+              setFocusedField(null);
+              setRoleOpen((value) => !value);
+            }}
+          >
+            <Text style={[styles.userEditRolePlaceholder, role ? styles.userEditRoleValue : null]}>{role || 'Роль'}</Text>
+            <Ionicons name={roleOpen ? 'chevron-down' : 'chevron-forward'} size={12} color="#252525" />
+          </TouchableOpacity>
+
+          {roleOpen ? (
+            <View style={styles.userEditRoleOptions}>
+              {roleOptions.map((option) => (
+                <TouchableOpacity
+                  key={option}
+                  activeOpacity={0.85}
+                  style={styles.userEditRoleOption}
+                  onPress={() => {
+                    setRole(option);
+                    setRoleOpen(false);
+                  }}
+                >
+                  <Text style={styles.userEditRoleOptionText}>{option}</Text>
+                  {option !== roleOptions[roleOptions.length - 1] ? <View style={styles.userEditRoleOptionDivider} /> : null}
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+        </View>
+
+        <View style={styles.userEditDivider} />
+        <Text style={styles.userEditTestsTitle}>Тесты</Text>
+
+        <SwipeableUserTestCard />
+      </ScrollView>
+
+      <View style={[styles.userEditActions, { bottom: navHeight + bottomInset + 16 }]}>
+        <TouchableOpacity activeOpacity={0.85} style={styles.userEditDeleteBtn}>
+          <Text style={styles.userEditDeleteText}>Удалить пользователя</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity disabled={!canSave} activeOpacity={0.85} style={[styles.userEditSaveBtn, !canSave ? styles.userEditSaveBtnDisabled : null]}>
+          <Text style={[styles.userEditSaveText, !canSave ? styles.userEditSaveTextDisabled : null]}>Сохранить изменения</Text>
+        </TouchableOpacity>
+      </View>
+
+      <BottomNav
+        bottomInset={bottomInset}
+        navHeight={navHeight}
+        activeTab="profile"
+        onGoHome={onGoHome}
+        onOpenFavorites={onOpenFavorites}
+        onOpenProfile={onOpenProfile}
+        onOpenAdmin={onOpenAdmin}
+        isAdmin
+      />
+    </SafeAreaView>
+  );
+}
+
+function SwipeableUserTestCard() {
+  const swipeProgress = useRef(new Animated.Value(0)).current;
+  const swipeProgressValue = useRef(0);
+  const swipeStartValue = useRef(0);
+  const [isSwiped, setIsSwiped] = useState(false);
+
+  useEffect(() => {
+    const listenerId = swipeProgress.addListener(({ value }) => {
+      swipeProgressValue.current = value;
+    });
+
+    return () => swipeProgress.removeListener(listenerId);
+  }, [swipeProgress]);
+
+  function animateSwipe(open) {
+    setIsSwiped(open);
+    Animated.spring(swipeProgress, {
+      toValue: open ? 1 : 0,
+      useNativeDriver: false,
+    }).start();
+  }
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 8 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+      onPanResponderGrant: () => {
+        swipeStartValue.current = swipeProgressValue.current;
+        if (!isSwiped) setIsSwiped(true);
+      },
+      onPanResponderMove: (_, gesture) => {
+        const nextValue = Math.max(0, Math.min(1, swipeStartValue.current - gesture.dx / 40));
+        swipeProgress.setValue(nextValue);
+      },
+      onPanResponderRelease: (_, gesture) => {
+        animateSwipe(gesture.dx < -12 || swipeProgressValue.current > 0.5);
+      },
+    })
+  ).current;
+  const cardMarginRight = swipeProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 40],
+  });
+  const deleteOpacity = swipeProgress.interpolate({
+    inputRange: [0, 0.25, 1],
+    outputRange: [0, 1, 1],
+  });
+
+  return (
+    <View style={styles.userEditSwipeRow}>
+      <Animated.View pointerEvents={isSwiped ? 'auto' : 'none'} style={[styles.userEditDeleteTestSlot, { opacity: deleteOpacity }]}>
+        <TouchableOpacity activeOpacity={0.85} style={styles.userEditDeleteTestBtn}>
+          <SvgXml xml={BIN_SVG} width="24" height="24" />
+        </TouchableOpacity>
+      </Animated.View>
+
+      <View
+        {...panResponder.panHandlers}
+        style={styles.userEditSwipeCardWrap}
+      >
+        <Animated.View style={{ marginRight: cardMarginRight }}>
+          <TouchableOpacity activeOpacity={0.85} style={styles.adminPanelTestCard}>
+            <Image source={{ uri: PROFESSIONS[2].icon }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
+            <View style={styles.adminPanelTestTextWrap}>
+              <Text numberOfLines={1} style={styles.adminPanelTestName}>Java Senior</Text>
+              <Text numberOfLines={1} style={styles.adminPanelTestQuestions}>12 вопросов</Text>
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    </View>
   );
 }
 
@@ -864,6 +1075,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 6,
   },
+  userEditContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
   adminPanelHeader: {
     height: 23,
     flexDirection: 'row',
@@ -986,6 +1201,217 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 12,
     color: '#8A8983',
+  },
+  userEditTitle: {
+    flex: 1,
+    marginLeft: 16,
+    textAlign: 'left',
+    fontFamily: 'Roboto_500Medium',
+    fontSize: 20,
+    lineHeight: 23,
+    color: '#252525',
+  },
+  userEditSectionTitle: {
+    marginTop: 16,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 14,
+    lineHeight: 18,
+    color: '#252525',
+  },
+  userEditDivider: {
+    height: 2,
+    marginTop: 12,
+    borderRadius: 999,
+    backgroundColor: '#D9D9D9',
+  },
+  userEditInput: {
+    height: 48,
+    marginTop: 16,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: '#D9D9D9',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 0,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 14,
+    lineHeight: 18,
+    color: '#252525',
+    textAlignVertical: 'center',
+  },
+  userEditInputActive: {
+    borderColor: '#E95B20',
+  },
+  userEditRoleBox: {
+    marginTop: 16,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: '#D9D9D9',
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+  },
+  userEditRoleBoxOpen: {
+    borderColor: '#FF7A45',
+  },
+  userEditRoleSelect: {
+    height: 48,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  userEditRoleSelectOpen: {
+    height: 19,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  userEditRolePlaceholder: {
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 16,
+    lineHeight: 19,
+    color: '#C9C9C9',
+  },
+  userEditRoleValue: {
+    color: '#252525',
+  },
+  userEditRoleOptions: {
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    paddingTop: 10,
+    gap: 10,
+  },
+  userEditRoleOption: {
+    minHeight: 22,
+    justifyContent: 'center',
+  },
+  userEditRoleOptionText: {
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 16,
+    lineHeight: 20,
+    color: '#252525',
+  },
+  userEditRoleOptionDivider: {
+    height: 2,
+    marginTop: 10,
+    borderRadius: 999,
+    backgroundColor: '#D9D9D9',
+  },
+  userEditTestsTitle: {
+    marginTop: 16,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 14,
+    lineHeight: 18,
+    color: '#252525',
+  },
+  userEditTestRow: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  userEditSwipeRow: {
+    height: 76,
+    marginTop: 16,
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  userEditSwipeCardWrap: {
+    width: '100%',
+    backgroundColor: 'transparent',
+    zIndex: 1,
+  },
+  userEditSwipeCardWrapOpen: {
+    width: 'auto',
+    marginRight: 40,
+  },
+  userEditTestCard: {
+    flex: 1,
+    height: 76,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: '#D8EFE3',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  userEditDeleteTestSlot: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+  userEditDeleteTestBtn: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userEditActions: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    gap: 16,
+  },
+  userEditDeleteBtn: {
+    flex: 1,
+    height: 51,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: '#76113A',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#76113A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.16,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  userEditDeleteText: {
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 15,
+    lineHeight: 18,
+    color: '#76113A',
+  },
+  userEditSaveBtn: {
+    flex: 1,
+    height: 51,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: '#76113A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#76113A',
+    shadowColor: '#76113A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  userEditSaveBtnDisabled: {
+    borderColor: '#DEDEDE',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#A9A9A9',
+    shadowOpacity: 0.16,
+  },
+  userEditSaveText: {
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 15,
+    lineHeight: 18,
+    color: '#FFFFFF',
+  },
+  userEditSaveTextDisabled: {
+    color: '#A9A9A9',
   },
   favoritesShell: {
     flex: 1,
