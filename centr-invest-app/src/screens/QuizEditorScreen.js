@@ -1,14 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Modal, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { TouchableOpacity, TextInput } from "../components/SilentTouchables";
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -335,7 +327,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onCancel} style={styles.backBtn} hitSlop={12}>
+        <TouchableOpacity  onPress={onCancel} style={styles.backBtn} hitSlop={12}>
           <Ionicons name="chevron-back" size={22} color="#252525" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{editorTitle}</Text>
@@ -345,7 +337,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.card}>
           <Text style={styles.label}>Название</Text>
-          <TextInput
+          <TextInput 
             value={draftQuiz.title ?? ''}
             onChangeText={(value) => updateQuizField('title', value)}
             placeholder="Например, Python Junior"
@@ -362,13 +354,13 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
           <View key={question.id} style={styles.card}>
             <View style={styles.questionHeader}>
               <Text style={styles.questionIndex}>Вопрос {index + 1}</Text>
-              <TouchableOpacity onPress={() => removeQuestion(question.id)} style={styles.removeQuestionBtn} activeOpacity={0.8}>
+              <TouchableOpacity  onPress={() => removeQuestion(question.id)} style={styles.removeQuestionBtn} activeOpacity={0.8}>
                 <Feather name="trash-2" size={16} color="#D83131" />
               </TouchableOpacity>
             </View>
 
             <Text style={styles.label}>Тип вопроса</Text>
-            <TouchableOpacity
+            <TouchableOpacity 
               activeOpacity={0.9}
               style={styles.selectBox}
               onPress={() => setTypePickerForQuestion(question.id)}
@@ -378,7 +370,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
             </TouchableOpacity>
 
             <Text style={styles.label}>Текст вопроса</Text>
-            <TextInput
+            <TextInput 
               value={question.text ?? ''}
               onChangeText={(value) => updateQuestion(question.id, { text: value })}
               placeholder="Введите вопрос"
@@ -399,7 +391,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
 
                     return (
                       <View key={option.id} style={styles.optionRow}>
-                        <TextInput
+                        <TextInput 
                           value={option.label ?? ''}
                           onChangeText={(value) => updateOption(question.id, option.id, value)}
                           placeholder="Введите ответ"
@@ -407,7 +399,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
                           style={styles.optionInput}
                         />
 
-                        <TouchableOpacity
+                        <TouchableOpacity 
                           activeOpacity={0.85}
                           style={[styles.correctBtn, isSelected ? styles.correctBtnActive : null]}
                           onPress={() => (isMulti ? toggleMultiCorrect(question.id, option.id) : pickSingleCorrect(question.id, option.id))}
@@ -419,7 +411,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
                           />
                         </TouchableOpacity>
 
-                        <TouchableOpacity
+                        <TouchableOpacity 
                           activeOpacity={0.85}
                           style={styles.deleteOptionBtn}
                           onPress={() => removeOption(question.id, option.id)}
@@ -431,7 +423,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
                   })}
                 </View>
 
-                <TouchableOpacity style={styles.addAnswerBtn} onPress={() => addOption(question.id)} activeOpacity={0.9}>
+                <TouchableOpacity  style={styles.addAnswerBtn} onPress={() => addOption(question.id)} activeOpacity={0.9}>
                   <Feather name="plus" size={14} color="#FF5D2E" />
                   <Text style={styles.addAnswerText}>Добавить ответ</Text>
                 </TouchableOpacity>
@@ -444,7 +436,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
                 <View style={styles.optionList}>
                   {(question.options ?? []).map((option) => (
                     <View key={option.id} style={styles.optionRow}>
-                      <TextInput
+                      <TextInput 
                         value={option.label ?? ''}
                         onChangeText={(value) => updateOption(question.id, option.id, value)}
                         placeholder="Вариант"
@@ -459,7 +451,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
                 <View style={styles.matchingList}>
                   {(question.rows ?? []).map((row) => (
                     <View key={row.id} style={styles.matchingRow}>
-                      <TextInput
+                      <TextInput 
                         value={row.label ?? ''}
                         onChangeText={(value) => updateMatchingRow(question.id, row.id, { label: value })}
                         placeholder="Подпись строки"
@@ -467,7 +459,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
                         style={[styles.input, styles.matchingLabelInput]}
                       />
 
-                      <TouchableOpacity
+                      <TouchableOpacity 
                         activeOpacity={0.9}
                         style={styles.selectBox}
                         onPress={() => setAnswerPicker({ questionId: question.id, rowId: row.id })}
@@ -484,7 +476,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
             {question.type === 'text' ? (
               <>
                 <Text style={styles.label}>Правильный ответ</Text>
-                <TextInput
+                <TextInput 
                   value={question.answer ?? ''}
                   onChangeText={(value) => updateQuestion(question.id, { answer: value })}
                   placeholder="Введите правильный ответ"
@@ -509,7 +501,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
                 {question.showExplanation ? (
                   <>
                     <Text style={styles.label}>Пояснение</Text>
-                    <TextInput
+                    <TextInput 
                       value={question.explanation ?? ''}
                       onChangeText={(value) => updateQuestion(question.id, { explanation: value })}
                       placeholder="Введите пояснение"
@@ -519,7 +511,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
                     />
 
                     <Text style={styles.label}>Ссылка на источник</Text>
-                    <TextInput
+                    <TextInput 
                       value={question.sourceUrl ?? ''}
                       onChangeText={(value) => updateQuestion(question.id, { sourceUrl: value })}
                       placeholder="Введите ссылку"
@@ -533,12 +525,12 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
           </View>
         ))}
 
-        <TouchableOpacity style={styles.addQuestionBtn} onPress={addQuestion} activeOpacity={0.9}>
+        <TouchableOpacity  style={styles.addQuestionBtn} onPress={addQuestion} activeOpacity={0.9}>
           <Feather name="plus" size={16} color="#FFFFFF" />
           <Text style={styles.addQuestionText}>Добавить вопрос</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.9}>
+        <TouchableOpacity  style={styles.saveBtn} onPress={handleSave} activeOpacity={0.9}>
           <Text style={styles.saveBtnText}>Завершить</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -548,7 +540,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Тип вопроса</Text>
             {QUESTION_TYPE_OPTIONS.map((option) => (
-              <TouchableOpacity
+              <TouchableOpacity 
                 key={option.value}
                 style={styles.modalOption}
                 onPress={() => {
@@ -559,7 +551,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
                 <Text style={styles.modalOptionText}>{option.label}</Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setTypePickerForQuestion(null)}>
+            <TouchableOpacity  style={styles.modalCloseBtn} onPress={() => setTypePickerForQuestion(null)}>
               <Text style={styles.modalCloseText}>Отмена</Text>
             </TouchableOpacity>
           </View>
@@ -573,7 +565,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
             {(draftQuiz.questions ?? [])
               .find((question) => question.id === answerPicker?.questionId)
               ?.options?.map((option) => (
-                <TouchableOpacity
+                <TouchableOpacity 
                   key={option.id}
                   style={styles.modalOption}
                   onPress={() => setMatchingCorrect(answerPicker.questionId, answerPicker.rowId, option.id)}
@@ -581,7 +573,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
                   <Text style={styles.modalOptionText}>{option.label}</Text>
                 </TouchableOpacity>
               ))}
-            <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setAnswerPicker(null)}>
+            <TouchableOpacity  style={styles.modalCloseBtn} onPress={() => setAnswerPicker(null)}>
               <Text style={styles.modalCloseText}>Отмена</Text>
             </TouchableOpacity>
           </View>

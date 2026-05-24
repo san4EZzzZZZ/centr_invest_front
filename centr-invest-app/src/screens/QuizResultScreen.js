@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { TouchableOpacity, TextInput } from "../components/SilentTouchables";
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { attemptsApi } from '../api/client';
@@ -88,7 +89,7 @@ export default function QuizResultScreen({ quizTitle, result, attemptId, onGoHom
         </View>
 
         <View style={styles.bottom}>
-          <TouchableOpacity onPress={onGoHome} activeOpacity={0.9} style={styles.homeBtn}>
+          <TouchableOpacity  onPress={onGoHome} activeOpacity={0.9} style={styles.homeBtn}>
             <Text style={styles.homeBtnText}>На главную</Text>
           </TouchableOpacity>
         </View>

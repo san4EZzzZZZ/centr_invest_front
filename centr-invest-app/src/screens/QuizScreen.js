@@ -1,16 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Linking,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { TouchableOpacity, TextInput } from "../components/SilentTouchables";
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { attemptsApi } from '../api/client';
@@ -44,7 +34,7 @@ function buildAnswerRequest(question, answer) {
 
 function ChoiceOption({ label, selected, onPress, disabled }) {
   return (
-    <TouchableOpacity
+    <TouchableOpacity 
       disabled={disabled}
       onPress={onPress}
       activeOpacity={0.88}
@@ -59,7 +49,7 @@ function MatchingRow({ leftItem, rightItems, selectedValue, expanded, disabled, 
   return (
     <View style={styles.matchingRow}>
       <Text style={styles.matchingLabel}>{leftItem}</Text>
-      <TouchableOpacity
+      <TouchableOpacity 
         disabled={disabled}
         onPress={onToggle}
         activeOpacity={0.85}
@@ -71,7 +61,7 @@ function MatchingRow({ leftItem, rightItems, selectedValue, expanded, disabled, 
       {expanded ? (
         <View style={styles.dropdownMenu}>
           {rightItems.map((rightItem) => (
-            <TouchableOpacity key={rightItem} onPress={() => onPick(rightItem)} activeOpacity={0.85} style={styles.dropdownItem}>
+            <TouchableOpacity  key={rightItem} onPress={() => onPick(rightItem)} activeOpacity={0.85} style={styles.dropdownItem}>
               <Text style={[styles.dropdownText, rightItem === selectedValue ? styles.dropdownTextActive : null]}>{rightItem}</Text>
             </TouchableOpacity>
           ))}
@@ -202,7 +192,7 @@ export default function QuizScreen({ quiz, onBack, onFinish }) {
     if (question.type === 'SHORT_TEXT') {
       return (
         <View style={styles.textAnswerBlock}>
-          <TextInput
+          <TextInput 
             editable={!answerResponse}
             value={typeof draftAnswer === 'string' ? draftAnswer : ''}
             placeholder="Введите ответ"
@@ -249,7 +239,7 @@ export default function QuizScreen({ quiz, onBack, onFinish }) {
       <SafeAreaView edges={['top']} style={styles.screen}>
         <View style={styles.centerState}>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity onPress={onBack} style={styles.backHomeBtn}>
+          <TouchableOpacity  onPress={onBack} style={styles.backHomeBtn}>
             <Text style={styles.backHomeText}>Назад</Text>
           </TouchableOpacity>
         </View>
@@ -267,7 +257,7 @@ export default function QuizScreen({ quiz, onBack, onFinish }) {
             contentContainerStyle={[styles.content, { paddingBottom: 24 + insets.bottom + 88 }]}
           >
             <View style={styles.header}>
-              <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={12}>
+              <TouchableOpacity  onPress={onBack} style={styles.backBtn} hitSlop={12}>
                 <Ionicons name="chevron-back" size={22} color="#252525" />
               </TouchableOpacity>
               <Text numberOfLines={1} style={styles.headerTitle}>{quiz?.title ?? 'Тест'}</Text>
@@ -321,7 +311,7 @@ export default function QuizScreen({ quiz, onBack, onFinish }) {
           </ScrollView>
 
           <View style={[styles.footer, { paddingBottom: 16 + insets.bottom }]}>
-            <TouchableOpacity
+            <TouchableOpacity 
               onPress={handlePrimary}
               disabled={(!canContinue && !answerResponse) || isSubmitting}
               activeOpacity={0.9}

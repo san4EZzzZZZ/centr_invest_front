@@ -1,15 +1,6 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Image,
-} from 'react-native';
+import { View, Text, Pressable, ScrollView, KeyboardAvoidingView, Platform, StyleSheet, Image } from "react-native";
+import { TouchableOpacity, TextInput } from "../components/SilentTouchables";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 
@@ -158,7 +149,7 @@ function LoginForm({
   return (
     <View>
       <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
-      <TextInput
+      <TextInput 
         placeholder="Введите Email"
         placeholderTextColor={fieldErrors?.loginEmail ? '#F23030' : '#D6D6D6'}
         keyboardType="email-address"
@@ -176,7 +167,7 @@ function LoginForm({
           {fieldErrors.loginEmail}
         </Text>
       ) : null}
-      <TextInput
+      <TextInput 
         placeholder="Введите пароль"
         placeholderTextColor={fieldErrors?.loginPassword ? '#F23030' : '#D6D6D6'}
         secureTextEntry
@@ -227,7 +218,7 @@ function RegisterForm({
     <View>
       <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
 
-      <TextInput
+      <TextInput 
         placeholder="Имя пользователя"
         placeholderTextColor={fieldErrors?.regUsername ? '#F23030' : '#D6D6D6'}
         value={regUsername}
@@ -244,7 +235,7 @@ function RegisterForm({
         </Text>
       ) : null}
 
-      <TextInput
+      <TextInput 
         placeholder="Email"
         placeholderTextColor={fieldErrors?.regEmail ? '#F23030' : '#D6D6D6'}
         keyboardType="email-address"
@@ -263,7 +254,7 @@ function RegisterForm({
         </Text>
       ) : null}
 
-      <TextInput
+      <TextInput 
         placeholder="Пароль"
         placeholderTextColor={fieldErrors?.regPassword ? '#F23030' : '#D6D6D6'}
         secureTextEntry
@@ -281,7 +272,7 @@ function RegisterForm({
         </Text>
       ) : null}
 
-      <TextInput
+      <TextInput 
         placeholder="Подтверждение пароля"
         placeholderTextColor={fieldErrors?.regPassword2 ? '#F23030' : '#D6D6D6'}
         secureTextEntry
@@ -359,7 +350,7 @@ function RegisterCodeForm({
 
       <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
 
-      <TextInput
+      <TextInput 
         placeholder="Код подтверждения"
         placeholderTextColor={fieldErrors?.regCode ? '#F23030' : '#D6D6D6'}
         value={regCode}
@@ -431,7 +422,7 @@ function ResetRequestScreen({
         Восстановление доступа
       </Text>
       <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
-      <TextInput
+      <TextInput 
         placeholder="Email"
         placeholderTextColor={fieldErrors?.resetEmail ? '#F23030' : '#D6D6D6'}
         keyboardType="email-address"
@@ -520,7 +511,7 @@ function ResetNewPasswordScreen({
         Восстановление доступа
       </Text>
       <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
-      <TextInput
+      <TextInput 
         placeholder="Код подтверждения"
         placeholderTextColor={fieldErrors?.resetCode ? '#F23030' : '#D6D6D6'}
         value={resetCode}
@@ -536,7 +527,7 @@ function ResetNewPasswordScreen({
           {fieldErrors.resetCode}
         </Text>
       ) : null}
-      <TextInput
+      <TextInput 
         placeholder="Новый пароль"
         placeholderTextColor={fieldErrors?.resetNewPassword ? '#F23030' : '#D6D6D6'}
         secureTextEntry
@@ -553,7 +544,7 @@ function ResetNewPasswordScreen({
           {fieldErrors.resetNewPassword}
         </Text>
       ) : null}
-      <TextInput
+      <TextInput 
         placeholder="Повторите пароль"
         placeholderTextColor={fieldErrors?.resetNewPassword2 ? '#F23030' : '#D6D6D6'}
         secureTextEntry
@@ -894,12 +885,12 @@ const styles = StyleSheet.create({
   resetCardContent: {
     minHeight: 346,
     paddingTop: 0,
-    paddingBottom: 16,
+    paddingBottom: 8,
   },
   newPasswordCardContent: {
     minHeight: 346,
     paddingTop: 0,
-    paddingBottom: 16,
+    paddingBottom: 8,
   },
   confirmCardContent: {
     minHeight: 0,
@@ -991,8 +982,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 45,
   },
   confirmBackLinkWrap: {
-    marginTop: 10,
-    marginBottom: 16,
+    marginTop: 8,
+    marginBottom: 4,
     marginHorizontal: 45,
   },
   confirmBackLinkText: {
@@ -1030,8 +1021,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backLinkWrap: {
-    marginTop: 10,
-    marginBottom: 16,
+    marginTop: 8,
+    marginBottom: 4,
   },
   backLinkText: {
     fontFamily: 'Roboto_300Light',

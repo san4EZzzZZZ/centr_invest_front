@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Keyboard, PanResponder, View, Text, TextInput, ScrollView, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Keyboard, PanResponder, View, Text, ScrollView, Image, StyleSheet, Platform } from "react-native";
+import { TouchableOpacity, TextInput } from "../components/SilentTouchables";
 import { SvgXml } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -498,7 +499,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
         <View style={styles.searchWrap}>
           <View style={styles.searchBar}>
             <SvgXml xml={SEARCH_SVG} width="24" height="24" />
-            <TextInput
+            <TextInput 
               placeholder="Поиск теста"
               placeholderTextColor="#7C7C7C"
               value={search}
@@ -512,7 +513,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Языки</Text>
-            <TouchableOpacity>
+            <TouchableOpacity >
               <Text style={styles.sectionAction}>Смотреть все</Text>
             </TouchableOpacity>
           </View>
@@ -520,7 +521,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
           <View style={styles.horizontalListWrap}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalListContent}>
               {(professions.length ? professions : PROFESSIONS).map((item) => (
-                <TouchableOpacity key={item.id} style={styles.professionCard} activeOpacity={0.8}>
+                <TouchableOpacity  key={item.id} style={styles.professionCard} activeOpacity={0.8}>
                   <Image 
                     source={{ uri: item.icon ?? FALLBACK_ICON }} 
                     style={styles.professionIcon} 
@@ -596,12 +597,12 @@ function ProfileScreen({ currentUser, isAdmin, bottomInset, navHeight, onGoHome,
             <ProfileField label="Email" value={currentUser?.email ?? 'unknown@mail.com'} />
             <ProfileField label="Должность" value={currentUser?.role ?? 'Пользователь'} />
 
-            <TouchableOpacity activeOpacity={0.85} style={styles.logoutBtn} onPress={onLogout}>
+            <TouchableOpacity  activeOpacity={0.85} style={styles.logoutBtn} onPress={onLogout}>
               <Text style={styles.logoutText}>Выйти</Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity activeOpacity={0.85} style={styles.adminPanelBtn} onPress={onOpenAdmin}>
+          <TouchableOpacity  activeOpacity={0.85} style={styles.adminPanelBtn} onPress={onOpenAdmin}>
             <Text style={styles.adminPanelText}>Панель администратора</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -643,7 +644,7 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
         contentContainerStyle={[styles.adminPanelContent, { paddingBottom: navHeight + bottomInset + 24 }]}
       >
         <View style={styles.adminPanelHeader}>
-          <TouchableOpacity onPress={onBack} style={styles.adminPanelBackBtn} hitSlop={12}>
+          <TouchableOpacity  onPress={onBack} style={styles.adminPanelBackBtn} hitSlop={12}>
             <Ionicons name="chevron-back" size={16} color="#252525" />
           </TouchableOpacity>
           <Text numberOfLines={1} style={styles.adminPanelTitle}>Панель администратора</Text>
@@ -654,7 +655,7 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
 
         <View style={styles.adminPanelSearchBar}>
           <SvgXml xml={SEARCH_SVG} width="24" height="24" />
-          <TextInput
+          <TextInput 
             placeholder="Поиск пользователя"
             placeholderTextColor="#7C7C7C"
             value={userSearch}
@@ -665,7 +666,7 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
 
         <View style={styles.adminPanelUsersList}>
           {users.map((user) => (
-            <TouchableOpacity key={user.id} activeOpacity={0.85} style={styles.adminPanelUserRow} onPress={() => onOpenUser?.(user)}>
+            <TouchableOpacity  key={user.id} activeOpacity={0.85} style={styles.adminPanelUserRow} onPress={() => onOpenUser?.(user)}>
               <Image source={{ uri: PROFESSIONS[2].icon }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
               <Text numberOfLines={1} style={styles.adminPanelUserName}>{user.name}</Text>
               <Ionicons name="chevron-forward" size={12} color="#252525" />
@@ -678,7 +679,7 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
 
         <View style={styles.adminPanelSearchBar}>
           <SvgXml xml={SEARCH_SVG} width="24" height="24" />
-          <TextInput
+          <TextInput 
             placeholder="Поиск теста"
             placeholderTextColor="#7C7C7C"
             value={testSearch}
@@ -689,7 +690,7 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
 
         <View style={styles.adminPanelTestsList}>
           {adminTests.map((test) => (
-            <TouchableOpacity key={test.id} activeOpacity={0.85} style={styles.adminPanelTestCard}>
+            <TouchableOpacity  key={test.id} activeOpacity={0.85} style={styles.adminPanelTestCard}>
               <Image source={{ uri: PROFESSIONS[2].icon }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
               <View style={styles.adminPanelTestTextWrap}>
                 <Text numberOfLines={1} style={styles.adminPanelTestName}>{test.title}</Text>
@@ -735,7 +736,7 @@ function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpen
         contentContainerStyle={[styles.userEditContent, { paddingBottom: navHeight + bottomInset + 112 }]}
       >
         <View style={styles.adminPanelHeader}>
-          <TouchableOpacity onPress={onBack} style={styles.adminPanelBackBtn} hitSlop={12}>
+          <TouchableOpacity  onPress={onBack} style={styles.adminPanelBackBtn} hitSlop={12}>
             <Ionicons name="chevron-back" size={16} color="#252525" />
           </TouchableOpacity>
           <Text numberOfLines={1} style={styles.userEditTitle}>Редактирование: {user?.name ?? 'Пользователь 1'}</Text>
@@ -744,7 +745,7 @@ function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpen
         <Text style={styles.userEditSectionTitle}>Основная информация</Text>
         <View style={styles.userEditDivider} />
 
-        <TextInput
+        <TextInput 
           value={name}
           onChangeText={setName}
           onFocus={() => {
@@ -756,7 +757,7 @@ function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpen
           placeholderTextColor="#C9C9C9"
         />
 
-        <TextInput
+        <TextInput 
           value={email}
           onChangeText={setEmail}
           onFocus={() => {
@@ -771,7 +772,7 @@ function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpen
         />
 
         <View style={[styles.userEditRoleBox, roleOpen ? styles.userEditRoleBoxOpen : null]}>
-          <TouchableOpacity
+          <TouchableOpacity 
             activeOpacity={0.85}
             style={[styles.userEditRoleSelect, roleOpen ? styles.userEditRoleSelectOpen : null]}
             onPress={() => {
@@ -787,7 +788,7 @@ function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpen
           {roleOpen ? (
             <View style={styles.userEditRoleOptions}>
               {roleOptions.map((option) => (
-                <TouchableOpacity
+                <TouchableOpacity 
                   key={option}
                   activeOpacity={0.85}
                   style={styles.userEditRoleOption}
@@ -817,11 +818,11 @@ function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpen
       </ScrollView>
 
       <View style={[styles.userEditActions, { bottom: navHeight + bottomInset + 16 }]}>
-        <TouchableOpacity activeOpacity={0.85} style={styles.userEditDeleteBtn}>
+        <TouchableOpacity  activeOpacity={0.85} style={styles.userEditDeleteBtn}>
           <Text style={styles.userEditDeleteText}>Удалить пользователя</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity disabled={!canSave} activeOpacity={0.85} style={[styles.userEditSaveBtn, !canSave ? styles.userEditSaveBtnDisabled : null]}>
+        <TouchableOpacity  disabled={!canSave} activeOpacity={0.85} style={[styles.userEditSaveBtn, !canSave ? styles.userEditSaveBtnDisabled : null]}>
           <Text style={[styles.userEditSaveText, !canSave ? styles.userEditSaveTextDisabled : null]}>Сохранить изменения</Text>
         </TouchableOpacity>
       </View>
@@ -890,7 +891,7 @@ function SwipeableUserTestCard() {
   return (
     <View style={styles.userEditSwipeRow}>
       <Animated.View pointerEvents={isSwiped ? 'auto' : 'none'} style={[styles.userEditDeleteTestSlot, { opacity: deleteOpacity }]}>
-        <TouchableOpacity activeOpacity={0.85} style={styles.userEditDeleteTestBtn}>
+        <TouchableOpacity  activeOpacity={0.85} style={styles.userEditDeleteTestBtn}>
           <SvgXml xml={BIN_SVG} width="24" height="24" />
         </TouchableOpacity>
       </Animated.View>
@@ -900,7 +901,7 @@ function SwipeableUserTestCard() {
         style={styles.userEditSwipeCardWrap}
       >
         <Animated.View style={{ marginRight: cardMarginRight }}>
-          <TouchableOpacity activeOpacity={0.85} style={styles.adminPanelTestCard}>
+          <TouchableOpacity  activeOpacity={0.85} style={styles.adminPanelTestCard}>
             <Image source={{ uri: PROFESSIONS[2].icon }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
             <View style={styles.adminPanelTestTextWrap}>
               <Text numberOfLines={1} style={styles.adminPanelTestName}>Java Senior</Text>
@@ -930,7 +931,7 @@ function FavoritesScreen({ favorites, bottomInset, navHeight, onGoHome, onOpenFa
           contentContainerStyle={[styles.favoritesScrollContent, { paddingBottom: navHeight + bottomInset + 24 }]}
         >
           <View style={styles.favoritesHeader}>
-            <TouchableOpacity onPress={onGoHome} activeOpacity={0.8} style={styles.backBtn}>
+            <TouchableOpacity  onPress={onGoHome} activeOpacity={0.8} style={styles.backBtn}>
               <Ionicons name="chevron-back" size={18} color="#252525" />
             </TouchableOpacity>
             <Text style={styles.favoritesTitle}>Избранное</Text>
@@ -938,7 +939,7 @@ function FavoritesScreen({ favorites, bottomInset, navHeight, onGoHome, onOpenFa
 
           <View style={styles.favoritesList}>
             {favoriteItems.map((item) => (
-              <TouchableOpacity
+              <TouchableOpacity 
                 key={item.id}
                 activeOpacity={0.9}
                 style={styles.recentCard}
@@ -1004,7 +1005,7 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
         <View style={styles.bottomNavShadow}>
           <View style={Platform.OS === 'ios' ? styles.bottomNavShadowInner : null}>
             <View style={[styles.bottomNav, { height: navHeight + bottomInset, paddingBottom: bottomInset }]}>
-              <TouchableOpacity style={styles.bottomNavBtn} onPress={onGoHome} activeOpacity={0.8}>
+              <TouchableOpacity  style={styles.bottomNavBtn} onPress={onGoHome} activeOpacity={0.8}>
                 <SvgXml
                   xml={HOME_NAV_SVG}
                   width="32"
@@ -1012,7 +1013,7 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenFavorites} activeOpacity={0.8}>
+              <TouchableOpacity  style={styles.bottomNavBtn} onPress={onOpenFavorites} activeOpacity={0.8}>
                 <SvgXml
                   xml={activeTab === 'favorites' ? HEART_ACTIVE_SVG : HEART_INACTIVE_SVG}
                   width="32"
@@ -1020,7 +1021,7 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenProfile} activeOpacity={0.8}>
+              <TouchableOpacity  style={styles.bottomNavBtn} onPress={onOpenProfile} activeOpacity={0.8}>
                 <SvgXml
                   xml={activeTab === 'profile' ? PROFILE_ACTIVE_SVG : PROFILE_INACTIVE_SVG}
                   width="32"
@@ -1029,7 +1030,7 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
               </TouchableOpacity>
 
               {isAdmin ? (
-                <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenAdmin} activeOpacity={0.8}>
+                <TouchableOpacity  style={styles.bottomNavBtn} onPress={onOpenAdmin} activeOpacity={0.8}>
                   <SvgXml xml={PLUS_NAV_SVG} width="32" height="32" />
                 </TouchableOpacity>
               ) : null}
@@ -1046,7 +1047,7 @@ function RecentCard({ title, questions, status, statusVariant, iconColor, onPres
   const isDraft = statusVariant === 'draft';
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.recentCard}>
+    <TouchableOpacity  onPress={onPress} activeOpacity={0.9} style={styles.recentCard}>
       <View style={styles.recentLeft}>
         <View style={[styles.recentIcon, { backgroundColor: iconColor }]} />
         <View>
