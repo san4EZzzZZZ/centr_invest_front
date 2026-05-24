@@ -308,7 +308,10 @@ function RegisterForm({
 
 function RegisterConfirmForm({
   alert,
-  regEmail,
+  fieldErrors,
+  regCode,
+  setRegCode,
+  clearFieldError,
   onConfirmRegister,
   onBackToLogin,
   onCloseAlert,
@@ -316,32 +319,60 @@ function RegisterConfirmForm({
 }) {
   return (
     <View>
-      <Text style={styles.confirmTitle}>
-        Подтверждение Email
-      </Text>
+      <Text style={styles.confirmTitle}>Подтверждение Email</Text>
+
       <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
-      
-      <Text style={styles.confirmSubTitle}>
-        На почту будет отправлено письмо{"\n"}для подтверждения.
-      </Text>
 
-      <Text style={styles.confirmEmailText}>
-        {maskEmail(regEmail)}.
-      </Text>
-
-      <TouchableOpacity disabled={isSubmitting} onPress={onConfirmRegister} className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center">
-        <Text className="font-roboto text-[16px] text-white">
-          {isSubmitting ? 'Отправка...' : 'Отправить письмо'}
+      <TextInput
+        placeholder="Код подтверждения"
+        placeholderTextColor={fieldErrors?.regCode ? '#F23030' : '#D6D6D6'}
+        value={regCode}
+        onChangeText={(v) => {
+          setRegCode(v);
+          if (clearFieldError) clearFieldError('regCode');
+        }}
+        onFocus={() => clearFieldError && clearFieldError('regCode')}
+        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regCode ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regCode ? 'mb-0' : 'mb-[10px]'}`}
+      />
+      {fieldErrors?.regCode ? (
+        <Text style={styles.formErrorText} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">
+          {fieldErrors.regCode}
         </Text>
+      ) : null}
+
+      <TouchableOpacity
+        disabled={isSubmitting}
+        onPress={onConfirmRegister}
+        className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center"
+      >
+        <Text className="font-roboto text-[16px] text-white">{isSubmitting ? 'Подтверждение...' : 'Подтвердить'}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={onBackToLogin} style={styles.confirmBackLinkWrap}>
         <View style={styles.backLinkRow} className="flex-row items-center justify-center">
-          <Feather name="arrow-left" size={14} color="#FF4F12" style={{ marginRight: 4 }} />
-          <Text style={styles.confirmBackLinkText}>
-            Вернуться к входу
-          </Text>
+          <Text style={styles.confirmBackLinkText}>← Вернуться к входу</Text>
         </View>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function RegisterSuccessForm({ onBackToLogin }) {
+  return (
+    <View className="items-center">
+      <Text style={styles.confirmTitle}>Подтверждение Email</Text>
+
+      <Text className="font-roboto text-[14px] text-[#333333] text-center mb-[20px]">Вы успешно подтвердили почту</Text>
+
+      <View className="w-[68px] h-[68px] rounded-full bg-[#FF9B72] items-center justify-center mb-[20px]">
+        <CheckMark width={34} height={30} color="#FFFFFF" />
+      </View>
+
+      <TouchableOpacity
+        onPress={onBackToLogin}
+        className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center mb-[16px]"
+      >
+        <Text className="font-roboto text-[16px] text-white">Вернуться к входу</Text>
       </TouchableOpacity>
     </View>
   );
@@ -604,6 +635,7 @@ export default function AuthScreen({
 }) {
   const isResetFlow = authMode.startsWith('reset-');
   const isRegisterConfirm = authMode === 'register-confirm';
+  const isRegisterSuccess = authMode === 'register-success';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
@@ -634,7 +666,7 @@ export default function AuthScreen({
                   onCloseAlert={onCloseAlert}
                 />
               </>
-            ) : isRegisterConfirm ? (
+            ) : isRegisterConfirm || isRegisterSuccess ? (
               <>
                 <Image
                   source={require('../../assets/centr_test.png')}
@@ -643,14 +675,22 @@ export default function AuthScreen({
                 />
 
                 <AuthCardShell contentStyle={styles.confirmCardContent}>
-                  <RegisterConfirmForm
-                    alert={alert}
-                    regEmail={regEmail}
-                    onConfirmRegister={onConfirmRegister}
-                    onBackToLogin={onBackToLogin}
-                    onCloseAlert={onCloseAlert}
-                    isSubmitting={isSubmitting}
-                  />
+                  {isRegisterConfirm ? (
+                    <RegisterConfirmForm
+                      alert={alert}
+                      fieldErrors={fieldErrors}
+                      regEmail={regEmail}
+                      regCode={regCode}
+                      setRegCode={setRegCode}
+                      clearFieldError={clearFieldError}
+                      onConfirmRegister={onConfirmRegister}
+                      onBackToLogin={onBackToLogin}
+                      onCloseAlert={onCloseAlert}
+                      isSubmitting={isSubmitting}
+                    />
+                  ) : (
+                    <RegisterSuccessForm onBackToLogin={onBackToLogin} />
+                  )}
                 </AuthCardShell>
               </>
             ) : (
@@ -910,11 +950,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 45,
   },
   confirmBackLinkText: {
-    fontFamily: 'Roboto_300Light',
+    fontFamily: 'Roboto_400Regular',
     fontSize: 14,
     color: '#FF4F12',
-    lineHeight: 22,
-    includeFontPadding: false,
+    textAlign: 'center',
   },
   successTitle: {
     lineHeight: 22,
