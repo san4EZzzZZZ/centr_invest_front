@@ -497,7 +497,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Профессии</Text>
+            <Text style={styles.sectionTitle}>Языки</Text>
             <TouchableOpacity>
               <Text style={styles.sectionAction}>Смотреть все</Text>
             </TouchableOpacity>
@@ -521,7 +521,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Тесты</Text>
+            <Text style={styles.sectionTitle}>Недавние</Text>
           </View>
           <View style={styles.recentList}>
             {isLoading ? (
@@ -1668,7 +1668,9 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   recentCard: {
-    backgroundColor: '#FFFEEE',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D8EFE3',
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
