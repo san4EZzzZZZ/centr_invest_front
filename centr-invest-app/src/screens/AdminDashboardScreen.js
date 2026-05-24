@@ -14,7 +14,7 @@ function QuizCard({ quiz, onEdit, onDelete }) {
           <Text style={styles.quizTitle} numberOfLines={1}>
             {quiz.title}
           </Text>
-          <Text style={styles.quizSubtitle}>{quiz.questions?.length ?? 0} вопросов</Text>
+          <Text style={styles.quizSubtitle}>{quiz.questionCount ?? quiz.questions?.length ?? 0} вопросов</Text>
         </View>
 
         <View style={[styles.statusPill, isDraft ? styles.statusPillDraft : styles.statusPillPublished]}>
@@ -64,7 +64,15 @@ export default function AdminDashboardScreen({ quizzes, onBack, onCreate, onEdit
                 onDelete={() => {
                   Alert.alert('Удалить тест?', `Тест "${quiz.title}" будет удален без возможности восстановления.`, [
                     { text: 'Отмена', style: 'cancel' },
-                    { text: 'Удалить', style: 'destructive', onPress: () => onDelete?.(quiz.id) },
+                    {
+                      text: 'Удалить',
+                      style: 'destructive',
+                      onPress: () => {
+                        Promise.resolve(onDelete?.(quiz.id)).catch((deleteError) => {
+                          Alert.alert('Ошибка', deleteError?.message || 'Не удалось удалить тест');
+                        });
+                      },
+                    },
                   ]);
                 }}
               />

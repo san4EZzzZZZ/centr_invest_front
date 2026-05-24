@@ -4,30 +4,14 @@ import { useFonts, Roboto_300Light, Roboto_400Regular, Roboto_500Medium, Roboto_
 import * as SplashScreen from 'expo-splash-screen';
 import HomeScreen from './src/screens/HomeScreen';
 import AuthScreen from './src/screens/AuthScreen';
-import { QUIZZES, cloneQuiz } from './src/data/quizzes';
+import { authApi, clearToken, setToken } from './src/api/client';
 
 SplashScreen.preventAutoHideAsync();
 
 const TEST_ACCOUNT = {
-  email: 'test@centrinvest.app',
-  password: 'CentrInvest#2026',
+  email: 'admin@example.com',
+  password: 'admin123',
 };
-
-const ADMIN_ACCOUNT = {
-  email: 'admin@centrinvest.app',
-  password: 'Admin#2026',
-  name: 'Admin',
-  role: 'Администратор',
-};
-
-const TEST_ACCOUNTS = [
-  {
-    ...TEST_ACCOUNT,
-    name: 'User',
-    role: 'Пользователь',
-  },
-  ADMIN_ACCOUNT,
-];
 
 function isValidEmail(value) {
   if (!value) return false;
@@ -35,14 +19,23 @@ function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 }
 
+function toAppUser(user) {
+  return {
+    ...user,
+    name: user?.username ?? user?.email ?? 'User',
+    roleCode: user?.role,
+    role: user?.role === 'ADMIN' ? 'Администратор' : 'Пользователь',
+  };
+}
+
 export default function App() {
   const [authMode, setAuthMode] = useState('login');
   const [fontsLoaded] = useFonts({ Roboto_300Light, Roboto_400Regular, Roboto_500Medium, Roboto_700Bold });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [quizzes, setQuizzes] = useState(() => QUIZZES.map((quiz) => ({ ...cloneQuiz(quiz), status: quiz.status ?? 'published' })));
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [alert, setAlert] = useState(null); // { variant: 'error' | 'success', message: string }
+  const [alert, setAlert] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
 
   const [loginEmail, setLoginEmail] = useState(TEST_ACCOUNT.email);
@@ -97,7 +90,7 @@ export default function App() {
     resetFormErrors();
   }
 
-  function handleLogin() {
+  async function handleLogin() {
     resetFormErrors();
 
     const email = String(loginEmail || '').trim();
@@ -118,28 +111,21 @@ export default function App() {
       return;
     }
 
-    const matchedAccount = TEST_ACCOUNTS.find((account) => account.email.toLowerCase() === email.toLowerCase());
-
-    if (!matchedAccount) {
-      setFieldError('loginPassword', 'Пользователь не найден');
-      return;
+    setIsSubmitting(true);
+    try {
+      const auth = await authApi.login(email, password);
+      setToken(auth.token);
+      setCurrentUser(toAppUser(auth.user));
+      setAlert({ variant: 'success', message: 'Успешный вход' });
+      setIsLoggedIn(true);
+    } catch (error) {
+      setFieldError('loginPassword', error.message || 'Не удалось войти');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    if (password !== matchedAccount.password) {
-      setFieldError('loginPassword', 'Неверный пароль');
-      return;
-    }
-
-    setAlert({ variant: 'success', message: 'Успешный вход' });
-    setIsLoggedIn(true);
-    setCurrentUser({
-      email: matchedAccount.email,
-      name: matchedAccount.name,
-      role: matchedAccount.role,
-    });
   }
 
-  function handleRegister() {
+  async function handleRegister() {
     resetFormErrors();
 
     const username = String(regUsername || '').trim();
@@ -164,12 +150,20 @@ export default function App() {
       (password && password.length < 8) ||
       (password && password2 && password !== password2);
 
-    if (shouldFail) {
-      return;
-    }
+    if (shouldFail) return;
 
-    setAlert({ variant: 'success', message: 'Регистрация (демо) успешна. Теперь можно войти.' });
-    setAuthMode('login');
+    setIsSubmitting(true);
+    try {
+      const auth = await authApi.register({ email, username, password });
+      setToken(auth.token);
+      setCurrentUser(toAppUser(auth.user));
+      setAlert({ variant: 'success', message: 'Регистрация успешна' });
+      setIsLoggedIn(true);
+    } catch (error) {
+      setAlert({ variant: 'error', message: error.message || 'Не удалось зарегистрироваться' });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function handleRequestReset() {
@@ -215,9 +209,7 @@ export default function App() {
       (password && password.length < 8) ||
       (password && password2 && password !== password2);
 
-    if (shouldFail) {
-      return;
-    }
+    if (shouldFail) return;
 
     setAuthMode('reset-success');
   }
@@ -227,8 +219,18 @@ export default function App() {
     resetFormErrors();
   }
 
+  function handleLogout() {
+    clearToken();
+    setIsLoggedIn(false);
+    setCurrentUser(null);
+    setAlert(null);
+    setAuthMode('login');
+    setLoginEmail(TEST_ACCOUNT.email);
+    setLoginPassword(TEST_ACCOUNT.password);
+  }
+
   function handleSupportPress() {
-    // no-op (demo UI)
+    // no-op: password reset is not part of the backend API yet.
   }
 
   if (!fontsLoaded) return null;
@@ -236,19 +238,7 @@ export default function App() {
   if (isLoggedIn) {
     return (
       <SafeAreaProvider>
-        <HomeScreen
-          currentUser={currentUser}
-          quizzes={quizzes}
-          setQuizzes={setQuizzes}
-          onLogout={() => {
-            setIsLoggedIn(false);
-            setCurrentUser(null);
-            setAlert(null);
-            setAuthMode('login');
-            setLoginEmail(TEST_ACCOUNT.email);
-            setLoginPassword(TEST_ACCOUNT.password);
-          }}
-        />
+        <HomeScreen currentUser={currentUser} onLogout={handleLogout} />
       </SafeAreaProvider>
     );
   }
@@ -292,6 +282,7 @@ export default function App() {
         onSaveNewPassword={handleSaveNewPassword}
         onSupportPress={handleSupportPress}
         onCloseAlert={() => setAlert(null)}
+        isSubmitting={isSubmitting}
       />
     </SafeAreaProvider>
   );

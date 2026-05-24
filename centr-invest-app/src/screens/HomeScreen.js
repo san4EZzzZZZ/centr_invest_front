@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, TextInput, ScrollView, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, View, Text, TextInput, ScrollView, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +7,7 @@ import QuizScreen from './QuizScreen';
 import QuizResultScreen from './QuizResultScreen';
 import AdminDashboardScreen from './AdminDashboardScreen';
 import QuizEditorScreen from './QuizEditorScreen';
+import { adminApi, contentApi, profileApi } from '../api/client';
 
 const SEARCH_SVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M9.5 16C7.68333 16 6.146 15.3707 4.888 14.112C3.63 12.8533 3.00067 11.316 3 9.5C2.99933 7.684 3.62867 6.14667 4.888 4.888C6.14733 3.62933 7.68467 3 9.5 3C11.3153 3 12.853 3.62933 14.113 4.888C15.373 6.14667 16.002 7.684 16 9.5C16 10.2333 15.8833 10.925 15.65 11.575C15.4167 12.225 15.1 12.8 14.7 13.3L20.3 18.9C20.4833 19.0833 20.575 19.3167 20.575 19.6C20.575 19.8833 20.4833 20.1167 20.3 20.3C20.1167 20.4833 19.8833 20.575 19.6 20.575C19.3167 20.575 19.0833 20.4833 18.9 20.3L13.3 14.7C12.8 15.1 12.225 15.4167 11.575 15.65C10.925 15.8833 10.2333 16 9.5 16ZM9.5 14C10.75 14 11.8127 13.5627 12.688 12.688C13.5633 11.8133 14.0007 10.7507 14 9.5C13.9993 8.24933 13.562 7.187 12.688 6.313C11.814 5.439 10.7513 5.00133 9.5 5C8.24867 4.99867 7.18633 5.43633 6.313 6.313C5.43967 7.18967 5.002 8.252 5 9.5C4.998 10.748 5.43567 11.8107 6.313 12.688C7.19033 13.5653 8.25267 14.0027 9.5 14Z" fill="#7C7C7C"/>
@@ -42,23 +43,288 @@ const PROFESSIONS = [
   { id: 3, title: 'Python', icon: 'https://img.icons8.com/color/96/python--v1.png' },
 ];
 
-export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout }) {
+const FALLBACK_ICON = 'https://img.icons8.com/color/96/source-code.png';
+const DEFAULT_READ_MORE_URL = 'https://developer.mozilla.org/';
+
+function toEditorQuiz(test) {
+  if (!test) return null;
+
+  return {
+    id: test.id,
+    professionId: test.professionId,
+    professionTitle: test.professionTitle,
+    title: test.title,
+    shortDescription: test.shortDescription,
+    description: test.description,
+    status: 'published',
+    questions: (test.questions ?? []).map((question) => {
+      const base = {
+        id: String(question.id),
+        topic: question.topic,
+        text: question.prompt,
+        explanation: question.explanation,
+        sourceUrl: question.readMoreUrl,
+      };
+
+      if (question.type === 'MULTIPLE_CHOICE') {
+        return {
+          ...base,
+          type: 'multi',
+          options: (question.options ?? []).map((option) => ({ id: String(option.id), label: option.text })),
+          correctOptionIds: (question.options ?? []).filter((option) => option.correct).map((option) => String(option.id)),
+        };
+      }
+
+      if (question.type === 'MATCHING') {
+        const options = (question.matchPairs ?? []).map((pair, index) => ({
+          id: `pair_${pair.id}_${index}`,
+          label: pair.rightLabel,
+        }));
+
+        return {
+          ...base,
+          type: 'matching',
+          options,
+          rows: (question.matchPairs ?? []).map((pair, index) => ({
+            id: `row_${pair.id}_${index}`,
+            label: pair.leftLabel,
+            options,
+            correctOptionId: `pair_${pair.id}_${index}`,
+          })),
+        };
+      }
+
+      if (question.type === 'SHORT_TEXT') {
+        return { ...base, type: 'text', answer: question.correctTextAnswer ?? '' };
+      }
+
+      return {
+        ...base,
+        type: 'single',
+        showExplanation: true,
+        options: (question.options ?? []).map((option) => ({ id: String(option.id), label: option.text })),
+        correctOptionId: String((question.options ?? []).find((option) => option.correct)?.id ?? question.options?.[0]?.id ?? ''),
+      };
+    }),
+  };
+}
+
+function ensureTwoOptions(options) {
+  const next = [...(options ?? [])];
+  while (next.length < 2) {
+    next.push({ id: `generated_${next.length + 1}`, label: `Вариант ${next.length + 1}` });
+  }
+  return next;
+}
+
+function getOptionLabel(options, optionId) {
+  return options?.find((option) => option.id === optionId)?.label ?? options?.[0]?.label ?? 'Вариант';
+}
+
+function toAdminPayload(quiz, fallbackProfessionId) {
+  const professionId = Number(quiz.professionId ?? fallbackProfessionId);
+  const title = String(quiz.title || '').trim() || 'Новый тест';
+  const shortDescription = String(quiz.shortDescription || '').trim() || title;
+  const description = String(quiz.description || '').trim() || shortDescription;
+
+  return {
+    professionId,
+    title,
+    shortDescription,
+    description,
+    questions: (quiz.questions ?? []).map((question, index) => {
+      const topic = String(question.topic || '').trim() || 'General';
+      const prompt = String(question.text || '').trim() || `Вопрос ${index + 1}`;
+      const explanation = String(question.explanation || '').trim() || 'Пояснение будет добавлено позже.';
+      const readMoreUrl = String(question.sourceUrl || '').trim() || DEFAULT_READ_MORE_URL;
+
+      if (question.type === 'multi') {
+        const options = ensureTwoOptions(question.options);
+        const correctIds = question.correctOptionIds?.length ? question.correctOptionIds : [options[0]?.id].filter(Boolean);
+        return {
+          type: 'MULTIPLE_CHOICE',
+          topic,
+          prompt,
+          correctTextAnswer: null,
+          explanation,
+          readMoreUrl,
+          options: options.map((option, optionIndex) => ({
+            text: String(option.label || '').trim() || `Вариант ${optionIndex + 1}`,
+            correct: correctIds.includes(option.id),
+          })),
+          matchPairs: [],
+        };
+      }
+
+      if (question.type === 'matching') {
+        const options = question.options ?? [];
+        const rows = question.rows?.length ? question.rows : [{ label: 'Левая часть', correctOptionId: options[0]?.id }];
+        return {
+          type: 'MATCHING',
+          topic,
+          prompt,
+          correctTextAnswer: null,
+          explanation,
+          readMoreUrl,
+          options: [],
+          matchPairs: rows.map((row, rowIndex) => ({
+            leftLabel: String(row.label || '').trim() || `Элемент ${rowIndex + 1}`,
+            rightLabel: getOptionLabel(options, row.correctOptionId),
+          })),
+        };
+      }
+
+      if (question.type === 'text') {
+        return {
+          type: 'SHORT_TEXT',
+          topic,
+          prompt,
+          correctTextAnswer: String(question.answer || '').trim() || 'ответ',
+          explanation,
+          readMoreUrl,
+          options: [],
+          matchPairs: [],
+        };
+      }
+
+      const options = ensureTwoOptions(question.options);
+      const correctOptionId = question.correctOptionId ?? options[0]?.id;
+      return {
+        type: 'SINGLE_CHOICE',
+        topic,
+        prompt,
+        correctTextAnswer: null,
+        explanation,
+        readMoreUrl,
+        options: options.map((option, optionIndex) => ({
+          text: String(option.label || '').trim() || `Вариант ${optionIndex + 1}`,
+          correct: option.id === correctOptionId,
+        })),
+        matchPairs: [],
+      };
+    }),
+  };
+}
+
+export default function HomeScreen({ currentUser, onLogout }) {
   const insets = useSafeAreaInsets();
   const bottomInset = insets.bottom;
   const NAV_HEIGHT = 64;
 
   const [route, setRoute] = useState({ name: 'home' });
+  const [professions, setProfessions] = useState([]);
+  const [allProfessions, setAllProfessions] = useState([]);
+  const [tests, setTests] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const [profile, setProfile] = useState(null);
+  const [adminTests, setAdminTests] = useState([]);
+  const [search, setSearch] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const homeRequestId = useRef(0);
 
-  const visibleQuizzes = useMemo(() => {
-    return quizzes.filter((quiz) => quiz.status !== 'draft');
-  }, [quizzes]);
+  const isAdmin = currentUser?.roleCode === 'ADMIN' || currentUser?.role === 'Администратор';
+  const favoriteIds = useMemo(() => new Set(favorites.map((item) => item.testId)), [favorites]);
+  const displayUser = profile?.user
+    ? { ...currentUser, email: profile.user.email, name: profile.user.username }
+    : currentUser;
+
+  async function loadHomeData(query = search) {
+    const requestId = homeRequestId.current + 1;
+    homeRequestId.current = requestId;
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const [professionsResponse, profileResponse] = await Promise.all([
+        contentApi.getProfessions({ title: query }),
+        profileApi.get().catch(() => null),
+      ]);
+
+      const nextProfessions = Array.isArray(professionsResponse) ? professionsResponse : [];
+      const nextTests = nextProfessions.flatMap((profession) =>
+        (profession.tests ?? []).map((test) => ({
+          ...test,
+          professionId: profession.id,
+          professionTitle: profession.title,
+          status: 'published',
+        }))
+      );
+
+      if (requestId !== homeRequestId.current) return;
+
+      setProfessions(nextProfessions);
+      if (!query) setAllProfessions(nextProfessions);
+      setTests(nextTests);
+      setProfile(profileResponse);
+      setFavorites(profileResponse?.favoriteTests ?? []);
+    } catch (loadError) {
+      if (requestId === homeRequestId.current) {
+        setError(loadError.message || 'Не удалось загрузить данные');
+      }
+    } finally {
+      if (requestId === homeRequestId.current) {
+        setIsLoading(false);
+      }
+    }
+  }
+
+  async function loadAdminTests() {
+    if (!isAdmin) return;
+
+    try {
+      const response = await adminApi.getTests();
+      setAdminTests(Array.isArray(response) ? response : []);
+    } catch (loadError) {
+      Alert.alert('Ошибка', loadError.message || 'Не удалось загрузить админские тесты');
+    }
+  }
+
+  function goHomeWithRefresh() {
+    setSearch('');
+    loadHomeData('');
+    setRoute({ name: 'home' });
+  }
+
+  async function toggleFavorite(test) {
+    try {
+      if (favoriteIds.has(test.id)) {
+        await profileApi.removeFavorite(test.id);
+      } else {
+        await profileApi.addFavorite(test.id);
+      }
+      const nextProfile = await profileApi.get();
+      setProfile(nextProfile);
+      setFavorites(nextProfile?.favoriteTests ?? []);
+    } catch (favoriteError) {
+      Alert.alert('Ошибка', favoriteError.message || 'Не удалось обновить избранное');
+    }
+  }
+
+  useEffect(() => {
+    loadHomeData('');
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadHomeData(search);
+    }, 350);
+
+    return () => clearTimeout(timeoutId);
+  }, [search]);
+
+  useEffect(() => {
+    if (route.name === 'admin') {
+      loadAdminTests();
+    }
+  }, [route.name]);
 
   if (route.name === 'quiz') {
     return (
       <QuizScreen
         quiz={route.quiz}
-        onBack={() => setRoute({ name: 'home' })}
-        onFinish={({ quiz, score, total }) => setRoute({ name: 'result', quiz, score, total })}
+        onBack={goHomeWithRefresh}
+        onFinish={({ quiz, result, attemptId }) => setRoute({ name: 'result', quiz, result, attemptId })}
       />
     );
   }
@@ -67,10 +333,9 @@ export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout 
     return (
       <QuizResultScreen
         quizTitle={route.quiz?.title}
-        score={route.score}
-        total={route.total}
-        onGoHome={() => setRoute({ name: 'home' })}
-        onReview={() => setRoute({ name: 'home' })}
+        result={route.result}
+        attemptId={route.attemptId}
+        onGoHome={goHomeWithRefresh}
       />
     );
   }
@@ -78,11 +343,22 @@ export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout 
   if (route.name === 'admin') {
     return (
       <AdminDashboardScreen
-        quizzes={quizzes}
-        onBack={() => setRoute({ name: 'home' })}
+        quizzes={adminTests}
+        onBack={goHomeWithRefresh}
         onCreate={() => setRoute({ name: 'editor', quiz: null })}
-        onEdit={(quiz) => setRoute({ name: 'editor', quiz })}
-        onDelete={(quizId) => setQuizzes((prev) => prev.filter((quiz) => quiz.id !== quizId))}
+        onEdit={async (quiz) => {
+          try {
+            const details = await adminApi.getTest(quiz.id);
+            setRoute({ name: 'editor', quiz: toEditorQuiz(details) });
+          } catch (editError) {
+            Alert.alert('Ошибка', editError.message || 'Не удалось открыть тест');
+          }
+        }}
+        onDelete={async (quizId) => {
+          await adminApi.deleteTest(quizId);
+          setAdminTests((prev) => prev.filter((quiz) => quiz.id !== quizId));
+          await loadHomeData('');
+        }}
       />
     );
   }
@@ -92,13 +368,26 @@ export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout 
       <QuizEditorScreen
         quiz={route.quiz}
         onCancel={() => setRoute({ name: 'admin' })}
-        onSave={(nextQuiz) => {
-          setQuizzes((prev) => {
-            const exists = prev.some((quiz) => quiz.id === nextQuiz.id);
-            if (exists) return prev.map((quiz) => (quiz.id === nextQuiz.id ? nextQuiz : quiz));
-            return [nextQuiz, ...prev];
-          });
-          setRoute({ name: 'admin' });
+        onSave={async (nextQuiz) => {
+          try {
+            const fallbackProfessionId = route.quiz?.professionId ?? allProfessions[0]?.id ?? professions[0]?.id;
+            if (!fallbackProfessionId) {
+              Alert.alert('Ошибка', 'Сначала нужна хотя бы одна профессия на сервере');
+              return;
+            }
+
+            const payload = toAdminPayload(nextQuiz, fallbackProfessionId);
+            if (route.quiz?.id) {
+              await adminApi.updateTest(route.quiz.id, payload);
+            } else {
+              await adminApi.createTest(payload);
+            }
+            await loadAdminTests();
+            await loadHomeData('');
+            setRoute({ name: 'admin' });
+          } catch (saveError) {
+            Alert.alert('Ошибка', saveError.message || 'Не удалось сохранить тест');
+          }
         }}
       />
     );
@@ -107,10 +396,10 @@ export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout 
   if (route.name === 'profile') {
     return (
       <ProfileScreen
-        currentUser={currentUser}
+        currentUser={displayUser}
         bottomInset={bottomInset}
         navHeight={NAV_HEIGHT}
-        onGoHome={() => setRoute({ name: 'home' })}
+        onGoHome={goHomeWithRefresh}
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
         onLogout={onLogout}
@@ -121,13 +410,14 @@ export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout 
   if (route.name === 'favorites') {
     return (
       <FavoritesScreen
-        quizzes={visibleQuizzes}
+        favorites={favorites}
         bottomInset={bottomInset}
         navHeight={NAV_HEIGHT}
-        onGoHome={() => setRoute({ name: 'home' })}
+        onGoHome={goHomeWithRefresh}
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
-        onOpenQuiz={(quiz) => setRoute({ name: 'quiz', quiz })}
+        onOpenQuiz={(test) => setRoute({ name: 'quiz', quiz: test })}
+        onFavorite={toggleFavorite}
       />
     );
   }
@@ -141,7 +431,7 @@ export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout 
         <View style={styles.header}>
           <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }} style={styles.avatar} />
           <View>
-            <Text style={styles.headerTitle}>Привет, {currentUser?.name ?? 'User'}</Text>
+            <Text style={styles.headerTitle}>Привет, {displayUser?.name ?? 'User'}</Text>
             <Text style={styles.headerSubtitle}>Готов учиться</Text>
           </View>
         </View>
@@ -149,7 +439,14 @@ export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout 
         <View style={styles.searchWrap}>
           <View style={styles.searchBar}>
             <SvgXml xml={SEARCH_SVG} width="24" height="24" />
-            <TextInput placeholder="Поиск теста" placeholderTextColor="#7C7C7C" style={styles.searchInput} />
+            <TextInput
+              placeholder="Поиск теста"
+              placeholderTextColor="#7C7C7C"
+              value={search}
+              onChangeText={setSearch}
+              onSubmitEditing={() => loadHomeData(search)}
+              style={styles.searchInput}
+            />
           </View>
         </View>
 
@@ -163,10 +460,10 @@ export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout 
 
           <View style={styles.horizontalListWrap}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalListContent}>
-              {PROFESSIONS.map((item) => (
+              {(professions.length ? professions : PROFESSIONS).map((item) => (
                 <TouchableOpacity key={item.id} style={styles.professionCard} activeOpacity={0.8}>
-                  <Image source={{ uri: item.icon }} style={styles.professionIcon} />
-                  <Text style={styles.professionName}>{item.title}</Text>
+                  <Image source={{ uri: item.icon ?? FALLBACK_ICON }} style={styles.professionIcon} />
+                  <Text numberOfLines={2} style={styles.professionName}>{item.title}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -175,20 +472,28 @@ export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout 
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Недавние</Text>
+            <Text style={styles.sectionTitle}>Тесты</Text>
           </View>
           <View style={styles.recentList}>
-            {visibleQuizzes.slice(0, 3).map((quiz, index) => (
-              <RecentCard
-                key={quiz.id}
-                title={quiz.title}
-                questions={`${quiz.questions?.length ?? 0} вопросов`}
-                status={quiz.status === 'draft' ? 'Черновик' : index === 0 ? 'Пройдено' : 'Не пройдено'}
-                statusVariant={quiz.status === 'draft' ? 'draft' : index === 0 ? 'passed' : 'not_passed'}
-                iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
-                onPress={() => setRoute({ name: 'quiz', quiz })}
-              />
-            ))}
+            {isLoading ? (
+              <ActivityIndicator color="#7A1136" />
+            ) : error ? (
+              <Text style={styles.errorText}>{error}</Text>
+            ) : tests.length ? (
+              tests.map((test, index) => (
+                <RecentCard
+                  key={test.id}
+                  title={test.title}
+                  questions={`${test.questionCount ?? 0} вопросов`}
+                  status={test.professionTitle ?? 'Профессия'}
+                  statusVariant={favoriteIds.has(test.id) ? 'passed' : 'not_passed'}
+                  iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
+                  onPress={() => setRoute({ name: 'quiz', quiz: test })}
+                />
+              ))
+            ) : (
+              <Text style={styles.errorText}>Тесты не найдены</Text>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -197,13 +502,13 @@ export default function HomeScreen({ currentUser, quizzes, setQuizzes, onLogout 
         bottomInset={bottomInset}
         navHeight={NAV_HEIGHT}
         activeTab="home"
-        onGoHome={() => setRoute({ name: 'home' })}
+        onGoHome={goHomeWithRefresh}
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
         onOpenAdmin={() => {
-          if (currentUser?.role === 'Администратор') setRoute({ name: 'admin' });
+          if (isAdmin) setRoute({ name: 'admin' });
         }}
-        isAdmin={currentUser?.role === 'Администратор'}
+        isAdmin={isAdmin}
       />
     </SafeAreaView>
   );
@@ -249,12 +554,12 @@ function ProfileScreen({ currentUser, bottomInset, navHeight, onGoHome, onOpenFa
   );
 }
 
-function FavoritesScreen({ quizzes, bottomInset, navHeight, onGoHome, onOpenFavorites, onOpenProfile, onOpenQuiz }) {
-  const favoriteItems = quizzes.slice(0, 3).map((quiz, index) => ({
-    quiz,
-    id: quiz.id,
-    title: quiz.title,
-    questions: `${quiz.questions?.length ?? 0} вопросов`,
+function FavoritesScreen({ favorites, bottomInset, navHeight, onGoHome, onOpenFavorites, onOpenProfile, onOpenQuiz }) {
+  const favoriteItems = favorites.map((item, index) => ({
+    quiz: { id: item.testId, title: item.testTitle, questionCount: item.questionCount },
+    id: item.testId,
+    title: item.testTitle,
+    questions: item.professionTitle ?? 'Профессия',
     accent: index === 0 ? '#F7D76D' : index === 1 ? '#F6D85F' : '#F3C95A',
   }));
 

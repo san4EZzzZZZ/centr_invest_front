@@ -152,6 +152,7 @@ function LoginForm({
   onLogin,
   onOpenResetFlow,
   onCloseAlert,
+  isSubmitting,
 }) {
   return (
     <View>
@@ -191,8 +192,8 @@ function LoginForm({
           {fieldErrors.loginPassword}
         </Text>
       ) : null}
-      <TouchableOpacity onPress={onLogin} className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center">
-        <Text className="font-roboto text-[16px] text-white">Войти</Text>
+      <TouchableOpacity disabled={isSubmitting} onPress={onLogin} className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center">
+        <Text className="font-roboto text-[16px] text-white">{isSubmitting ? 'Вход...' : 'Войти'}</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={onOpenResetFlow} className="items-center pt-[14px] pb-[14px]">
         <Text style={styles.forgotLinkText} className="text-[#F23030] text-[14px] font-robotoLight">
@@ -219,6 +220,7 @@ function RegisterForm({
   clearFieldError,
   onRegister,
   onCloseAlert,
+  isSubmitting,
 }) {
   return (
     <View>
@@ -305,8 +307,8 @@ function RegisterForm({
         <Text className="font-roboto text-[16px] text-[#252525]">Создатель Хайпа</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={onRegister} className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center mb-[16px]">
-        <Text className="font-roboto text-[16px] text-white">Зарегистрироваться</Text>
+      <TouchableOpacity disabled={isSubmitting} onPress={onRegister} className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center mb-[16px]">
+        <Text className="font-roboto text-[16px] text-white">{isSubmitting ? 'Регистрация...' : 'Зарегистрироваться'}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -564,6 +566,7 @@ export default function AuthScreen({
   onSaveNewPassword,
   onSupportPress,
   onCloseAlert,
+  isSubmitting,
 }) {
   const isResetFlow = authMode.startsWith('reset-');
 
@@ -618,6 +621,7 @@ export default function AuthScreen({
                         onLogin={onLogin}
                         onOpenResetFlow={onOpenResetFlow}
                         onCloseAlert={onCloseAlert}
+                        isSubmitting={isSubmitting}
                       />
                     ) : (
                       <RegisterForm
@@ -636,6 +640,7 @@ export default function AuthScreen({
                         clearFieldError={clearFieldError}
                         onRegister={onRegister}
                         onCloseAlert={onCloseAlert}
+                        isSubmitting={isSubmitting}
                       />
                     )}
                   </View>
