@@ -79,10 +79,10 @@ function AuthCardShell({ children, contentStyle, topSpacer = 0 }) {
     <View style={styles.shadowWrap}>
       {Platform.OS === 'android' ? (
         <>
-          <View pointerEvents="none" style={styles.androidShadowLeftSoft} />
-          <View pointerEvents="none" style={styles.androidShadowLeft} />
-          <View pointerEvents="none" style={styles.androidShadowRightSoft} />
-          <View pointerEvents="none" style={styles.androidShadowRight} />
+          <View style={styles.androidShadowLeftSoft} />
+          <View style={styles.androidShadowLeft} />
+          <View style={styles.androidShadowRightSoft} />
+          <View style={styles.androidShadowRight} />
         </>
       ) : null}
 
@@ -739,14 +739,11 @@ const styles = StyleSheet.create({
     maxWidth: 370,
     position: 'relative',
     ...Platform.select({
-      ios: {
-        shadowOpacity: 0,
-      },
-      android: {
-        elevation: 0,
-      },
       web: {
         boxShadow: '-6px 10px 14px 0px rgba(242, 239, 255, 0.45), 6px 10px 12px 0px rgba(242, 239, 255, 0.45)',
+      },
+      default: {
+        elevation: 0,
       },
     }),
   },
@@ -754,10 +751,10 @@ const styles = StyleSheet.create({
     width: '100%',
     ...Platform.select({
       ios: {
-        shadowColor: '#F2EFFF',
-        shadowOffset: { width: -6, height: 10 },
-        shadowOpacity: 0.35,
-        shadowRadius: 14,
+        boxShadow: '-6px 10px 14px rgba(242, 239, 255, 0.35)',
+      },
+      web: {
+        boxShadow: '-6px 10px 14px 0px rgba(242, 239, 255, 0.45)',
       },
       default: {},
     }),
@@ -766,10 +763,10 @@ const styles = StyleSheet.create({
     width: '100%',
     ...Platform.select({
       ios: {
-        shadowColor: '#F2EFFF',
-        shadowOffset: { width: 6, height: 10 },
-        shadowOpacity: 0.35,
-        shadowRadius: 12,
+        boxShadow: '6px 10px 12px rgba(242, 239, 255, 0.35)',
+      },
+      web: {
+        boxShadow: '6px 10px 12px 0px rgba(242, 239, 255, 0.45)',
       },
       default: {},
     }),
@@ -782,6 +779,7 @@ const styles = StyleSheet.create({
     bottom: -10,
     borderRadius: 20,
     backgroundColor: 'rgba(242, 239, 255, 0.18)',
+    pointerEvents: 'none',
   },
   androidShadowLeft: {
     position: 'absolute',
@@ -791,6 +789,7 @@ const styles = StyleSheet.create({
     bottom: -6,
     borderRadius: 16,
     backgroundColor: 'rgba(242, 239, 255, 0.28)',
+    pointerEvents: 'none',
   },
   androidShadowRightSoft: {
     position: 'absolute',
@@ -800,6 +799,7 @@ const styles = StyleSheet.create({
     bottom: -10,
     borderRadius: 20,
     backgroundColor: 'rgba(242, 239, 255, 0.18)',
+    pointerEvents: 'none',
   },
   androidShadowRight: {
     position: 'absolute',
@@ -809,6 +809,7 @@ const styles = StyleSheet.create({
     bottom: -6,
     borderRadius: 16,
     backgroundColor: 'rgba(242, 239, 255, 0.28)',
+    pointerEvents: 'none',
   },
   cardContent: {
     paddingTop: 15,
