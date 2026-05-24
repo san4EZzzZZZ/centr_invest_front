@@ -841,7 +841,7 @@ function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpen
   );
 }
 
-function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin }) {
+function UserEditScreenDuplicate({ user, bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin }) {
   const initialName = 'User 1';
   const initialEmail = 'yourmail@mail.com';
   const [name, setName] = useState(initialName);
