@@ -235,6 +235,20 @@ export default function HomeScreen({ currentUser, onLogout }) {
     currentUser?.roleCode === 'SUPER_ADMIN' ||
     currentUser?.role === 'Администратор' ||
     currentUser?.role === 'Супер-администратор';
+
+  const roleName = useMemo(() => {
+    const userRoleCode = displayUser?.roleCode || currentUser?.roleCode;
+    const userRole = displayUser?.role || currentUser?.role;
+
+    if (userRoleCode === 'SUPER_ADMIN' || userRole === 'Супер-администратор') {
+      return 'Администратор';
+    }
+    if (userRoleCode === 'ADMIN' || userRole === 'Администратор') {
+      return 'Редактор';
+    }
+    return 'Ученик';
+  }, [displayUser, currentUser]);
+
   const favoriteIds = useMemo(() => new Set(favorites.map((item) => item.testId)), [favorites]);
   const displayUser = profile?.user
     ? { ...currentUser, email: profile.user.email, name: profile.user.username }
@@ -385,7 +399,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
           try {
             const fallbackProfessionId = route.quiz?.languageId ?? route.quiz?.professionId ?? allProfessions[0]?.id ?? professions[0]?.id;
             if (!fallbackProfessionId) {
-              Alert.alert('Ошибка', 'Сначала нужна хотя бы одна профессия на сервере');
+              Alert.alert('Ошибка', 'Сначала нужен хотя бы один язык на сервере');
               return;
             }
 
@@ -477,7 +491,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
           <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }} style={styles.avatar} />
           <View>
             <Text style={styles.headerTitle}>Привет, {displayUser?.name ?? 'User'}</Text>
-            <Text style={styles.headerSubtitle}>Готов учиться</Text>
+            <Text style={styles.headerSubtitle}>{roleName}</Text>
           </View>
         </View>
 
@@ -497,7 +511,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Профессии</Text>
+            <Text style={styles.sectionTitle}>Языки</Text>
             <TouchableOpacity>
               <Text style={styles.sectionAction}>Смотреть все</Text>
             </TouchableOpacity>
@@ -521,7 +535,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Тесты</Text>
+            <Text style={styles.sectionTitle}>Недавние</Text>
           </View>
           <View style={styles.recentList}>
             {isLoading ? (
@@ -534,14 +548,14 @@ export default function HomeScreen({ currentUser, onLogout }) {
                   key={test.id}
                   title={test.title}
                   questions={`${test.questionCount ?? 0} вопросов`}
-                  status={test.languageTitle ?? test.professionTitle ?? 'Профессия'}
+                  status={test.languageTitle ?? test.professionTitle ?? 'Язык'}
                   statusVariant={favoriteIds.has(test.id) ? 'passed' : 'not_passed'}
                   iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
                   onPress={() => setRoute({ name: 'quiz', quiz: test })}
                 />
               ))
             ) : (
-              <Text style={styles.errorText}>Тесты не найдены</Text>
+              <Text style={styles.errorText}>Вы еще не проходили тесты</Text>
             )}
           </View>
         </View>
@@ -904,7 +918,7 @@ function FavoritesScreen({ favorites, bottomInset, navHeight, onGoHome, onOpenFa
     quiz: { id: item.testId, title: item.testTitle, questionCount: item.questionCount },
     id: item.testId,
     title: item.testTitle,
-    questions: item.languageTitle ?? item.professionTitle ?? 'Профессия',
+    questions: item.languageTitle ?? item.professionTitle ?? 'Язык',
     accent: index === 0 ? '#F7D76D' : index === 1 ? '#F6D85F' : '#F3C95A',
   }));
 
