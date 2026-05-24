@@ -829,9 +829,10 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   authLogo: {
-    width: 190,
-    height: 67,
-    marginTop: 242.5,
+    width: 224,
+    height: 100,
+    marginTop: 80,
+    marginBottom: 116.5,
     alignSelf: 'center',
   },
   resetCardContent: {
