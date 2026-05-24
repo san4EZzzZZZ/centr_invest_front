@@ -2,9 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, Roboto_300Light, Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@expo-google-fonts/roboto';
 import * as SplashScreen from 'expo-splash-screen';
+import { NativeWindStyleSheet } from 'nativewind';
 import HomeScreen from './src/screens/HomeScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import { authApi, clearToken, setToken } from './src/api/client';
+
+NativeWindStyleSheet.setOutput({
+  default: "native",
+});
 
 SplashScreen.preventAutoHideAsync();
 

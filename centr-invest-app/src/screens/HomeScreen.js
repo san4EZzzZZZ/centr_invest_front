@@ -462,7 +462,11 @@ export default function HomeScreen({ currentUser, onLogout }) {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalListContent}>
               {(professions.length ? professions : PROFESSIONS).map((item) => (
                 <TouchableOpacity key={item.id} style={styles.professionCard} activeOpacity={0.8}>
-                  <Image source={{ uri: item.icon ?? FALLBACK_ICON }} style={styles.professionIcon} />
+                  <Image 
+                    source={{ uri: item.icon ?? FALLBACK_ICON }} 
+                    style={styles.professionIcon} 
+                    resizeMode="contain"
+                  />
                   <Text numberOfLines={2} style={styles.professionName}>{item.title}</Text>
                 </TouchableOpacity>
               ))}
@@ -942,7 +946,6 @@ const styles = StyleSheet.create({
   professionIcon: {
     width: 44,
     height: 44,
-    resizeMode: 'contain',
     marginRight: 10, // Немного увеличил отступ от иконки до текста
   },
   professionName: {
