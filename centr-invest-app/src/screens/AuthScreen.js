@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -659,10 +660,11 @@ export default function AuthScreen({
               </>
             ) : isRegisterConfirm ? (
               <>
-                <View style={{ width: 190, height: 67 }} className="mt-[242.5px] self-center items-center justify-center flex-row">
-                  <View className="w-8 h-10 bg-[#7700FF] rounded-tr-xl rounded-bl-xl mr-2" />
-                  <Text className="text-2xl font-bold text-[#182030]">Тест</Text>
-                </View>
+                <Image
+                  source={require('../../assets/centr_test.png')}
+                  style={styles.authLogo}
+                  resizeMode="contain"
+                />
 
                 <AuthCardShell contentStyle={styles.mainCardContent}>
                   <RegisterConfirmForm
@@ -681,10 +683,11 @@ export default function AuthScreen({
               </>
             ) : (
               <>
-                <View style={{ width: 190, height: 67 }} className="mt-[242.5px] self-center items-center justify-center flex-row">
-                  <View className="w-8 h-10 bg-[#7700FF] rounded-tr-xl rounded-bl-xl mr-2" />
-                  <Text className="text-2xl font-bold text-[#182030]">Тест</Text>
-                </View>
+                <Image
+                  source={require('../../assets/centr_test.png')}
+                  style={styles.authLogo}
+                  resizeMode="contain"
+                />
 
                 <AuthCardShell contentStyle={styles.mainCardContent}>
                   <AuthTabs authMode={authMode} onSwitch={onSwitch} />
@@ -824,6 +827,12 @@ const styles = StyleSheet.create({
     minHeight: 281,
     paddingTop: 15,
     paddingBottom: 0,
+  },
+  authLogo: {
+    width: 190,
+    height: 67,
+    marginTop: 242.5,
+    alignSelf: 'center',
   },
   resetCardContent: {
     minHeight: 346,
