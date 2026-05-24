@@ -513,7 +513,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Языки</Text>
-            <TouchableOpacity >
+            <TouchableOpacity>
               <Text style={styles.sectionAction}>Смотреть все</Text>
             </TouchableOpacity>
           </View>
@@ -602,7 +602,7 @@ function ProfileScreen({ currentUser, isAdmin, bottomInset, navHeight, onGoHome,
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity  activeOpacity={0.85} style={styles.adminPanelBtn} onPress={onOpenAdmin}>
+          <TouchableOpacity activeOpacity={0.85} style={styles.adminPanelBtn} onPress={onOpenAdmin}>
             <Text style={styles.adminPanelText}>Панель администратора</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -644,7 +644,7 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
         contentContainerStyle={[styles.adminPanelContent, { paddingBottom: navHeight + bottomInset + 24 }]}
       >
         <View style={styles.adminPanelHeader}>
-          <TouchableOpacity  onPress={onBack} style={styles.adminPanelBackBtn} hitSlop={12}>
+          <TouchableOpacity onPress={onBack} style={styles.adminPanelBackBtn} hitSlop={12}>
             <Ionicons name="chevron-back" size={16} color="#252525" />
           </TouchableOpacity>
           <Text numberOfLines={1} style={styles.adminPanelTitle}>Панель администратора</Text>
@@ -655,7 +655,7 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
 
         <View style={styles.adminPanelSearchBar}>
           <SvgXml xml={SEARCH_SVG} width="24" height="24" />
-          <TextInput 
+          <TextInput
             placeholder="Поиск пользователя"
             placeholderTextColor="#7C7C7C"
             value={userSearch}
@@ -666,7 +666,7 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
 
         <View style={styles.adminPanelUsersList}>
           {users.map((user) => (
-            <TouchableOpacity  key={user.id} activeOpacity={0.85} style={styles.adminPanelUserRow} onPress={() => onOpenUser?.(user)}>
+            <TouchableOpacity key={user.id} activeOpacity={0.85} style={styles.adminPanelUserRow} onPress={() => onOpenUser?.(user)}>
               <Image source={{ uri: PROFESSIONS[2].icon }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
               <Text numberOfLines={1} style={styles.adminPanelUserName}>{user.name}</Text>
               <Ionicons name="chevron-forward" size={12} color="#252525" />
@@ -679,7 +679,7 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
 
         <View style={styles.adminPanelSearchBar}>
           <SvgXml xml={SEARCH_SVG} width="24" height="24" />
-          <TextInput 
+          <TextInput
             placeholder="Поиск теста"
             placeholderTextColor="#7C7C7C"
             value={testSearch}
@@ -690,7 +690,7 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
 
         <View style={styles.adminPanelTestsList}>
           {adminTests.map((test) => (
-            <TouchableOpacity  key={test.id} activeOpacity={0.85} style={styles.adminPanelTestCard}>
+            <TouchableOpacity key={test.id} activeOpacity={0.85} style={styles.adminPanelTestCard}>
               <Image source={{ uri: PROFESSIONS[2].icon }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
               <View style={styles.adminPanelTestTextWrap}>
                 <Text numberOfLines={1} style={styles.adminPanelTestName}>{test.title}</Text>
@@ -716,6 +716,132 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
 }
 
 function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin }) {
+  const initialName = 'User 1';
+  const initialEmail = 'yourmail@mail.com';
+  const [name, setName] = useState(initialName);
+  const [email, setEmail] = useState(initialEmail);
+  const [role, setRole] = useState('');
+  const [roleOpen, setRoleOpen] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
+  const userTests = user?.tests ?? [];
+  const canSave = name !== initialName || email !== initialEmail || role.length > 0;
+  const roleOptions = ['Администратор', 'Редактор', 'Пользователь', 'Гость'];
+  const canCreateTests = role === 'Администратор' || role === 'Редактор';
+
+  return (
+    <SafeAreaView edges={['top']} style={[styles.screen, styles.adminPanelScreen]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[styles.userEditContent, { paddingBottom: navHeight + bottomInset + 112 }]}
+      >
+        <View style={styles.adminPanelHeader}>
+          <TouchableOpacity onPress={onBack} style={styles.adminPanelBackBtn} hitSlop={12}>
+            <Ionicons name="chevron-back" size={16} color="#252525" />
+          </TouchableOpacity>
+          <Text numberOfLines={1} style={styles.userEditTitle}>Редактирование: {user?.name ?? 'Пользователь 1'}</Text>
+        </View>
+
+        <Text style={styles.userEditSectionTitle}>Основная информация</Text>
+        <View style={styles.userEditDivider} />
+
+        <TextInput
+          value={name}
+          onChangeText={setName}
+          onFocus={() => {
+            setRoleOpen(false);
+            setFocusedField('name');
+          }}
+          onBlur={() => setFocusedField(null)}
+          style={[styles.userEditInput, focusedField === 'name' ? styles.userEditInputActive : null]}
+          placeholderTextColor="#C9C9C9"
+        />
+
+        <TextInput
+          value={email}
+          onChangeText={setEmail}
+          onFocus={() => {
+            setRoleOpen(false);
+            setFocusedField('email');
+          }}
+          onBlur={() => setFocusedField(null)}
+          style={[styles.userEditInput, focusedField === 'email' ? styles.userEditInputActive : null]}
+          placeholderTextColor="#C9C9C9"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+
+        <View style={[styles.userEditRoleBox, roleOpen ? styles.userEditRoleBoxOpen : null]}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={[styles.userEditRoleSelect, roleOpen ? styles.userEditRoleSelectOpen : null]}
+            onPress={() => {
+              Keyboard.dismiss();
+              setFocusedField(null);
+              setRoleOpen((value) => !value);
+            }}
+          >
+            <Text style={[styles.userEditRolePlaceholder, role ? styles.userEditRoleValue : null]}>{role || 'Роль'}</Text>
+            <Ionicons name={roleOpen ? 'chevron-down' : 'chevron-forward'} size={12} color="#252525" />
+          </TouchableOpacity>
+
+          {roleOpen ? (
+            <View style={styles.userEditRoleOptions}>
+              {roleOptions.map((option) => (
+                <TouchableOpacity
+                  key={option}
+                  activeOpacity={0.85}
+                  style={styles.userEditRoleOption}
+                  onPress={() => {
+                    setRole(option);
+                    setRoleOpen(false);
+                  }}
+                >
+                  <Text style={styles.userEditRoleOptionText}>{option}</Text>
+                  {option !== roleOptions[roleOptions.length - 1] ? <View style={styles.userEditRoleOptionDivider} /> : null}
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+        </View>
+
+        <View style={styles.userEditDivider} />
+        <Text style={styles.userEditTestsTitle}>Тесты</Text>
+
+        {!canCreateTests ? (
+          <Text style={styles.userEditEmptyTestsText}>У пользователя нет прав для создания теста</Text>
+        ) : userTests.length === 0 ? (
+          <Text style={styles.userEditEmptyTestsText}>Пользователь пока не создал ни одного теста</Text>
+        ) : (
+          <SwipeableUserTestCard />
+        )}
+      </ScrollView>
+
+      <View style={[styles.userEditActions, { bottom: navHeight + bottomInset + 16 }]}>
+        <TouchableOpacity activeOpacity={0.85} style={styles.userEditDeleteBtn}>
+          <Text style={styles.userEditDeleteText}>Удалить пользователя</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity disabled={!canSave} activeOpacity={0.85} style={[styles.userEditSaveBtn, !canSave ? styles.userEditSaveBtnDisabled : null]}>
+          <Text style={[styles.userEditSaveText, !canSave ? styles.userEditSaveTextDisabled : null]}>Сохранить изменения</Text>
+        </TouchableOpacity>
+      </View>
+
+      <BottomNav
+        bottomInset={bottomInset}
+        navHeight={navHeight}
+        activeTab="profile"
+        onGoHome={onGoHome}
+        onOpenFavorites={onOpenFavorites}
+        onOpenProfile={onOpenProfile}
+        onOpenAdmin={onOpenAdmin}
+        isAdmin
+      />
+    </SafeAreaView>
+  );
+}
+
+function UserEditScreenDuplicate({ user, bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin }) {
   const initialName = 'User 1';
   const initialEmail = 'yourmail@mail.com';
   const [name, setName] = useState(initialName);
@@ -891,7 +1017,7 @@ function SwipeableUserTestCard() {
   return (
     <View style={styles.userEditSwipeRow}>
       <Animated.View pointerEvents={isSwiped ? 'auto' : 'none'} style={[styles.userEditDeleteTestSlot, { opacity: deleteOpacity }]}>
-        <TouchableOpacity  activeOpacity={0.85} style={styles.userEditDeleteTestBtn}>
+        <TouchableOpacity activeOpacity={0.85} style={styles.userEditDeleteTestBtn}>
           <SvgXml xml={BIN_SVG} width="24" height="24" />
         </TouchableOpacity>
       </Animated.View>
@@ -901,7 +1027,7 @@ function SwipeableUserTestCard() {
         style={styles.userEditSwipeCardWrap}
       >
         <Animated.View style={{ marginRight: cardMarginRight }}>
-          <TouchableOpacity  activeOpacity={0.85} style={styles.adminPanelTestCard}>
+          <TouchableOpacity activeOpacity={0.85} style={styles.adminPanelTestCard}>
             <Image source={{ uri: PROFESSIONS[2].icon }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
             <View style={styles.adminPanelTestTextWrap}>
               <Text numberOfLines={1} style={styles.adminPanelTestName}>Java Senior</Text>
@@ -1030,7 +1156,7 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
               </TouchableOpacity>
 
               {isAdmin ? (
-                <TouchableOpacity  style={styles.bottomNavBtn} onPress={onOpenAdmin} activeOpacity={0.8}>
+                <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenAdmin} activeOpacity={0.8}>
                   <SvgXml xml={PLUS_NAV_SVG} width="32" height="32" />
                 </TouchableOpacity>
               ) : null}
@@ -1683,7 +1809,9 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   recentCard: {
-    backgroundColor: '#FFFEEE',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D8EFE3',
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',

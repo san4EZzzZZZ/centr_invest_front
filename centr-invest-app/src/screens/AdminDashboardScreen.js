@@ -54,8 +54,6 @@ export default function AdminDashboardScreen({ quizzes, onBack, onCreate, onEdit
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Тесты</Text>
-
           <View style={styles.list}>
             {quizzes.map((quiz) => (
               <QuizCard
@@ -82,7 +80,7 @@ export default function AdminDashboardScreen({ quizzes, onBack, onCreate, onEdit
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Создание</Text>
+          <Text style={styles.sectionTitle}>Черновики</Text>
 
           <TouchableOpacity  style={styles.createCard} onPress={onCreate} activeOpacity={0.9}>
             <View style={styles.createIcon}>
@@ -90,7 +88,6 @@ export default function AdminDashboardScreen({ quizzes, onBack, onCreate, onEdit
             </View>
             <View style={styles.createBody}>
               <Text style={styles.createTitle}>Создать новый тест</Text>
-              <Text style={styles.createSubtitle}>Добавьте вопросы, ответы и пояснения</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -107,9 +104,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 12,
+    marginLeft: 16,
+    paddingTop: 24,
+    paddingBottom: 16,
   },
   backBtn: {
     width: 28,
@@ -121,8 +118,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Roboto',
     fontWeight: '500',
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 20,
+    lineHeight: 23,
     color: '#252525',
     textAlign: 'left',
   },
@@ -135,24 +132,25 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   section: {
-    marginBottom: 18,
     backgroundColor: '#FFFFFF',
     borderRadius: 22,
-    padding: 16,
+    paddingBottom: 16,
   },
   sectionTitle: {
     fontFamily: 'Roboto',
     fontWeight: '500',
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 20,
+    lineHeight: 23,
     color: '#252525',
-    marginBottom: 14,
+    marginBottom: 16,
   },
   list: {
     gap: 12,
   },
   quizCard: {
-    backgroundColor: '#FFFEEE',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D8EFE3',
     borderRadius: 16,
     padding: 12,
   },
@@ -234,35 +232,31 @@ const styles = StyleSheet.create({
   createCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF0EB',
+    backgroundColor: '#76113A',
     borderRadius: 16,
-    padding: 14,
+    padding: 16,
+    justifyContent: 'center',
   },
   createIcon: {
-    width: 38,
-    height: 38,
+    width: 18,
+    height: 18,
     borderRadius: 10,
-    backgroundColor: '#FF7A45',
+    backgroundColor: '#76113A',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   createBody: {
-    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   createTitle: {
     fontFamily: 'Roboto',
     fontWeight: '500',
     fontSize: 14,
     lineHeight: 16,
-    color: '#252525',
-  },
-  createSubtitle: {
-    marginTop: 4,
-    fontFamily: 'Roboto',
-    fontWeight: '400',
-    fontSize: 11,
-    lineHeight: 14,
-    color: '#8A8983',
+    color: '#FFFFFF',
+    textAlign: "center",
   },
 });
