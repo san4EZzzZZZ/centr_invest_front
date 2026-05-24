@@ -13,6 +13,15 @@ const SEARCH_SVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" 
 <path d="M9.5 16C7.68333 16 6.146 15.3707 4.888 14.112C3.63 12.8533 3.00067 11.316 3 9.5C2.99933 7.684 3.62867 6.14667 4.888 4.888C6.14733 3.62933 7.68467 3 9.5 3C11.3153 3 12.853 3.62933 14.113 4.888C15.373 6.14667 16.002 7.684 16 9.5C16 10.2333 15.8833 10.925 15.65 11.575C15.4167 12.225 15.1 12.8 14.7 13.3L20.3 18.9C20.4833 19.0833 20.575 19.3167 20.575 19.6C20.575 19.8833 20.4833 20.1167 20.3 20.3C20.1167 20.4833 19.8833 20.575 19.6 20.575C19.3167 20.575 19.0833 20.4833 18.9 20.3L13.3 14.7C12.8 15.1 12.225 15.4167 11.575 15.65C10.925 15.8833 10.2333 16 9.5 16ZM9.5 14C10.75 14 11.8127 13.5627 12.688 12.688C13.5633 11.8133 14.0007 10.7507 14 9.5C13.9993 8.24933 13.562 7.187 12.688 6.313C11.814 5.439 10.7513 5.00133 9.5 5C8.24867 4.99867 7.18633 5.43633 6.313 6.313C5.43967 7.18967 5.002 8.252 5 9.5C4.998 10.748 5.43567 11.8107 6.313 12.688C7.19033 13.5653 8.25267 14.0027 9.5 14Z" fill="#7C7C7C"/>
 </svg>`;
 
+const HOME_NAV_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M8.1775 27.9999C6.60683 27.9999 5.3335 26.6932 5.3335 25.0799V13.3439C5.3335 12.4572 5.72683 11.6172 6.40016 11.0639L14.2228 4.63988C14.7226 4.22599 15.3512 3.99951 16.0002 3.99951C16.6491 3.99951 17.2777 4.22599 17.7775 4.63988L25.5988 11.0639C26.2735 11.6172 26.6668 12.4572 26.6668 13.3439V25.0799C26.6668 26.6932 25.3935 27.9999 23.8228 27.9999H8.1775Z" stroke="#CECECE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12.667 28V20.6667C12.667 19.9594 12.9479 19.2811 13.448 18.781C13.9481 18.281 14.6264 18 15.3337 18H16.667C17.3742 18 18.0525 18.281 18.5526 18.781C19.0527 19.2811 19.3337 19.9594 19.3337 20.6667V28" stroke="#CECECE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+const PLUS_NAV_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M26.2857 17.7143H17.7143V26.2857C17.7143 26.7404 17.5337 27.1764 17.2122 27.4979C16.8907 27.8194 16.4547 28 16 28C15.5453 28 15.1093 27.8194 14.7878 27.4979C14.4663 27.1764 14.2857 26.7404 14.2857 26.2857V17.7143H5.71429C5.25963 17.7143 4.82359 17.5337 4.5021 17.2122C4.18061 16.8907 4 16.4547 4 16C4 15.5453 4.18061 15.1093 4.5021 14.7878C4.82359 14.4663 5.25963 14.2857 5.71429 14.2857H14.2857V5.71429C14.2857 5.25963 14.4663 4.82359 14.7878 4.5021C15.1093 4.18061 15.5453 4 16 4C16.4547 4 16.8907 4.18061 17.2122 4.5021C17.5337 4.82359 17.7143 5.25963 17.7143 5.71429V14.2857H26.2857C26.7404 14.2857 27.1764 14.4663 27.4979 14.7878C27.8194 15.1093 28 15.5453 28 16C28 16.4547 27.8194 16.8907 27.4979 17.2122C27.1764 17.5337 26.7404 17.7143 26.2857 17.7143Z" fill="#CECECE"/>
+</svg>`;
+
 const HOME_ACTIVE_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M28 26.6664C28 27.02 27.8595 27.3592 27.6095 27.6092C27.3594 27.8593 27.0203 27.9997 26.6667 27.9997H5.33333C4.97971 27.9997 4.64057 27.8593 4.39052 27.6092C4.14048 27.3592 4 27.02 4 26.6664V12.6531C3.99986 12.4499 4.04616 12.2494 4.13535 12.0668C4.22455 11.8843 4.35429 11.7245 4.51467 11.5997L15.1813 3.30241C15.4154 3.12034 15.7035 3.02148 16 3.02148C16.2965 3.02148 16.5846 3.12034 16.8187 3.30241L27.4853 11.5997C27.6457 11.7245 27.7754 11.8843 27.8646 12.0668C27.9538 12.2494 28.0001 12.4499 28 12.6531V26.6664Z" fill="#76113A"/>
 </svg>`;
@@ -397,12 +406,28 @@ export default function HomeScreen({ currentUser, onLogout }) {
     return (
       <ProfileScreen
         currentUser={displayUser}
+        isAdmin={isAdmin}
         bottomInset={bottomInset}
         navHeight={NAV_HEIGHT}
         onGoHome={goHomeWithRefresh}
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
+        onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
         onLogout={onLogout}
+      />
+    );
+  }
+
+  if (route.name === 'adminPanel') {
+    return (
+      <AdminPanelScreen
+        bottomInset={bottomInset}
+        navHeight={NAV_HEIGHT}
+        onBack={() => setRoute({ name: 'profile' })}
+        onGoHome={goHomeWithRefresh}
+        onOpenFavorites={() => setRoute({ name: 'favorites' })}
+        onOpenProfile={() => setRoute({ name: 'profile' })}
+        onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
       />
     );
   }
@@ -518,7 +543,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
   );
 }
 
-function ProfileScreen({ currentUser, bottomInset, navHeight, onGoHome, onOpenFavorites, onOpenProfile, onLogout }) {
+function ProfileScreen({ currentUser, isAdmin, bottomInset, navHeight, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, onLogout }) {
   return (
     <SafeAreaView edges={['top']} style={[styles.screen, styles.profileScreen]}>
       <View style={styles.profileShell}>
@@ -541,6 +566,10 @@ function ProfileScreen({ currentUser, bottomInset, navHeight, onGoHome, onOpenFa
               <Text style={styles.logoutText}>Выйти</Text>
             </TouchableOpacity>
           </View>
+
+          <TouchableOpacity activeOpacity={0.85} style={styles.adminPanelBtn} onPress={onOpenAdmin}>
+            <Text style={styles.adminPanelText}>Панель администратора</Text>
+          </TouchableOpacity>
         </ScrollView>
       </View>
 
@@ -551,8 +580,101 @@ function ProfileScreen({ currentUser, bottomInset, navHeight, onGoHome, onOpenFa
         onGoHome={onGoHome}
         onOpenFavorites={onOpenFavorites}
         onOpenProfile={onOpenProfile}
-        onOpenAdmin={() => {}}
-        isAdmin={false}
+        onOpenAdmin={onOpenAdmin}
+        isAdmin={isAdmin}
+      />
+    </SafeAreaView>
+  );
+}
+
+function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin }) {
+  const [userSearch, setUserSearch] = useState('');
+  const [testSearch, setTestSearch] = useState('');
+  const users = [
+    { id: 'user-1', name: 'Пользователь 1' },
+    { id: 'user-2', name: 'Пользователь 1' },
+    { id: 'user-3', name: 'Пользователь 1' },
+  ];
+  const adminTests = [
+    { id: 'test-1', title: 'Java Senior', questions: '12 вопросов' },
+    { id: 'test-2', title: 'Java Senior', questions: '12 вопросов' },
+    { id: 'test-3', title: 'Java Senior', questions: '12 вопросов' },
+  ];
+
+  return (
+    <SafeAreaView edges={['top']} style={[styles.screen, styles.adminPanelScreen]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[styles.adminPanelContent, { paddingBottom: navHeight + bottomInset + 24 }]}
+      >
+        <View style={styles.adminPanelHeader}>
+          <TouchableOpacity onPress={onBack} style={styles.adminPanelBackBtn} hitSlop={12}>
+            <Ionicons name="chevron-back" size={16} color="#252525" />
+          </TouchableOpacity>
+          <Text numberOfLines={1} style={styles.adminPanelTitle}>Панель администратора</Text>
+          <View style={styles.adminPanelHeaderRight} />
+        </View>
+
+        <Text style={styles.adminPanelUsersTitle}>Пользователи</Text>
+
+        <View style={styles.adminPanelSearchBar}>
+          <SvgXml xml={SEARCH_SVG} width="24" height="24" />
+          <TextInput
+            placeholder="Поиск пользователя"
+            placeholderTextColor="#7C7C7C"
+            value={userSearch}
+            onChangeText={setUserSearch}
+            style={styles.adminPanelSearchInput}
+          />
+        </View>
+
+        <View style={styles.adminPanelUsersList}>
+          {users.map((user) => (
+            <TouchableOpacity key={user.id} activeOpacity={0.85} style={styles.adminPanelUserRow}>
+              <Image source={{ uri: PROFESSIONS[2].icon }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
+              <Text numberOfLines={1} style={styles.adminPanelUserName}>{user.name}</Text>
+              <Ionicons name="chevron-forward" size={12} color="#252525" />
+              <View pointerEvents="none" style={styles.adminPanelUserDivider} />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={styles.adminPanelTestsTitle}>Тесты</Text>
+
+        <View style={styles.adminPanelSearchBar}>
+          <SvgXml xml={SEARCH_SVG} width="24" height="24" />
+          <TextInput
+            placeholder="Поиск теста"
+            placeholderTextColor="#7C7C7C"
+            value={testSearch}
+            onChangeText={setTestSearch}
+            style={styles.adminPanelSearchInput}
+          />
+        </View>
+
+        <View style={styles.adminPanelTestsList}>
+          {adminTests.map((test) => (
+            <TouchableOpacity key={test.id} activeOpacity={0.85} style={styles.adminPanelTestCard}>
+              <Image source={{ uri: PROFESSIONS[2].icon }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
+              <View style={styles.adminPanelTestTextWrap}>
+                <Text numberOfLines={1} style={styles.adminPanelTestName}>{test.title}</Text>
+                <Text numberOfLines={1} style={styles.adminPanelTestQuestions}>{test.questions}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+
+      <BottomNav
+        bottomInset={bottomInset}
+        navHeight={navHeight}
+        activeTab="profile"
+        onGoHome={onGoHome}
+        onOpenFavorites={onOpenFavorites}
+        onOpenProfile={onOpenProfile}
+        onOpenAdmin={onOpenAdmin}
+        isAdmin
       />
     </SafeAreaView>
   );
@@ -651,7 +773,7 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
             <View style={[styles.bottomNav, { height: navHeight + bottomInset, paddingBottom: bottomInset }]}>
               <TouchableOpacity style={styles.bottomNavBtn} onPress={onGoHome} activeOpacity={0.8}>
                 <SvgXml
-                  xml={activeTab === 'home' ? HOME_ACTIVE_SVG : HOME_INACTIVE_SVG}
+                  xml={HOME_NAV_SVG}
                   width="32"
                   height="32"
                 />
@@ -675,7 +797,7 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
 
               {isAdmin ? (
                 <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenAdmin} activeOpacity={0.8}>
-                  <Ionicons name="add" size={32} color="#7A1136" />
+                  <SvgXml xml={PLUS_NAV_SVG} width="32" height="32" />
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -732,8 +854,138 @@ const styles = StyleSheet.create({
   favoritesScreen: {
     backgroundColor: '#FFFFFF',
   },
+  adminPanelScreen: {
+    backgroundColor: '#FFFFFF',
+  },
   scrollContent: {
     paddingBottom: 120,
+  },
+  adminPanelContent: {
+    paddingHorizontal: 16,
+    paddingTop: 6,
+  },
+  adminPanelHeader: {
+    height: 23,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  adminPanelBackBtn: {
+    width: 16,
+    height: 16,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  adminPanelTitle: {
+    flex: 1,
+    marginLeft: 16,
+    textAlign: 'left',
+    fontFamily: 'Roboto_500Medium',
+    fontSize: 20,
+    lineHeight: 23,
+    color: '#252525',
+  },
+  adminPanelHeaderRight: {
+    width: 16,
+    height: 16,
+  },
+  adminPanelUsersTitle: {
+    marginTop: 16,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 18,
+    lineHeight: 22,
+    color: '#252525',
+  },
+  adminPanelSearchBar: {
+    marginTop: 16,
+    height: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    backgroundColor: '#EAEAEA',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+  },
+  adminPanelSearchInput: {
+    flex: 1,
+    marginLeft: 8,
+    paddingVertical: 0,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 14,
+    lineHeight: 18,
+    color: '#7C7C7C',
+    textAlignVertical: 'center',
+  },
+  adminPanelUsersList: {
+    marginTop: 16,
+  },
+  adminPanelUserRow: {
+    minHeight: 62,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingBottom: 16,
+  },
+  adminPanelUserDivider: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 2,
+    borderRadius: 999,
+    backgroundColor: '#D9D9D9',
+  },
+  adminPanelPythonIcon: {
+    width: 44,
+    height: 44,
+  },
+  adminPanelUserName: {
+    flex: 1,
+    marginLeft: 16,
+    marginRight: 16,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 16,
+    lineHeight: 20,
+    color: '#252525',
+  },
+  adminPanelTestsTitle: {
+    marginTop: 16,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 18,
+    lineHeight: 22,
+    color: '#252525',
+  },
+  adminPanelTestsList: {
+    marginTop: 16,
+    gap: 16,
+  },
+  adminPanelTestCard: {
+    height: 76,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: '#D8EFE3',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  adminPanelTestTextWrap: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  adminPanelTestName: {
+    fontFamily: 'Roboto_500Medium',
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#252525',
+  },
+  adminPanelTestQuestions: {
+    marginTop: 4,
+    fontFamily: 'Roboto_500Medium',
+    fontSize: 10,
+    lineHeight: 12,
+    color: '#8A8983',
   },
   favoritesShell: {
     flex: 1,
@@ -852,6 +1104,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 20,
     color: '#FF5D2E',
+  },
+  adminPanelBtn: {
+    alignSelf: 'stretch',
+    height: 51,
+    marginTop: 16,
+    marginHorizontal: -16,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: '#E95B20',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  adminPanelText: {
+    fontFamily: 'Roboto',
+    fontWeight: '400',
+    fontSize: 16,
+    lineHeight: 20,
+    color: '#E95B20',
+    textAlign: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -1126,7 +1399,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(242, 239, 255, 0.6)',
   },
   bottomNavBtn: {
-    width: 56,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
