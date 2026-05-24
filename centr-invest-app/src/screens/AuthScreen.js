@@ -212,13 +212,11 @@ function RegisterForm({
   regEmail,
   regPassword,
   regPassword2,
-  regCreator,
   regCode,
   setRegUsername,
   setRegEmail,
   setRegPassword,
   setRegPassword2,
-  setRegCreator,
   setRegCode,
   clearFieldError,
   onRegister,
@@ -301,15 +299,6 @@ function RegisterForm({
         </Text>
       ) : null}
 
-      <TouchableOpacity onPress={() => setRegCreator((prev) => !prev)} activeOpacity={0.8} className="flex-row items-center mb-[10px]">
-        <View
-          className={`w-[22px] h-[22px] rounded-[6px] items-center justify-center mr-[10px] ${regCreator ? 'bg-[#76113A]' : 'border border-[#76113A] bg-white'}`}
-        >
-          {regCreator ? <CheckMark width={14} height={12} color="#FFFFFF" /> : null}
-        </View>
-        <Text className="font-roboto text-[16px] text-[#252525]">Создатель Хайпа</Text>
-      </TouchableOpacity>
-
       <TouchableOpacity disabled={isSubmitting} onPress={onRegister} className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center mb-[16px]">
         <Text className="font-roboto text-[16px] text-white">{isSubmitting ? 'Регистрация...' : 'Зарегистрироваться'}</Text>
       </TouchableOpacity>
@@ -319,11 +308,7 @@ function RegisterForm({
 
 function RegisterConfirmForm({
   alert,
-  fieldErrors,
   regEmail,
-  regCode,
-  setRegCode,
-  clearFieldError,
   onConfirmRegister,
   onBackToLogin,
   onCloseAlert,
@@ -331,37 +316,30 @@ function RegisterConfirmForm({
 }) {
   return (
     <View>
-      <Text style={styles.resetTitle} className="font-roboto text-[18px] text-[#000000] text-center mt-[16px]">
-        Подтверждение регистрации
+      <Text style={styles.confirmTitle}>
+        Подтверждение Email
       </Text>
       <FormAlert variant={alert?.variant} message={alert?.message} onClose={onCloseAlert} />
-      <Text style={styles.resetEmailText} className="font-roboto text-[14px] text-[#6B6B6B] text-center ">
-        {maskEmail(regEmail)}
+      
+      <Text style={styles.confirmSubTitle}>
+        На почту будет отправлено письмо{"\n"}для подтверждения.
       </Text>
-      <TextInput
-        placeholder="Код подтверждения"
-        placeholderTextColor={fieldErrors?.regCode ? '#F23030' : '#D6D6D6'}
-        value={regCode}
-        onChangeText={(v) => {
-          setRegCode(v);
-          clearFieldError('regCode');
-        }}
-        onFocus={() => clearFieldError('regCode')}
-        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regCode ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regCode ? 'mb-0' : 'mb-[10px]'}`}
-      />
-      {fieldErrors?.regCode ? (
-        <Text style={styles.formErrorText} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">
-          {fieldErrors.regCode}
-        </Text>
-      ) : null}
+
+      <Text style={styles.confirmEmailText}>
+        {maskEmail(regEmail)}.
+      </Text>
+
       <TouchableOpacity disabled={isSubmitting} onPress={onConfirmRegister} className="bg-[#76113A] w-full max-w-[338px] h-[51px] rounded-[12px] items-center justify-center self-center">
-        <Text className="font-roboto text-[16px] text-white">{isSubmitting ? 'Проверка...' : 'Подтвердить'}</Text>
+        <Text className="font-roboto text-[16px] text-white">
+          {isSubmitting ? 'Отправка...' : 'Отправить письмо'}
+        </Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={onBackToLogin} style={styles.backLinkWrap} className="items-center">
-        <View style={styles.backLinkRow} className="flex-row items-center">
+
+      <TouchableOpacity onPress={onBackToLogin} style={styles.confirmBackLinkWrap}>
+        <View style={styles.backLinkRow} className="flex-row items-center justify-center">
           <Feather name="arrow-left" size={14} color="#FF4F12" style={{ marginRight: 4 }} />
-          <Text style={styles.backLinkText} className="text-[#FF4F12] text-[14px] font-robotoLight">
-            Вернуться ко входу
+          <Text style={styles.confirmBackLinkText}>
+            Вернуться к входу
           </Text>
         </View>
       </TouchableOpacity>
@@ -596,13 +574,11 @@ export default function AuthScreen({
   regEmail,
   regPassword,
   regPassword2,
-  regCreator,
   regCode,
   setRegUsername,
   setRegEmail,
   setRegPassword,
   setRegPassword2,
-  setRegCreator,
   setRegCode,
   resetEmail,
   resetCode,
@@ -666,14 +642,10 @@ export default function AuthScreen({
                   resizeMode="contain"
                 />
 
-                <AuthCardShell contentStyle={styles.mainCardContent}>
+                <AuthCardShell contentStyle={styles.confirmCardContent}>
                   <RegisterConfirmForm
                     alert={alert}
-                    fieldErrors={fieldErrors}
                     regEmail={regEmail}
-                    regCode={regCode}
-                    setRegCode={setRegCode}
-                    clearFieldError={clearFieldError}
                     onConfirmRegister={onConfirmRegister}
                     onBackToLogin={onBackToLogin}
                     onCloseAlert={onCloseAlert}
@@ -714,12 +686,10 @@ export default function AuthScreen({
                         regEmail={regEmail}
                         regPassword={regPassword}
                         regPassword2={regPassword2}
-                        regCreator={regCreator}
                         setRegUsername={setRegUsername}
                         setRegEmail={setRegEmail}
                         setRegPassword={setRegPassword}
                         setRegPassword2={setRegPassword2}
-                        setRegCreator={setRegCreator}
                         clearFieldError={clearFieldError}
                         onRegister={onRegister}
                         onCloseAlert={onCloseAlert}
@@ -848,7 +818,8 @@ const styles = StyleSheet.create({
   confirmCardContent: {
     minHeight: 0,
     paddingTop: 0,
-    paddingBottom: 16,
+    paddingBottom: 0,
+    paddingHorizontal: 16,
   },
   requestCardContent: {
     minHeight: 215,
@@ -902,6 +873,47 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 16,
     textAlignVertical: 'center',
+    includeFontPadding: false,
+  },
+  confirmTitle: {
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 14,
+    color: '#333333',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 15,
+    marginHorizontal: 40,
+  },
+  confirmSubTitle: {
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 14,
+    color: '#A9A9A9',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginTop: 0,
+    marginBottom: 15,
+    paddingHorizontal: 16,
+  },
+  confirmEmailText: {
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 14,
+    color: '#6B6B6B',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginTop: 0,
+    marginBottom: 10,
+    marginHorizontal: 45,
+  },
+  confirmBackLinkWrap: {
+    marginTop: 10,
+    marginBottom: 16,
+    marginHorizontal: 45,
+  },
+  confirmBackLinkText: {
+    fontFamily: 'Roboto_300Light',
+    fontSize: 14,
+    color: '#FF4F12',
+    lineHeight: 22,
     includeFontPadding: false,
   },
   successTitle: {

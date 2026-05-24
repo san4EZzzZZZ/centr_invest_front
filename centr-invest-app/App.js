@@ -66,7 +66,6 @@ export default function App() {
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regPassword2, setRegPassword2] = useState('');
-  const [regCreator, setRegCreator] = useState(true);
   const [regCode, setRegCode] = useState('');
 
   const [resetEmail, setResetEmail] = useState(TEST_ACCOUNT.email);
@@ -230,7 +229,6 @@ export default function App() {
       await authApi.register({ email, username, password });
       setRegEmail(email);
       setRegCode('');
-      setAlert({ variant: 'success', message: 'Код подтверждения отправлен на email' });
       setAuthMode('register-confirm');
     } catch (error) {
       const msg = error.message || '';
@@ -359,7 +357,6 @@ export default function App() {
       await authApi.forgotPassword(email);
       setResetEmail(email);
       setAuthMode('reset-confirm');
-      setAlert({ variant: 'success', message: 'Код восстановления отправлен на email' });
     } catch (error) {
       setAlert({ variant: 'error', message: error.message || 'Не удалось отправить код восстановления' });
     } finally {
@@ -443,13 +440,11 @@ export default function App() {
         regEmail={regEmail}
         regPassword={regPassword}
         regPassword2={regPassword2}
-        regCreator={regCreator}
         regCode={regCode}
         setRegUsername={setRegUsername}
         setRegEmail={setRegEmail}
         setRegPassword={setRegPassword}
         setRegPassword2={setRegPassword2}
-        setRegCreator={setRegCreator}
         setRegCode={setRegCode}
         resetEmail={resetEmail}
         resetCode={resetCode}
