@@ -22,7 +22,7 @@ function isValidEmail(value) {
 function toAppUser(user) {
   return {
     ...user,
-    name: user?.username ?? user?.email ?? 'User',
+    name: user?.username ?? user?.email ?? 'Пользователь',
     roleCode: user?.role,
     role: user?.role === 'ADMIN' ? 'Администратор' : 'Пользователь',
   };
@@ -102,7 +102,7 @@ export default function App() {
     }
 
     if (!isValidEmail(email)) {
-      setFieldError('loginEmail', 'Некорректный Email');
+      setFieldError('loginEmail', 'Некорректный формат Email');
       return;
     }
 
@@ -119,7 +119,12 @@ export default function App() {
       setAlert({ variant: 'success', message: 'Успешный вход' });
       setIsLoggedIn(true);
     } catch (error) {
-      setFieldError('loginPassword', error.message || 'Не удалось войти');
+      const msg = error.message || '';
+      if (msg.includes('Invalid email or password') || msg.includes('Unauthorized') || msg.includes('401')) {
+        setFieldError('loginPassword', 'Неверный email или пароль');
+      } else {
+        setFieldError('loginPassword', 'Не удалось войти. Попробуйте снова.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -135,7 +140,7 @@ export default function App() {
 
     if (!username) setFieldError('regUsername', 'Введите имя пользователя');
     if (!email) setFieldError('regEmail', 'Введите Email');
-    if (email && !isValidEmail(email)) setFieldError('regEmail', 'Некорректный Email');
+    if (email && !isValidEmail(email)) setFieldError('regEmail', 'Некорректный формат Email');
     if (!password) setFieldError('regPassword', 'Введите пароль');
     if (!password2) setFieldError('regPassword2', 'Подтвердите пароль');
     if (password && password.length < 8) setFieldError('regPassword', 'Пароль должен быть не короче 8 символов');
@@ -160,7 +165,12 @@ export default function App() {
       setAlert({ variant: 'success', message: 'Регистрация успешна' });
       setIsLoggedIn(true);
     } catch (error) {
-      setAlert({ variant: 'error', message: error.message || 'Не удалось зарегистрироваться' });
+      const msg = error.message || '';
+      if (msg.includes('Email is already registered') || msg.includes('409') || msg.includes('exists')) {
+        setFieldError('regEmail', 'Этот Email уже зарегистрирован');
+      } else {
+        setAlert({ variant: 'error', message: 'Не удалось зарегистрироваться. Попробуйте снова.' });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -176,7 +186,7 @@ export default function App() {
     }
 
     if (!isValidEmail(email)) {
-      setFieldError('resetEmail', 'Некорректный Email');
+      setFieldError('resetEmail', 'Некорректный формат Email');
       return;
     }
 

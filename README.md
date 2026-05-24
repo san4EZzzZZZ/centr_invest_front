@@ -91,3 +91,39 @@ npx expo start --localhost
 
 - `--localhost` подходит, когда эмулятор запущен на этом же компьютере.
 - Если запускаешь на реальном телефоне и есть проблемы с доступом, попробуй `npx expo start --tunnel` (медленнее, но стабильнее).
+
+---
+
+## Информация для бэкенд-разработчика
+
+### API Base URL
+По умолчанию фронтенд ожидает API по адресу:
+- **Web**: `http://localhost:8080/api`
+- **Android Emulator**: `http://10.0.2.2:8080/api`
+
+Для переопределения используйте переменную окружения в файле `centr-invest-app/.env` (или `.env.local`):
+```env
+EXPO_PUBLIC_API_URL=http://your-backend-ip:8080/api
+```
+
+### Аутентификация
+Используется заголовок `Authorization: Bearer <token>`. Токен передается после успешного логина/регистрации.
+
+### Требования к CORS
+Бэкенд должен разрешать запросы (CORS) с адресов, где запущен фронтенд (например, `http://localhost:8081` или IP-адрес машины разработчика).
+
+### Основные эндпоинты
+- **Auth**: `/auth/login`, `/auth/register` (POST)
+- **Professions**: `/professions` (GET)
+- **Tests**: `/tests/{id}` (GET)
+- **Attempts**: 
+  - `POST /tests/{id}/attempts` — начать попытку
+  - `GET /attempts/{id}` — получить данные попытки
+  - `POST /attempts/{id}/answer` — отправить ответ
+  - `GET /attempts/{id}/result` — результат
+  - `GET /attempts/{id}/ai-review` — ИИ-разбор
+- **Profile**: `/profile`, `/profile/favorites`
+- **Admin**: `/admin/tests` (доступ ограничен `AdminGuard` на фронте)
+
+### Формат данных
+Frontend ожидает и отправляет данные в формате **JSON**. Заголовок `Content-Type: application/json` устанавливается автоматически для запросов с телом.
