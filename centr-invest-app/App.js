@@ -159,20 +159,20 @@ export default function App() {
     const password = String(regPassword || '');
     const password2 = String(regPassword2 || '');
 
-    if (!username) setFieldError('regUsername', 'Введите имя пользователя');
-    if (!email) setFieldError('regEmail', 'Введите Email');
+    if (!username || !email || !password || !password2) {
+      if (!username) setFieldError('regUsername', ' ');
+      if (!email) setFieldError('regEmail', ' ');
+      if (!password) setFieldError('regPassword', ' ');
+      setFieldError('regPassword2', 'Заполните все поля');
+      return;
+    }
+
     if (email && !isValidEmail(email)) setFieldError('regEmail', 'Некорректный формат Email');
-    if (!password) setFieldError('regPassword', 'Введите пароль');
-    if (!password2) setFieldError('regPassword2', 'Подтвердите пароль');
     if (password && password.length < 8) setFieldError('regPassword', 'Пароль должен быть не короче 8 символов');
     if (password && password2 && password !== password2) setFieldError('regPassword2', 'Пароли не совпадают');
 
     const shouldFail =
-      !username ||
-      !email ||
       (email && !isValidEmail(email)) ||
-      !password ||
-      !password2 ||
       (password && password.length < 8) ||
       (password && password2 && password !== password2);
 
@@ -205,28 +205,44 @@ export default function App() {
     const password = String(regPassword || '');
     const password2 = String(regPassword2 || '');
 
-    if (!username) setFieldError('regUsername', 'Введите имя пользователя');
-    if (!email) setFieldError('regEmail', 'Введите Email');
+    if (!username || !email || !password || !password2) {
+      if (!username) setFieldError('regUsername', ' ');
+      if (!email) setFieldError('regEmail', ' ');
+      if (!password) setFieldError('regPassword', ' ');
+      setFieldError('regPassword2', 'Заполните все поля');
+      return;
+    }
+
     if (email && !isValidEmail(email)) setFieldError('regEmail', 'Некорректный формат Email');
-    if (!password) setFieldError('regPassword', 'Введите пароль');
-    if (!password2) setFieldError('regPassword2', 'Подтвердите пароль');
     if (password && password.length < 8) setFieldError('regPassword', 'Пароль должен быть не короче 8 символов');
     if (password && password2 && password !== password2) setFieldError('regPassword2', 'Пароли не совпадают');
 
     const shouldFail =
-      !username ||
-      !email ||
       (email && !isValidEmail(email)) ||
-      !password ||
-      !password2 ||
       (password && password.length < 8) ||
       (password && password2 && password !== password2);
 
     if (shouldFail) return;
 
-    setRegEmail(email);
-    setRegCode('');
-    setAuthMode('register-confirm');
+    setIsSubmitting(true);
+    try {
+      // Предварительная попытка регистрации для проверки email
+      await authApi.register({ email, username, password });
+      setRegEmail(email);
+      setRegCode('');
+      setAuthMode('register-code');
+    } catch (error) {
+      const msg = error.message || '';
+      if (msg.includes('Email is already registered') || msg.includes('409') || msg.includes('exists')) {
+        setFieldError('regEmail', ' ');
+        // Используем специальный префикс, чтобы в UI знать, что обводка не нужна
+        setFieldError('regPassword2', 'NO_BORDER:Этот Email уже зарегистрирован');
+      } else {
+        setAlert({ variant: 'error', message: 'Не удалось продолжить. Попробуйте снова.' });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   async function handleSendRegisterCode() {
@@ -241,7 +257,8 @@ export default function App() {
     } catch (error) {
       const msg = error.message || '';
       if (msg.includes('Email is already registered') || msg.includes('409') || msg.includes('exists')) {
-        setFieldError('regEmail', 'Этот Email уже зарегистрирован');
+        setFieldError('regEmail', ' ');
+        setFieldError('regPassword2', 'NO_BORDER:Этот Email уже зарегистрирован');
         setAuthMode('register');
       } else {
         setAlert({ variant: 'error', message: error.message || 'Не удалось зарегистрироваться. Попробуйте снова.' });

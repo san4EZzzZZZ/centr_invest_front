@@ -236,9 +236,9 @@ function RegisterForm({
           clearFieldError('regUsername');
         }}
         onFocus={() => clearFieldError('regUsername')}
-        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regUsername ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regUsername ? 'mb-0' : 'mb-[10px]'}`}
+        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regUsername ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regUsername && fieldErrors.regUsername.trim() ? 'mb-0' : 'mb-[10px]'}`}
       />
-      {fieldErrors?.regUsername ? (
+      {fieldErrors?.regUsername && fieldErrors.regUsername.trim() ? (
         <Text style={styles.formErrorText} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">
           {fieldErrors.regUsername}
         </Text>
@@ -255,9 +255,9 @@ function RegisterForm({
           clearFieldError('regEmail');
         }}
         onFocus={() => clearFieldError('regEmail')}
-        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regEmail ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regEmail ? 'mb-0' : 'mb-[10px]'}`}
+        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regEmail ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regEmail && fieldErrors.regEmail.trim() ? 'mb-0' : 'mb-[10px]'}`}
       />
-      {fieldErrors?.regEmail ? (
+      {fieldErrors?.regEmail && fieldErrors.regEmail.trim() ? (
         <Text style={styles.formErrorText} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">
           {fieldErrors.regEmail}
         </Text>
@@ -273,9 +273,9 @@ function RegisterForm({
           clearFieldError('regPassword');
         }}
         onFocus={() => clearFieldError('regPassword')}
-        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regPassword ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regPassword ? 'mb-0' : 'mb-[10px]'}`}
+        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regPassword ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regPassword && fieldErrors.regPassword.trim() ? 'mb-0' : 'mb-[10px]'}`}
       />
-      {fieldErrors?.regPassword ? (
+      {fieldErrors?.regPassword && fieldErrors.regPassword.trim() ? (
         <Text style={styles.formErrorText} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">
           {fieldErrors.regPassword}
         </Text>
@@ -291,11 +291,11 @@ function RegisterForm({
           clearFieldError('regPassword2');
         }}
         onFocus={() => clearFieldError('regPassword2')}
-        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regPassword2 ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regPassword2 ? 'mb-0' : 'mb-[10px]'}`}
+        className={`w-full h-[56px] border px-[16px] rounded-[8px] font-roboto text-[16px] ${fieldErrors?.regPassword2 && !fieldErrors.regPassword2.startsWith('NO_BORDER:') ? 'border-[#F23030]' : 'border-[#EAEBED]'} ${fieldErrors?.regPassword2 && fieldErrors.regPassword2.trim() ? 'mb-0' : 'mb-[10px]'}`}
       />
-      {fieldErrors?.regPassword2 ? (
+      {fieldErrors?.regPassword2 && fieldErrors.regPassword2.trim() ? (
         <Text style={styles.formErrorText} className="text-[#F23030] text-[14px] font-roboto text-center mt-[10px] mb-[10px]">
-          {fieldErrors.regPassword2}
+          {fieldErrors.regPassword2.startsWith('NO_BORDER:') ? fieldErrors.regPassword2.replace('NO_BORDER:', '') : fieldErrors.regPassword2}
         </Text>
       ) : null}
 
