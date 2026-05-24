@@ -596,11 +596,13 @@ export default function AuthScreen({
   regPassword,
   regPassword2,
   regCreator,
+  regCode,
   setRegUsername,
   setRegEmail,
   setRegPassword,
   setRegPassword2,
   setRegCreator,
+  setRegCode,
   resetEmail,
   resetCode,
   resetNewPassword,
@@ -659,7 +661,7 @@ export default function AuthScreen({
               <>
                 <View style={{ width: 190, height: 67 }} className="mt-[242.5px] self-center items-center justify-center flex-row">
                   <View className="w-8 h-10 bg-[#7700FF] rounded-tr-xl rounded-bl-xl mr-2" />
-                  <Text className="text-2xl font-bold text-[#182030]">РўРµСЃС‚</Text>
+                  <Text className="text-2xl font-bold text-[#182030]">Тест</Text>
                 </View>
 
                 <AuthCardShell contentStyle={styles.mainCardContent}>
