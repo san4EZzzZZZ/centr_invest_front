@@ -55,13 +55,20 @@ function MatchingRow({ leftItem, rightItems, selectedValue, expanded, disabled, 
         activeOpacity={0.85}
         style={[styles.selectBox, selectedValue ? styles.selectBoxSelected : null, expanded ? styles.selectBoxExpanded : null]}
       >
-        <Text style={styles.selectText} numberOfLines={1}>{selectedValue || 'Выберите вариант'}</Text>
-        <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color="#7C7C7C" />
+        <Text style={[styles.selectText, selectedValue ? styles.selectTextSelected : null]} numberOfLines={1}>
+          {selectedValue || 'placeholder'}
+        </Text>
+        <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color="#252525" />
       </TouchableOpacity>
       {expanded ? (
         <View style={styles.dropdownMenu}>
-          {rightItems.map((rightItem) => (
-            <TouchableOpacity  key={rightItem} onPress={() => onPick(rightItem)} activeOpacity={0.85} style={styles.dropdownItem}>
+          {rightItems.map((rightItem, index) => (
+            <TouchableOpacity
+              key={rightItem}
+              onPress={() => onPick(rightItem)}
+              activeOpacity={0.85}
+              style={[styles.dropdownItem, index < rightItems.length - 1 ? styles.dropdownItemDivider : null]}
+            >
               <Text style={[styles.dropdownText, rightItem === selectedValue ? styles.dropdownTextActive : null]}>{rightItem}</Text>
             </TouchableOpacity>
           ))}
@@ -102,7 +109,7 @@ export default function QuizScreen({ quiz, onBack, onFinish }) {
         setTotalQuestions(state?.totalQuestions ?? quiz?.questionCount ?? 0);
         setDraftAnswer(getDefaultAnswer(response.question));
         setAnswerResponse(null);
-        setExpandedRowId(response.question?.matchLeftItems?.[0] ?? null);
+        setExpandedRowId(null);
       } catch (startError) {
         if (!ignore) setError(startError.message || 'Не удалось начать тест');
       } finally {
@@ -149,7 +156,7 @@ export default function QuizScreen({ quiz, onBack, onFinish }) {
         setQuestionNumber((value) => value + 1);
         setDraftAnswer(getDefaultAnswer(answerResponse.nextQuestion));
         setAnswerResponse(null);
-        setExpandedRowId(answerResponse.nextQuestion?.matchLeftItems?.[0] ?? null);
+        setExpandedRowId(null);
         setTextFocused(false);
       }
       return;
@@ -345,10 +352,10 @@ const styles = StyleSheet.create({
   counter: { marginTop: 6 },
   counterActive: { fontFamily: 'Roboto_500Medium', fontSize: 28, lineHeight: 32, color: '#FF5D2E' },
   counterTotal: { fontFamily: 'Roboto_400Regular', fontSize: 28, lineHeight: 32, color: '#252525' },
-  progressTrack: { marginTop: 14, height: 1, width: '100%', backgroundColor: '#D9D9D9', borderRadius: 999, overflow: 'hidden' },
+  progressTrack: { marginTop: 14, height: 2, width: '100%', backgroundColor: '#D9D9D9', borderRadius: 999, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: '#7A1136' },
   promptWrap: { marginTop: 20, alignItems: 'center' },
-  promptText: { textAlign: 'center', fontFamily: 'Roboto_400Regular', fontSize: 14, lineHeight: 18, color: '#252525', maxWidth: 330 },
+  promptText: { textAlign: 'center', alignSelf: 'center', fontFamily: 'Roboto_400Regular', fontSize: 14, lineHeight: 18, color: '#252525', maxWidth: 330 },
   choiceList: { marginTop: 22, gap: 12 },
   choiceOption: { minHeight: 48, borderRadius: 8, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#D6D6D6', paddingHorizontal: 12, justifyContent: 'center' },
   choiceOptionSelected: { backgroundColor: '#F8E2D5', borderColor: '#FF7A45' },
@@ -356,15 +363,17 @@ const styles = StyleSheet.create({
   matchingList: { marginTop: 14, gap: 12 },
   matchingRow: { marginTop: 8 },
   matchingLabel: { fontFamily: 'Roboto_400Regular', fontSize: 14, lineHeight: 18, color: '#252525' },
-  selectBox: { marginTop: 14, minHeight: 51, borderRadius: 8, borderWidth: 1, borderColor: '#D6D6D6', backgroundColor: '#FFFFFF', paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  selectBox: { marginTop: 14, minHeight: 56, borderRadius: 14, borderWidth: 1, borderColor: '#D6D6D6', backgroundColor: '#FFFFFF', paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   selectBoxSelected: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E95B20' },
-  selectBoxExpanded: { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderColor: '#E95B20'},
-  selectText: { flex: 1, marginRight: 10, fontFamily: 'Roboto_400Regular', fontSize: 14, lineHeight: 18, color: '#D6D6D6' },
-  dropdownMenu: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E95B20', borderTopWidth: 0, borderBottomLeftRadius: 8, borderBottomRightRadius: 8, overflow: 'hidden' },
-  dropdownItem: { backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 10 },
+  selectBoxExpanded: { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderColor: '#E95B20' },
+  selectText: { flex: 1, marginRight: 10, fontFamily: 'Roboto_400Regular', fontSize: 14, lineHeight: 18, color: '#CFCFCF' },
+  selectTextSelected: { color: '#252525' },
+  dropdownMenu: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E95B20', borderTopWidth: 0, borderBottomLeftRadius: 14, borderBottomRightRadius: 14, overflow: 'hidden' },
+  dropdownItem: { backgroundColor: '#FFFFFF', paddingHorizontal: 18, paddingVertical: 14 },
+  dropdownItemDivider: { borderBottomWidth: 1, borderBottomColor: '#D9D9D9' },
   dropdownText: { fontFamily: 'Roboto_400Regular', fontSize: 14, lineHeight: 18, color: '#252525' },
   dropdownTextActive: { color: '#7A1136' },
-  textPromptCard: { width: '100%', borderRadius: 8, backgroundColor: '#FFFFFF' },
+  textPromptCard: { width: '100%', borderRadius: 8, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   textAnswerBlock: { marginTop: 18 },
   textInput: { width: '100%', minHeight: 56, borderRadius: 8, borderWidth: 1, borderColor: '#D6D6D6', paddingHorizontal: 16, paddingVertical: Platform.OS === 'ios' ? 11 : 8, fontFamily: 'Roboto_400Regular', fontSize: 16, lineHeight: 24, color: '#252525' },
   explanationCard: { marginTop: 18, paddingHorizontal: 2 },
