@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import QuizScreen from './QuizScreen';
 import QuizResultScreen from './QuizResultScreen';
+import QuizReviewScreen from './QuizReviewScreen';
 import AdminDashboardScreen from './AdminDashboardScreen';
 import QuizEditorScreen from './QuizEditorScreen';
 import { adminApi, contentApi, profileApi } from '../api/client';
@@ -406,7 +407,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
   const isSuperAdmin = currentUser?.roleCode === 'SUPER_ADMIN';
 
   const displayUser = profile?.user
-    ? { ...currentUser, email: profile.user.email, name: profile.user.username }
+    ? { ...currentUser, email: profile.user.email, name: profile.user.username, avatarUrl: profile.user.avatarUrl }
     : currentUser;
 
   const roleName = useMemo(() => {
@@ -445,18 +446,37 @@ export default function HomeScreen({ currentUser, onLogout }) {
   }, [completedTests]);
   const recentTests = useMemo(() => {
     const profileRecentAttempts = Array.isArray(profile?.recentAttempts) ? profile.recentAttempts : [];
+    const latestAttemptsByTestId = new Map();
 
-    return profileRecentAttempts.map((item) => ({
-      id: item.testId,
-      title: item.testTitle,
-      questionCount: item.totalQuestions ?? 0,
-      languageTitle: item.languageTitle,
-      languageIcon: getLanguageIcon(item.languageTitle) ?? FALLBACK_ICON,
-      status: 'passed',
-      duration: item.duration,
-      bestTime: item.bestTime,
-      completedAt: item.completedAt,
-    }));
+    profileRecentAttempts.forEach((item, index) => {
+      const testId = item?.testId;
+      if (testId == null) return;
+
+      const previous = latestAttemptsByTestId.get(testId);
+      const currentCompletedAt = item?.completedAt ? new Date(item.completedAt).getTime() : 0;
+      const previousCompletedAt = previous?.completedAt ? new Date(previous.completedAt).getTime() : 0;
+
+      if (!previous || currentCompletedAt >= previousCompletedAt) {
+        latestAttemptsByTestId.set(testId, {
+          key: item?.attemptId != null ? `attempt-${item.attemptId}` : `recent-${testId}-${index}`,
+          id: testId,
+          title: item.testTitle,
+          questionCount: item.totalQuestions ?? 0,
+          languageTitle: item.languageTitle,
+          languageIcon: getLanguageIcon(item.languageTitle) ?? FALLBACK_ICON,
+          status: 'passed',
+          duration: item.duration,
+          bestTime: item.bestTime,
+          completedAt: item.completedAt,
+        });
+      }
+    });
+
+    return Array.from(latestAttemptsByTestId.values()).sort((left, right) => {
+      const leftTime = left?.completedAt ? new Date(left.completedAt).getTime() : 0;
+      const rightTime = right?.completedAt ? new Date(right.completedAt).getTime() : 0;
+      return rightTime - leftTime;
+    });
   }, [profile]);
   const trimmedSearch = search.trim();
   const isSearchMode = trimmedSearch.length > 0;
@@ -678,7 +698,18 @@ export default function HomeScreen({ currentUser, onLogout }) {
   if (route.name === 'result') {
     return (
       <QuizResultScreen
-        quizTitle={route.quiz?.title}
+        result={route.result}
+        userName={displayUser?.name}
+        avatarUrl={displayUser?.avatarUrl}
+        onGoHome={goHomeAfterResult}
+        onOpenReview={() => setRoute({ name: 'review', quiz: route.quiz, result: route.result, attemptId: route.attemptId })}
+      />
+    );
+  }
+
+  if (route.name === 'review') {
+    return (
+      <QuizReviewScreen
         result={route.result}
         attemptId={route.attemptId}
         onGoHome={goHomeAfterResult}
@@ -1003,7 +1034,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
             ) : recentTests.length ? (
               recentTests.map((test, index) => (
                 <RecentCard
-                  key={test.id}
+                  key={test.key ?? `recent_${test.id}_${index}`}
                   title={test.title}
                   questions={`${test.questionCount ?? 0} вопросов`}
                   status="Пройдено"

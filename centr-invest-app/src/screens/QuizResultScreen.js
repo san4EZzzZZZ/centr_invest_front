@@ -1,99 +1,121 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from "react-native";
-import { TouchableOpacity, TextInput } from "../components/SilentTouchables";
+import React from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
+import { TouchableOpacity } from '../components/SilentTouchables';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { attemptsApi } from '../api/client';
 
-export default function QuizResultScreen({ quizTitle, result, attemptId, onGoHome }) {
-  const [review, setReview] = useState(result?.aiReview ?? null);
-  const [isReviewLoading, setIsReviewLoading] = useState(false);
-  const [reviewError, setReviewError] = useState(null);
+function formatDuration(value) {
+  if (value == null) return '';
 
+  const text = String(value).trim();
+  if (!text) return '';
+
+  const minutesMatch = text.match(/^(\d+)\s*мин\s*(\d+)\s*сек$/i);
+  if (minutesMatch) {
+    return `${Number(minutesMatch[1])} мин ${Number(minutesMatch[2])} сек`;
+  }
+
+  const secondsMatch = text.match(/^(\d+)\s*сек$/i);
+  if (secondsMatch) {
+    return `${Number(secondsMatch[1])} сек`;
+  }
+
+  return text;
+}
+
+function getResultCopy(score, total, userName) {
+  const ratio = total > 0 ? score / total : 0;
+  const safeName = String(userName || 'User').trim() || 'User';
+
+  if (ratio >= 0.7) {
+    return {
+      title: 'Поздравляем!',
+      subtitle: `Хорошая работа, ${safeName}! Ты справился отлично`,
+    };
+  }
+
+  return {
+    title: 'Хорошая попытка!',
+    subtitle: `Начало положено, ${safeName}!\nЕсть над чем поработать`,
+  };
+}
+
+function Decor() {
+  return (
+    <View pointerEvents="none" style={styles.decorLayer}>
+      <Ionicons name="star-outline" size={26} color="#FFA180" style={[styles.star, { top: 28, left: 118 }]} />
+      <Ionicons name="star-outline" size={18} color="#FFA180" style={[styles.star, { top: 80, left: 64 }]} />
+      <Ionicons name="star-outline" size={18} color="#FFA180" style={[styles.star, { top: 84, right: 84 }]} />
+      <Ionicons name="star-outline" size={30} color="#FFA180" style={[styles.star, { top: 104, left: 22 }]} />
+      <Ionicons name="star-outline" size={30} color="#FFA180" style={[styles.star, { top: 104, right: 22 }]} />
+      <Ionicons name="star-outline" size={16} color="#FFA180" style={[styles.star, { top: 188, left: 42 }]} />
+      <Ionicons name="star-outline" size={30} color="#FFA180" style={[styles.star, { top: 188, right: 14 }]} />
+      <Ionicons name="star-outline" size={18} color="#FFA180" style={[styles.star, { top: 224, right: 78 }]} />
+      <Ionicons name="star-outline" size={28} color="#FFA180" style={[styles.star, { top: 236, left: 120 }]} />
+
+      <View style={[styles.confettiCluster, { left: 40, top: 254 }]}>
+        <View style={[styles.confettiStroke, { width: 10, transform: [{ rotate: '-24deg' }] }]} />
+        <View style={[styles.confettiStroke, { width: 7, marginTop: 6, marginLeft: 10, transform: [{ rotate: '12deg' }] }]} />
+        <View style={[styles.confettiStroke, { width: 12, marginTop: 6, marginLeft: 2, transform: [{ rotate: '-8deg' }] }]} />
+      </View>
+
+      <View style={[styles.confettiCluster, { right: 34, top: 256 }]}>
+        <View style={[styles.confettiStroke, { width: 10, transform: [{ rotate: '20deg' }] }]} />
+        <View style={[styles.confettiStroke, { width: 8, marginTop: 6, marginLeft: 8, transform: [{ rotate: '-10deg' }] }]} />
+        <View style={[styles.confettiStroke, { width: 12, marginTop: 6, marginLeft: 0, transform: [{ rotate: '12deg' }] }]} />
+      </View>
+
+      <Ionicons name="triangle-outline" size={18} color="#FFA180" style={[styles.star, { top: 286, left: 48, transform: [{ rotate: '-18deg' }] }]} />
+      <Ionicons name="triangle-outline" size={20} color="#FFA180" style={[styles.star, { top: 286, right: 44, transform: [{ rotate: '16deg' }] }]} />
+    </View>
+  );
+}
+
+export default function QuizResultScreen({ result, userName, avatarUrl, onGoHome, onOpenReview }) {
   const safeScore = typeof result?.correctAnswers === 'number' ? result.correctAnswers : 0;
   const safeTotal = typeof result?.totalQuestions === 'number' ? result.totalQuestions : 0;
-  const title = result?.testTitle || quizTitle || 'Тест';
-  const reviewAttemptId = result?.attemptId ?? attemptId;
-
-  useEffect(() => {
-    let ignore = false;
-
-    async function loadReview() {
-      if (!reviewAttemptId || result?.aiReview) return;
-
-      setIsReviewLoading(true);
-      setReviewError(null);
-
-      try {
-        const response = await attemptsApi.aiReview(reviewAttemptId);
-        if (!ignore) setReview(response);
-      } catch (error) {
-        if (!ignore) setReviewError(error.message || 'Не удалось загрузить разбор');
-      } finally {
-        if (!ignore) setIsReviewLoading(false);
-      }
-    }
-
-    loadReview();
-
-    return () => {
-      ignore = true;
-    };
-  }, [reviewAttemptId, result?.aiReview]);
+  const duration = formatDuration(result?.duration);
+  const copy = getResultCopy(safeScore, safeTotal, userName);
+  const badgeSource = avatarUrl ? { uri: avatarUrl } : require('../../assets/icon.png');
 
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.decor}>
-          <Ionicons name="star-outline" size={22} color="#FF7A45" style={[styles.star, { top: 10, left: 30 }]} />
-          <Ionicons name="star-outline" size={16} color="#FF7A45" style={[styles.star, { top: 48, right: 44 }]} />
-          <Ionicons name="star-outline" size={14} color="#FF7A45" style={[styles.star, { top: 92, left: 10 }]} />
-          <Ionicons name="star-outline" size={18} color="#FF7A45" style={[styles.star, { top: 104, right: 10 }]} />
-          <Ionicons name="star-outline" size={14} color="#FF7A45" style={[styles.star, { top: 170, left: 60 }]} />
-          <Ionicons name="star-outline" size={20} color="#FF7A45" style={[styles.star, { top: 180, right: 70 }]} />
-        </View>
+      <View style={styles.container}>
+        <Decor />
 
         <View style={styles.badgeOuter}>
           <View style={styles.badgeMid}>
             <View style={styles.badgeInner}>
-              <Image source={require('../../assets/icon.png')} style={styles.badgeImage} />
+              <Image source={badgeSource} style={styles.badgeImage} />
             </View>
           </View>
         </View>
 
-        <Text style={styles.recordLabel}>Твой результат</Text>
+        <Text style={styles.recordLabel}>Твой Рекорд</Text>
         <Text style={styles.recordValue}>
           {safeScore}/{safeTotal}
         </Text>
 
-        <Text style={styles.congrats}>{title}</Text>
-        <Text style={styles.subtitle}>{result?.recommendation || 'Тест завершен'}</Text>
+        {duration ? (
+          <View style={styles.durationRow}>
+            <Ionicons name="time-outline" size={14} color="#B6BBC8" style={styles.durationIcon} />
+            <Text style={styles.durationText}>{duration}</Text>
+          </View>
+        ) : null}
 
-        {result?.weakTopics?.length ? <Text style={styles.weakTopics}>Повторить: {result.weakTopics.join(', ')}</Text> : null}
+        <Text style={styles.title}>{copy.title}</Text>
+        <Text style={styles.subtitle}>{copy.subtitle}</Text>
 
-        <View style={styles.reviewCard}>
-          {isReviewLoading ? (
-            <>
-              <ActivityIndicator color="#7A1136" />
-              <Text style={styles.reviewText}>Готовим персональный разбор...</Text>
-            </>
-          ) : review ? (
-            <>
-              <Text style={styles.reviewTitle}>{review.generatedByAi ? 'AI-разбор' : 'Разбор'}</Text>
-              <Text style={styles.reviewText}>{review.summary}</Text>
-              {review.nextStep ? <Text style={styles.reviewText}>{review.nextStep}</Text> : null}
-            </>
-          ) : reviewError ? (
-            <Text style={styles.reviewText}>{reviewError}</Text>
-          ) : null}
-        </View>
+        <View style={styles.spacer} />
 
-        <View style={styles.bottom}>
-          <TouchableOpacity  onPress={onGoHome} activeOpacity={0.9} style={styles.homeBtn}>
-            <Text style={styles.homeBtnText}>На главную</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+        <TouchableOpacity onPress={onOpenReview} activeOpacity={0.85}>
+          <Text style={styles.reviewLink}>Перейти к разбору</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={onGoHome} activeOpacity={0.9} style={styles.homeBtn}>
+          <Text style={styles.homeBtnText}>На главную</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -104,130 +126,130 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   container: {
-    flexGrow: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 104,
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: 22,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  decor: {
+  decorLayer: {
     position: 'absolute',
-    top: 90,
+    top: 16,
     left: 0,
     right: 0,
-    height: 220,
+    height: 360,
   },
   star: {
     position: 'absolute',
   },
+  confettiCluster: {
+    position: 'absolute',
+  },
+  confettiStroke: {
+    height: 2,
+    borderRadius: 999,
+    backgroundColor: '#FFA180',
+  },
   badgeOuter: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    borderWidth: 3,
+    marginTop: 58,
+    width: 152,
+    height: 152,
+    borderRadius: 76,
+    borderWidth: 4,
     borderStyle: 'dashed',
-    borderColor: '#FF7A45',
+    borderColor: '#FF8D62',
     alignItems: 'center',
     justifyContent: 'center',
   },
   badgeMid: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    backgroundColor: '#FF7A45',
+    width: 126,
+    height: 126,
+    borderRadius: 63,
+    backgroundColor: '#FF8D62',
     alignItems: 'center',
     justifyContent: 'center',
   },
   badgeInner: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
-    backgroundColor: '#FFF3D8',
+    width: 94,
+    height: 94,
+    borderRadius: 47,
+    backgroundColor: '#FFF1C8',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   badgeImage: {
-    width: 78,
-    height: 78,
-    borderRadius: 39,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     resizeMode: 'cover',
   },
   recordLabel: {
-    marginTop: 18,
+    marginTop: 24,
     fontFamily: 'Roboto_400Regular',
-    fontSize: 14,
-    lineHeight: 16,
-    color: '#252525',
+    fontSize: 16,
+    lineHeight: 19,
+    color: '#505050',
   },
   recordValue: {
-    marginTop: 8,
+    marginTop: 10,
     fontFamily: 'Roboto_500Medium',
-    fontSize: 28,
+    fontSize: 24,
     lineHeight: 28,
-    color: '#7A1136',
+    color: '#8C1D4B',
   },
-  congrats: {
-    marginTop: 14,
+  durationRow: {
+    marginTop: 8,
+    minHeight: 16,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    left: 4,
+  },
+  durationIcon: {
+    position: 'absolute',
+    left: -18,
+    top: 1,
+  },
+  durationText: {
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 15,
+    lineHeight: 16,
+    color: '#B6BBC8',
+    textAlignVertical: 'center',
+  },
+  title: {
+    marginTop: 24,
     fontFamily: 'Roboto_500Medium',
-    fontSize: 26,
-    lineHeight: 30,
-    color: '#7A1136',
+    fontSize: 27,
+    lineHeight: 32,
+    color: '#8C1D4B',
     textAlign: 'center',
   },
   subtitle: {
-    marginTop: 14,
+    marginTop: 16,
     fontFamily: 'Roboto_400Regular',
-    fontSize: 14,
-    lineHeight: 18,
-    color: '#8A8983',
-    textAlign: 'center',
-    maxWidth: 320,
-  },
-  weakTopics: {
-    marginTop: 12,
-    fontFamily: 'Roboto_500Medium',
-    fontSize: 13,
-    lineHeight: 18,
-    color: '#FF5D2E',
-    textAlign: 'center',
-    maxWidth: 320,
-  },
-  reviewCard: {
-    marginTop: 24,
-    width: '100%',
-    maxWidth: 340,
-    minHeight: 78,
-    borderRadius: 16,
-    backgroundColor: '#FFFEEE',
-    padding: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  reviewTitle: {
-    fontFamily: 'Roboto_500Medium',
     fontSize: 16,
     lineHeight: 20,
-    color: '#7A1136',
-  },
-  reviewText: {
-    marginTop: 8,
-    fontFamily: 'Roboto_400Regular',
-    fontSize: 13,
-    lineHeight: 18,
-    color: '#252525',
+    color: '#8E8E8E',
     textAlign: 'center',
+    maxWidth: 280,
   },
-  bottom: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 24,
+  spacer: {
+    flex: 1,
+  },
+  reviewLink: {
+    marginBottom: 24,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 16,
+    lineHeight: 19,
+    color: '#FFA180',
   },
   homeBtn: {
+    width: '100%',
     height: 56,
-    borderRadius: 14,
-    backgroundColor: '#7A1136',
+    borderRadius: 12,
+    backgroundColor: '#8C1144',
     alignItems: 'center',
     justifyContent: 'center',
   },
