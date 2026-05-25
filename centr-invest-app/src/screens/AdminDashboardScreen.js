@@ -45,7 +45,7 @@ function QuizCard({ quiz, onEdit, onDelete }) {
   );
 }
 
-export default function AdminDashboardScreen({ quizzes, onBack, onCreate, onEdit, onDelete }) {
+export default function AdminDashboardScreen({ quizzes, onBack, onCreate, onEdit, onDelete, bottomInset = 0, navHeight = 64 }) {
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
       <View style={styles.header}>
@@ -56,7 +56,7 @@ export default function AdminDashboardScreen({ quizzes, onBack, onCreate, onEdit
         <View style={styles.headerRight} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: navHeight + bottomInset + 24 }]}>
         <View style={styles.section}>
           <View style={styles.list}>
             {quizzes.map((quiz) => (

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { Image, Modal, ScrollView, StyleSheet, Text, View } from "react-native";
 import { TouchableOpacity, TextInput } from "../components/SilentTouchables";
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -71,6 +71,9 @@ function createNewQuestion(type, index) {
   const question = createQuestionTemplate(type, questionId);
   return {
     ...question,
+    text: '',
+    options: (question.options ?? []).slice(0, 3).map((option) => ({ ...option, label: '' })),
+    answer: type === 'text' ? '' : question.answer,
     showExplanation: type === 'singleReveal',
   };
 }
@@ -81,6 +84,21 @@ function getTypeLabelFromValue(type) {
 
 function optionLabel(question, optionId) {
   return question.options?.find((option) => option.id === optionId)?.label ?? 'Выберите вариант';
+}
+
+const LANGUAGE_OPTIONS = [
+  { id: 1, title: 'Python', icon: 'https://img.icons8.com/color/96/python--v1.png' },
+  { id: 2, title: 'Java', icon: 'https://img.icons8.com/color/96/java-coffee-cup-logo.png' },
+  { id: 3, title: 'C++', icon: 'https://img.icons8.com/color/96/c-plus-plus-logo.png' },
+  { id: 4, title: 'C#', icon: 'https://img.icons8.com/color/96/c-sharp-logo.png' },
+  { id: 5, title: 'SQL', icon: 'https://img.icons8.com/color/96/mysql-logo.png' },
+  { id: 6, title: 'PHP', icon: 'https://img.icons8.com/color/96/elephant.png' },
+  { id: 7, title: 'JS', icon: require('../../assets/js.jpg') },
+  { id: 8, title: 'GO', icon: 'https://img.icons8.com/color/96/golang.png' },
+];
+
+function getImageSource(source) {
+  return typeof source === 'string' ? { uri: source } : source;
 }
 
 function stripEditorFields(question) {
@@ -142,7 +160,10 @@ function stripEditorFields(question) {
 
 function createInitialDraft(quiz) {
   if (!quiz) {
-    return createQuizTemplate();
+    return {
+      ...createQuizTemplate(''),
+      questions: [createNewQuestion('single', 1)],
+    };
   }
 
   const cloned = cloneQuiz(quiz) ?? createQuizTemplate();
@@ -155,14 +176,33 @@ function createInitialDraft(quiz) {
   };
 }
 
-export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
+export default function QuizEditorScreen({ quiz, languages = [], onCancel, onSave }) {
   const [draftQuiz, setDraftQuiz] = useState(() => createInitialDraft(quiz));
   const [typePickerForQuestion, setTypePickerForQuestion] = useState(null);
   const [answerPicker, setAnswerPicker] = useState(null);
+  const [pickedTypeQuestionIds, setPickedTypeQuestionIds] = useState(() => new Set());
+  const [selectedLanguageId, setSelectedLanguageId] = useState(() => {
+    const quizLanguageId = Number(quiz?.languageId ?? quiz?.professionId);
+    return Number.isFinite(quizLanguageId) && quizLanguageId > 0 ? quizLanguageId : LANGUAGE_OPTIONS[0].id;
+  });
+
+  const languageOptions = useMemo(() => {
+    const source = Array.isArray(languages) && languages.length ? languages : LANGUAGE_OPTIONS;
+    return source.map((language, index) => ({
+      id: Number(language.id ?? language.languageId ?? LANGUAGE_OPTIONS[index]?.id ?? index + 1),
+      title: language.title ?? language.languageTitle ?? LANGUAGE_OPTIONS[index]?.title ?? 'Язык',
+      icon: language.icon ?? LANGUAGE_OPTIONS.find((item) => item.title === language.title)?.icon,
+    }));
+  }, [languages]);
 
   useEffect(() => {
-    setDraftQuiz(createInitialDraft(quiz));
-  }, [quiz]);
+    const nextDraft = createInitialDraft(quiz);
+    setDraftQuiz(nextDraft);
+    setTypePickerForQuestion(null);
+    setPickedTypeQuestionIds(new Set(quiz ? (nextDraft.questions ?? []).map((question) => question.id) : []));
+    const quizLanguageId = Number(quiz?.languageId ?? quiz?.professionId);
+    setSelectedLanguageId(Number.isFinite(quizLanguageId) && quizLanguageId > 0 ? quizLanguageId : languageOptions[0]?.id ?? LANGUAGE_OPTIONS[0].id);
+  }, [languageOptions, quiz]);
 
   const editorTitle = quiz ? 'Редактирование теста' : 'Создание теста';
   const nextQuestionIndex = (draftQuiz.questions?.length ?? 0) + 1;
@@ -209,7 +249,7 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
       const newOptionId = `${questionId}_o${nextOptions.length + 1}_${Date.now()}`;
       nextOptions.push({
         id: newOptionId,
-        label: `Вариант ${nextOptions.length + 1}`,
+        label: '',
       });
 
       nextQuestion.options = nextOptions;
@@ -313,8 +353,14 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
   }
 
   function finalizeQuiz(quizDraft) {
+    const selectedLanguage = languageOptions.find((language) => language.id === selectedLanguageId);
+
     return {
       ...quizDraft,
+      languageId: selectedLanguageId,
+      professionId: selectedLanguageId,
+      languageTitle: selectedLanguage?.title ?? quizDraft.languageTitle,
+      professionTitle: selectedLanguage?.title ?? quizDraft.professionTitle,
       title: String(quizDraft.title || '').trim() || 'Новый тест',
       questions: (quizDraft.questions ?? []).map((question) => stripEditorFields(question)),
     };
@@ -335,16 +381,37 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <View style={styles.card}>
-          <Text style={styles.label}>Название</Text>
-          <TextInput 
-            value={draftQuiz.title ?? ''}
-            onChangeText={(value) => updateQuizField('title', value)}
-            placeholder="Например, Python Junior"
-            placeholderTextColor="#D2D2D2"
-            style={styles.input}
-          />
-        </View>
+        <Text style={styles.label}>Язык</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.languageList}
+        >
+          {languageOptions.map((language) => {
+            const isSelected = selectedLanguageId === language.id;
+
+            return (
+              <TouchableOpacity
+                key={language.id}
+                activeOpacity={0.88}
+                onPress={() => setSelectedLanguageId(language.id)}
+                style={[styles.languageCard, isSelected ? styles.languageCardActive : null]}
+              >
+                <Image source={getImageSource(language.icon)} style={styles.languageIcon} resizeMode="contain" />
+                <Text numberOfLines={1} style={styles.languageTitle}>{language.title}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        <Text style={[styles.label, styles.titleLabel]}>Название</Text>
+        <TextInput
+          value={draftQuiz.title ?? ''}
+          onChangeText={(value) => updateQuizField('title', value)}
+          placeholder="Python Junior"
+          placeholderTextColor="#D2D2D2"
+          style={styles.input}
+        />
 
         <View style={styles.sectionTitleWrap}>
           <Text style={styles.sectionTitle}>Вопросы</Text>
@@ -352,169 +419,163 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
 
         {(draftQuiz.questions ?? []).map((question, index) => (
           <View key={question.id} style={styles.card}>
-            <View style={styles.questionHeader}>
-              <Text style={styles.questionIndex}>Вопрос {index + 1}</Text>
-              <TouchableOpacity  onPress={() => removeQuestion(question.id)} style={styles.removeQuestionBtn} activeOpacity={0.8}>
-                <Feather name="trash-2" size={16} color="#D83131" />
-              </TouchableOpacity>
-            </View>
+            {index > 0 ? (
+              <View style={styles.questionHeader}>
+                <Text style={styles.questionIndex}>Вопрос {index + 1}</Text>
+                <TouchableOpacity  onPress={() => removeQuestion(question.id)} style={styles.removeQuestionBtn} activeOpacity={0.8}>
+                  <Feather name="trash-2" size={16} color="#D83131" />
+                </TouchableOpacity>
+              </View>
+            ) : null}
 
             <Text style={styles.label}>Тип вопроса</Text>
-            <TouchableOpacity 
-              activeOpacity={0.9}
-              style={styles.selectBox}
-              onPress={() => setTypePickerForQuestion(question.id)}
-            >
-              <Text style={styles.selectText}>{getTypeLabelFromValue(question.type === 'singleReveal' ? 'single' : question.type)}</Text>
-              <Feather name="chevron-down" size={16} color="#7C7C7C" />
-            </TouchableOpacity>
+            <View style={[styles.selectWrap, typePickerForQuestion === question.id ? styles.selectWrapOpen : null]}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                style={styles.selectBox}
+                onPress={() => setTypePickerForQuestion(typePickerForQuestion === question.id ? null : question.id)}
+              >
+                <Text style={[styles.selectText, !pickedTypeQuestionIds.has(question.id) || typePickerForQuestion === question.id ? styles.placeholderText : null]}>
+                  {!pickedTypeQuestionIds.has(question.id) || typePickerForQuestion === question.id
+                    ? 'Тип вопроса'
+                    : getTypeLabelFromValue(question.type === 'singleReveal' ? 'single' : question.type)}
+                </Text>
+                <Feather name={typePickerForQuestion === question.id ? 'chevron-up' : 'chevron-down'} size={16} color="#7C7C7C" />
+              </TouchableOpacity>
 
-            <Text style={styles.label}>Текст вопроса</Text>
-            <TextInput 
-              value={question.text ?? ''}
-              onChangeText={(value) => updateQuestion(question.id, { text: value })}
-              placeholder="Введите вопрос"
-              placeholderTextColor="#D2D2D2"
-              style={styles.input}
-              multiline
-            />
-
-            {(question.type === 'single' || question.type === 'singleReveal' || question.type === 'multi') ? (
-              <>
-                <Text style={styles.label}>Ответы</Text>
-                <View style={styles.optionList}>
-                  {(question.options ?? []).map((option) => {
-                    const isMulti = question.type === 'multi';
-                    const isSelected = isMulti
-                      ? Array.isArray(question.correctOptionIds) && question.correctOptionIds.includes(option.id)
-                      : question.correctOptionId === option.id;
-
-                    return (
-                      <View key={option.id} style={styles.optionRow}>
-                        <TextInput 
-                          value={option.label ?? ''}
-                          onChangeText={(value) => updateOption(question.id, option.id, value)}
-                          placeholder="Введите ответ"
-                          placeholderTextColor="#D2D2D2"
-                          style={styles.optionInput}
-                        />
-
-                        <TouchableOpacity 
-                          activeOpacity={0.85}
-                          style={[styles.correctBtn, isSelected ? styles.correctBtnActive : null]}
-                          onPress={() => (isMulti ? toggleMultiCorrect(question.id, option.id) : pickSingleCorrect(question.id, option.id))}
-                        >
-                          <Ionicons
-                            name={isMulti ? 'checkmark' : 'radio-button-on'}
-                            size={16}
-                            color={isSelected ? '#26A144' : '#7C7C7C'}
-                          />
-                        </TouchableOpacity>
-
-                        <TouchableOpacity 
-                          activeOpacity={0.85}
-                          style={styles.deleteOptionBtn}
-                          onPress={() => removeOption(question.id, option.id)}
-                        >
-                          <Feather name="trash-2" size={14} color="#7C7C7C" />
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  })}
-                </View>
-
-                <TouchableOpacity  style={styles.addAnswerBtn} onPress={() => addOption(question.id)} activeOpacity={0.9}>
-                  <Feather name="plus" size={14} color="#FF5D2E" />
-                  <Text style={styles.addAnswerText}>Добавить ответ</Text>
-                </TouchableOpacity>
-              </>
-            ) : null}
-
-            {question.type === 'matching' ? (
-              <>
-                <Text style={styles.label}>Варианты для сопоставления</Text>
-                <View style={styles.optionList}>
-                  {(question.options ?? []).map((option) => (
-                    <View key={option.id} style={styles.optionRow}>
-                      <TextInput 
-                        value={option.label ?? ''}
-                        onChangeText={(value) => updateOption(question.id, option.id, value)}
-                        placeholder="Вариант"
-                        placeholderTextColor="#D2D2D2"
-                        style={styles.optionInput}
-                      />
-                    </View>
+              {typePickerForQuestion === question.id ? (
+                <View style={styles.typeMenu}>
+                  {QUESTION_TYPE_OPTIONS.map((option) => (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={styles.typeMenuOption}
+                      onPress={() => {
+                        updateQuestionType(question.id, option.value);
+                        setPickedTypeQuestionIds((prev) => new Set(prev).add(question.id));
+                        setTypePickerForQuestion(null);
+                      }}
+                    >
+                      <Text style={styles.typeMenuText}>{option.label}</Text>
+                    </TouchableOpacity>
                   ))}
                 </View>
-
-                <Text style={styles.label}>Соответствия</Text>
-                <View style={styles.matchingList}>
-                  {(question.rows ?? []).map((row) => (
-                    <View key={row.id} style={styles.matchingRow}>
-                      <TextInput 
-                        value={row.label ?? ''}
-                        onChangeText={(value) => updateMatchingRow(question.id, row.id, { label: value })}
-                        placeholder="Подпись строки"
-                        placeholderTextColor="#D2D2D2"
-                        style={[styles.input, styles.matchingLabelInput]}
-                      />
-
-                      <TouchableOpacity 
-                        activeOpacity={0.9}
-                        style={styles.selectBox}
-                        onPress={() => setAnswerPicker({ questionId: question.id, rowId: row.id })}
-                      >
-                        <Text style={styles.selectText}>{optionLabel(question, row.correctOptionId)}</Text>
-                        <Feather name="chevron-down" size={16} color="#7C7C7C" />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
-                </View>
-              </>
             ) : null}
+            </View>
 
-            {question.type === 'text' ? (
+            {pickedTypeQuestionIds.has(question.id) ? (
               <>
-                <Text style={styles.label}>Правильный ответ</Text>
+                <Text style={styles.label}>Текст вопроса</Text>
                 <TextInput 
-                  value={question.answer ?? ''}
-                  onChangeText={(value) => updateQuestion(question.id, { answer: value })}
-                  placeholder="Введите правильный ответ"
+                  value={question.text ?? ''}
+                  onChangeText={(value) => updateQuestion(question.id, { text: value })}
+                  placeholder="Введите вопрос"
                   placeholderTextColor="#D2D2D2"
                   style={styles.input}
+                  multiline
                 />
-              </>
-            ) : null}
 
-            {(question.type === 'single' || question.type === 'singleReveal') ? (
-              <>
-                <View style={styles.switchRow}>
-                  <Text style={styles.switchLabel}>Показывать пояснение после ответа</Text>
-                  <Switch
-                    value={Boolean(question.showExplanation)}
-                    onValueChange={(value) => toggleExplanation(question.id, value)}
-                    trackColor={{ false: '#D9D9D9', true: '#F9C7B4' }}
-                    thumbColor={question.showExplanation ? '#FF5D2E' : '#FFFFFF'}
-                  />
-                </View>
-
-                {question.showExplanation ? (
+                {(question.type === 'single' || question.type === 'singleReveal' || question.type === 'multi') ? (
                   <>
-                    <Text style={styles.label}>Пояснение</Text>
-                    <TextInput 
-                      value={question.explanation ?? ''}
-                      onChangeText={(value) => updateQuestion(question.id, { explanation: value })}
-                      placeholder="Введите пояснение"
-                      placeholderTextColor="#D2D2D2"
-                      style={styles.input}
-                      multiline
-                    />
+                    <Text style={styles.label}>Ответы</Text>
+                    <View style={styles.optionList}>
+                      {(question.options ?? []).map((option) => {
+                        const isMulti = question.type === 'multi';
+                        const isSelected = isMulti
+                          ? Array.isArray(question.correctOptionIds) && question.correctOptionIds.includes(option.id)
+                          : question.correctOptionId === option.id;
 
-                    <Text style={styles.label}>Ссылка на источник</Text>
+                        return (
+                          <View key={option.id} style={styles.optionRow}>
+                            <TextInput 
+                              value={option.label ?? ''}
+                              onChangeText={(value) => updateOption(question.id, option.id, value)}
+                              placeholder="Введите ответ"
+                              placeholderTextColor="#D2D2D2"
+                              containerStyle={styles.optionInputWrap}
+                              style={[styles.optionInput, isSelected ? styles.optionInputActive : null]}
+                            />
+
+                            <TouchableOpacity 
+                              activeOpacity={0.85}
+                              style={[styles.correctBtn, isSelected ? styles.correctBtnActive : null]}
+                              onPress={() => (isMulti ? toggleMultiCorrect(question.id, option.id) : pickSingleCorrect(question.id, option.id))}
+                            >
+                              <Ionicons
+                                name="checkmark"
+                                size={22}
+                                color="#252525"
+                              />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity 
+                              activeOpacity={0.85}
+                              style={styles.deleteOptionBtn}
+                              onPress={() => removeOption(question.id, option.id)}
+                            >
+                              <Feather name="trash-2" size={14} color="#7C7C7C" />
+                            </TouchableOpacity>
+                          </View>
+                        );
+                      })}
+                    </View>
+
+                    <TouchableOpacity  style={styles.addAnswerBtn} onPress={() => addOption(question.id)} activeOpacity={0.9}>
+                      <Feather name="plus" size={14} color="#FF5D2E" />
+                      <Text style={styles.addAnswerText}>Добавить ответ</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : null}
+
+                {question.type === 'matching' ? (
+                  <>
+                    <Text style={styles.label}>Варианты для сопоставления</Text>
+                    <View style={styles.optionList}>
+                      {(question.options ?? []).map((option) => (
+                        <View key={option.id} style={styles.optionRow}>
+                          <TextInput 
+                            value={option.label ?? ''}
+                            onChangeText={(value) => updateOption(question.id, option.id, value)}
+                            placeholder="Вариант"
+                            placeholderTextColor="#D2D2D2"
+                            style={styles.optionInput}
+                          />
+                        </View>
+                      ))}
+                    </View>
+
+                    <Text style={styles.label}>Соответствия</Text>
+                    <View style={styles.matchingList}>
+                      {(question.rows ?? []).map((row) => (
+                        <View key={row.id} style={styles.matchingRow}>
+                          <TextInput 
+                            value={row.label ?? ''}
+                            onChangeText={(value) => updateMatchingRow(question.id, row.id, { label: value })}
+                            placeholder="Подпись строки"
+                            placeholderTextColor="#D2D2D2"
+                            style={[styles.input, styles.matchingLabelInput]}
+                          />
+
+                          <TouchableOpacity 
+                            activeOpacity={0.9}
+                            style={styles.selectBox}
+                            onPress={() => setAnswerPicker({ questionId: question.id, rowId: row.id })}
+                          >
+                            <Text style={styles.selectText}>{optionLabel(question, row.correctOptionId)}</Text>
+                            <Feather name="chevron-down" size={16} color="#7C7C7C" />
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </View>
+                  </>
+                ) : null}
+
+                {question.type === 'text' ? (
+                  <>
+                    <Text style={styles.label}>Правильный ответ</Text>
                     <TextInput 
-                      value={question.sourceUrl ?? ''}
-                      onChangeText={(value) => updateQuestion(question.id, { sourceUrl: value })}
-                      placeholder="Введите ссылку"
+                      value={question.answer ?? ''}
+                      onChangeText={(value) => updateQuestion(question.id, { answer: value })}
+                      placeholder="Введите правильный ответ"
                       placeholderTextColor="#D2D2D2"
                       style={styles.input}
                     />
@@ -522,41 +583,22 @@ export default function QuizEditorScreen({ quiz, onCancel, onSave }) {
                 ) : null}
               </>
             ) : null}
+
           </View>
         ))}
 
+      </ScrollView>
+
+      <View style={styles.footerActions}>
         <TouchableOpacity  style={styles.addQuestionBtn} onPress={addQuestion} activeOpacity={0.9}>
-          <Feather name="plus" size={16} color="#FFFFFF" />
+          <Feather name="plus" size={18} color="#FF5D2E" />
           <Text style={styles.addQuestionText}>Добавить вопрос</Text>
         </TouchableOpacity>
 
         <TouchableOpacity  style={styles.saveBtn} onPress={handleSave} activeOpacity={0.9}>
           <Text style={styles.saveBtnText}>Завершить</Text>
         </TouchableOpacity>
-      </ScrollView>
-
-      <Modal transparent visible={Boolean(typePickerForQuestion)} animationType="fade" onRequestClose={() => setTypePickerForQuestion(null)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Тип вопроса</Text>
-            {QUESTION_TYPE_OPTIONS.map((option) => (
-              <TouchableOpacity 
-                key={option.value}
-                style={styles.modalOption}
-                onPress={() => {
-                  updateQuestionType(typePickerForQuestion, option.value);
-                  setTypePickerForQuestion(null);
-                }}
-              >
-                <Text style={styles.modalOptionText}>{option.label}</Text>
-              </TouchableOpacity>
-            ))}
-            <TouchableOpacity  style={styles.modalCloseBtn} onPress={() => setTypePickerForQuestion(null)}>
-              <Text style={styles.modalCloseText}>Отмена</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      </View>
 
       <Modal transparent visible={Boolean(answerPicker)} animationType="fade" onRequestClose={() => setAnswerPicker(null)}>
         <View style={styles.modalOverlay}>
@@ -591,9 +633,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 12,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 6,
   },
   backBtn: {
     width: 28,
@@ -602,60 +644,97 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    flex: 1,
     fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontWeight: '400',
     fontSize: 16,
     lineHeight: 20,
     color: '#252525',
     textAlign: 'left',
+    marginLeft: 4,
   },
   headerRight: {
     width: 28,
     height: 28,
   },
   content: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingHorizontal: 26,
+    paddingBottom: 86,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    padding: 16,
-    marginBottom: 14,
+    borderRadius: 0,
+    padding: 0,
+    marginBottom: 0,
   },
   label: {
     fontFamily: 'Roboto',
-    fontWeight: '500',
-    fontSize: 12,
-    lineHeight: 14,
+    fontWeight: '400',
+    fontSize: 14,
+    lineHeight: 17,
     color: '#252525',
     marginBottom: 8,
     marginTop: 10,
+  },
+  titleLabel: {
+    marginTop: 10,
+    marginBottom: 16,
+  },
+  languageList: {
+    gap: 14,
+    paddingBottom: 6,
+    paddingRight: 8,
+  },
+  languageCard: {
+    width: 112,
+    height: 88,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#EAEBED',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  languageCardActive: {
+    borderColor: '#50E45C',
+  },
+  languageIcon: {
+    width: 38,
+    height: 38,
+  },
+  languageTitle: {
+    maxWidth: 56,
+    fontFamily: 'Roboto',
+    fontWeight: '700',
+    fontSize: 17,
+    lineHeight: 21,
+    color: '#252525',
   },
   input: {
     minHeight: 44,
     borderWidth: 1,
     borderColor: '#EAEBED',
-    borderRadius: 10,
+    borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontFamily: 'Roboto',
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 17,
     color: '#252525',
     backgroundColor: '#FFFFFF',
   },
   sectionTitleWrap: {
-    paddingHorizontal: 2,
-    marginBottom: 10,
+    paddingHorizontal: 0,
+    marginBottom: 0,
+    marginTop: 12,
   },
   sectionTitle: {
     fontFamily: 'Roboto',
-    fontWeight: '500',
-    fontSize: 15,
-    lineHeight: 18,
-    color: '#FFFFFF',
+    fontWeight: '400',
+    fontSize: 16,
+    lineHeight: 19,
+    color: '#252525',
   },
   questionHeader: {
     flexDirection: 'row',
@@ -664,7 +743,7 @@ const styles = StyleSheet.create({
   },
   questionIndex: {
     fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontWeight: '400',
     fontSize: 14,
     lineHeight: 18,
     color: '#252525',
@@ -681,9 +760,9 @@ const styles = StyleSheet.create({
   },
   selectBox: {
     minHeight: 44,
-    borderWidth: 1,
-    borderColor: '#EAEBED',
-    borderRadius: 10,
+    borderWidth: 0,
+    borderColor: 'transparent',
+    borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 10,
     flexDirection: 'row',
@@ -691,67 +770,105 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
   },
+  selectWrap: {
+    borderWidth: 1,
+    borderColor: '#EAEBED',
+    borderRadius: 6,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+  },
+  selectWrapOpen: {
+    borderColor: '#FF6E4A',
+  },
   selectText: {
     flex: 1,
     marginRight: 10,
     fontFamily: 'Roboto',
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 12,
+    lineHeight: 16,
     color: '#252525',
   },
+  placeholderText: {
+    color: '#D2D2D2',
+  },
+  typeMenu: {
+    paddingHorizontal: 12,
+    paddingBottom: 4,
+  },
+  typeMenuOption: {
+    minHeight: 31,
+    justifyContent: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#D9D9D9',
+  },
+  typeMenuText: {
+    fontFamily: 'Roboto',
+    fontWeight: '400',
+    fontSize: 12,
+    lineHeight: 15,
+    color: '#666666',
+  },
   optionList: {
-    gap: 10,
+    gap: 11,
   },
   optionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    width: '100%',
+    gap: 12,
   },
   optionInput: {
-    flex: 1,
-    minHeight: 42,
+    width: '100%',
+    minHeight: 44,
     borderWidth: 1,
     borderColor: '#EAEBED',
-    borderRadius: 10,
+    borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontFamily: 'Roboto',
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 17,
     color: '#252525',
     backgroundColor: '#FFFFFF',
   },
+  optionInputWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  optionInputActive: {
+    borderColor: '#50E45C',
+  },
   correctBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    borderWidth: 1,
+    width: 44,
+    height: 44,
+    borderRadius: 6,
+    borderWidth: 2,
     borderColor: '#EAEBED',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
   },
   correctBtnActive: {
-    borderColor: '#26A144',
-    backgroundColor: '#E9F8EE',
+    borderColor: '#50E45C',
+    backgroundColor: '#FFFFFF',
   },
   deleteOptionBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#EAEBED',
+    width: 20,
+    height: 44,
+    borderRadius: 0,
+    borderWidth: 0,
+    borderColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
   },
   addAnswerBtn: {
-    marginTop: 10,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: '#FFF1EA',
-    borderWidth: 1,
-    borderColor: '#FFB89E',
+    marginTop: 4,
+    height: 28,
+    borderRadius: 0,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 0,
+    borderColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
@@ -759,7 +876,7 @@ const styles = StyleSheet.create({
   },
   addAnswerText: {
     fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontWeight: '400',
     fontSize: 12,
     lineHeight: 14,
     color: '#FF5D2E',
@@ -783,42 +900,61 @@ const styles = StyleSheet.create({
   switchLabel: {
     flex: 1,
     fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontWeight: '400',
     fontSize: 12,
     lineHeight: 16,
     color: '#252525',
   },
   addQuestionBtn: {
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#FF7A45',
+    flexShrink: 0,
+    height: 40,
+    borderRadius: 0,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
+    gap: 6,
+    marginBottom: 0,
   },
   addQuestionText: {
     fontFamily: 'Roboto',
-    fontWeight: '500',
-    fontSize: 14,
-    lineHeight: 18,
-    color: '#FFFFFF',
+    fontWeight: '400',
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#FF5D2E',
   },
   saveBtn: {
-    height: 48,
-    borderRadius: 12,
+    width: 150,
+    height: 40,
+    borderRadius: 8,
     backgroundColor: '#76113A',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: 0,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   saveBtnText: {
     fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontWeight: '400',
     fontSize: 14,
     lineHeight: 18,
     color: '#FFFFFF',
+  },
+  footerActions: {
+    borderTopWidth: 1,
+    borderTopColor: '#F4F4F4',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 22,
+    paddingTop: 10,
+    paddingBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
   },
   modalOverlay: {
     flex: 1,
@@ -833,7 +969,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontFamily: 'Roboto',
-    fontWeight: '700',
+    fontWeight: '400',
     fontSize: 16,
     lineHeight: 20,
     color: '#252525',
@@ -858,7 +994,7 @@ const styles = StyleSheet.create({
   },
   modalCloseText: {
     fontFamily: 'Roboto',
-    fontWeight: '500',
+    fontWeight: '400',
     fontSize: 13,
     lineHeight: 16,
     color: '#76113A',

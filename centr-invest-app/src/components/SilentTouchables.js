@@ -18,11 +18,11 @@ export const TouchableOpacity = ({ children, style, activeOpacity = 0.7, onPress
   );
 };
 
-export const TextInput = React.forwardRef(({ ...props }, ref) => {
+export const TextInput = React.forwardRef(({ containerStyle, ...props }, ref) => {
   // To handle the input click sound on Android, we wrap it in a Pressable
   // but we keep the TextInput interactive.
   return (
-    <View>
+    <View style={containerStyle}>
       <RNTextInput
         ref={ref}
         {...props}

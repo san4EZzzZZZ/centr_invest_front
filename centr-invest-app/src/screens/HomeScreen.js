@@ -19,6 +19,10 @@ const PLUS_NAV_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none
 <path d="M26.2857 17.7143H17.7143V26.2857C17.7143 26.7404 17.5337 27.1764 17.2122 27.4979C16.8907 27.8194 16.4547 28 16 28C15.5453 28 15.1093 27.8194 14.7878 27.4979C14.4663 27.1764 14.2857 26.7404 14.2857 26.2857V17.7143H5.71429C5.25963 17.7143 4.82359 17.5337 4.5021 17.2122C4.18061 16.8907 4 16.4547 4 16C4 15.5453 4.18061 15.1093 4.5021 14.7878C4.82359 14.4663 5.25963 14.2857 5.71429 14.2857H14.2857V5.71429C14.2857 5.25963 14.4663 4.82359 14.7878 4.5021C15.1093 4.18061 15.5453 4 16 4C16.4547 4 16.8907 4.18061 17.2122 4.5021C17.5337 4.82359 17.7143 5.25963 17.7143 5.71429V14.2857H26.2857C26.7404 14.2857 27.1764 14.4663 27.4979 14.7878C27.8194 15.1093 28 15.5453 28 16C28 16.4547 27.8194 16.8907 27.4979 17.2122C27.1764 17.5337 26.7404 17.7143 26.2857 17.7143Z" fill="#CECECE"/>
 </svg>`;
 
+const PLUS_NAV_ACTIVE_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M26.2857 17.7143H17.7143V26.2857C17.7143 26.7404 17.5337 27.1764 17.2122 27.4979C16.8907 27.8194 16.4547 28 16 28C15.5453 28 15.1093 27.8194 14.7878 27.4979C14.4663 27.1764 14.2857 26.7404 14.2857 26.2857V17.7143H5.71429C5.25963 17.7143 4.82359 17.5337 4.5021 17.2122C4.18061 16.8907 4 16.4547 4 16C4 15.5453 4.18061 15.1093 4.5021 14.7878C4.82359 14.4663 5.25963 14.2857 5.71429 14.2857H14.2857V5.71429C14.2857 5.25963 14.4663 4.82359 14.7878 4.5021C15.1093 4.18061 15.5453 4 16 4C16.4547 4 16.8907 4.18061 17.2122 4.5021C17.5337 4.82359 17.7143 5.25963 17.7143 5.71429V14.2857H26.2857C26.7404 14.2857 27.1764 14.4663 27.4979 14.7878C27.8194 15.1093 28 15.5453 28 16C28 16.4547 27.8194 16.8907 27.4979 17.2122C27.1764 17.5337 26.7404 17.7143 26.2857 17.7143Z" fill="#76113A"/>
+</svg>`;
+
 const BIN_SVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M19 8V19.6C19 20.2365 18.7471 20.847 18.2971 21.2971C17.847 21.7471 17.2365 22 16.6 22H7.4C6.76348 22 6.15303 21.7471 5.70294 21.2971C5.25286 20.847 5 20.2365 5 19.6V8M16 5V3.2C16 2.54 15.46 2 14.8 2H9.2C8.54 2 8 2.54 8 3.2V5M16 5H8M16 5H21M8 5H3M12 11V17M15 11V17M9 11V17" stroke="#E92828" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
@@ -405,6 +409,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
     currentUser?.role === 'Администратор' ||
     currentUser?.role === 'Супер-администратор';
   const isSuperAdmin = currentUser?.roleCode === 'SUPER_ADMIN';
+  const adminHomeRoute = isSuperAdmin ? 'adminPanel' : 'admin';
 
   const displayUser = profile?.user
     ? { ...currentUser, email: profile.user.email, name: profile.user.username, avatarUrl: profile.user.avatarUrl }
@@ -658,10 +663,15 @@ export default function HomeScreen({ currentUser, onLogout }) {
     }
   }
 
-  async function openTestEditor(quiz) {
+  function openAdminHome() {
+    if (!isAdmin) return;
+    setRoute({ name: adminHomeRoute });
+  }
+
+  async function openTestEditor(quiz, returnTo = adminHomeRoute) {
     try {
       const details = await adminApi.getTest(quiz.id);
-      setRoute({ name: 'editor', quiz: toEditorQuiz(details) });
+      setRoute({ name: 'editor', quiz: toEditorQuiz(details), returnTo });
     } catch (editError) {
       Alert.alert('Ошибка', editError.message || 'Не удалось открыть тест');
     }
@@ -719,17 +729,31 @@ export default function HomeScreen({ currentUser, onLogout }) {
 
   if (route.name === 'admin') {
     return (
-      <AdminDashboardScreen
-        quizzes={adminTests}
-        onBack={goHomeWithRefresh}
-        onCreate={() => setRoute({ name: 'editor', quiz: null })}
-        onEdit={openTestEditor}
-        onDelete={async (quizId) => {
-          await adminApi.deleteTest(quizId);
-          setAdminTests((prev) => prev.filter((quiz) => quiz.id !== quizId));
-          await loadHomeData('');
-        }}
-      />
+      <>
+        <AdminDashboardScreen
+          quizzes={adminTests}
+          onBack={goHomeWithRefresh}
+          onCreate={() => setRoute({ name: 'editor', quiz: null, returnTo: 'admin' })}
+          onEdit={(quiz) => openTestEditor(quiz, 'admin')}
+          bottomInset={bottomInset}
+          navHeight={NAV_HEIGHT}
+          onDelete={async (quizId) => {
+            await adminApi.deleteTest(quizId);
+            setAdminTests((prev) => prev.filter((quiz) => quiz.id !== quizId));
+            await loadHomeData('');
+          }}
+        />
+        <BottomNav
+          bottomInset={bottomInset}
+          navHeight={NAV_HEIGHT}
+          activeTab="admin"
+          onGoHome={goHomeWithRefresh}
+          onOpenFavorites={() => setRoute({ name: 'favorites' })}
+          onOpenProfile={() => setRoute({ name: 'profile' })}
+          onOpenAdmin={openAdminHome}
+          isAdmin={isAdmin}
+        />
+      </>
     );
   }
 
@@ -737,7 +761,8 @@ export default function HomeScreen({ currentUser, onLogout }) {
     return (
       <QuizEditorScreen
         quiz={route.quiz}
-        onCancel={() => setRoute({ name: 'adminPanel' })}
+        languages={availableLanguages}
+        onCancel={() => setRoute({ name: route.returnTo ?? adminHomeRoute })}
         onSave={async (nextQuiz) => {
           try {
             const fallbackProfessionId = route.quiz?.languageId ?? route.quiz?.professionId ?? allProfessions[0]?.id ?? professions[0]?.id;
@@ -754,7 +779,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
             }
             await loadAdminTests();
             await loadHomeData('');
-            setRoute({ name: 'adminPanel' });
+            setRoute({ name: route.returnTo ?? adminHomeRoute });
           } catch (saveError) {
             Alert.alert('Ошибка', saveError.message || 'Не удалось сохранить тест');
           }
@@ -769,12 +794,13 @@ export default function HomeScreen({ currentUser, onLogout }) {
         currentUser={displayUser}
         roleName={roleName}
         isAdmin={isAdmin}
+        isSuperAdmin={isSuperAdmin}
         bottomInset={bottomInset}
         navHeight={NAV_HEIGHT}
         onGoHome={goHomeWithRefresh}
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
-        onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
+        onOpenAdmin={openAdminHome}
         onStartEmailChange={(newEmail) => setRoute({ name: 'emailChangeRequest', newEmail })}
         onProfileUpdated={(nextUser) => {
           setProfile((prev) => ({
@@ -802,7 +828,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
         onGoHome={goHomeWithRefresh}
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
-        onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
+        onOpenAdmin={openAdminHome}
         onEmailSent={() => setRoute({ name: 'emailChangeConfirm', newEmail: route.newEmail })}
       />
     );
@@ -819,7 +845,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
         onGoHome={goHomeWithRefresh}
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
-        onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
+        onOpenAdmin={openAdminHome}
         onConfirmed={(confirmedEmail) => {
           setProfile((prev) => ({
             ...(prev ?? {}),
@@ -844,7 +870,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
         onGoHome={goHomeWithRefresh}
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
-        onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
+        onOpenAdmin={openAdminHome}
       />
     );
   }
@@ -859,9 +885,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
         onGoHome={goHomeWithRefresh}
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
-        onOpenAdmin={() => {
-          if (isAdmin) setRoute({ name: 'adminPanel' });
-        }}
+        onOpenAdmin={openAdminHome}
         onOpenLanguage={(language) => setRoute({ name: 'languageTests', language })}
         isAdmin={isAdmin}
       />
@@ -878,9 +902,9 @@ export default function HomeScreen({ currentUser, onLogout }) {
         onGoHome={goHomeWithRefresh}
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
-        onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
+        onOpenAdmin={openAdminHome}
         onOpenUser={(user) => setRoute({ name: 'userEdit', user })}
-        onOpenTest={openTestEditor}
+        onOpenTest={(test) => openTestEditor(test, 'adminPanel')}
       />
     );
   }
@@ -913,7 +937,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
         onGoHome={goHomeWithRefresh}
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
-        onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
+        onOpenAdmin={openAdminHome}
         onOpenQuiz={openQuiz}
         onFavorite={toggleFavorite}
       />
@@ -1064,16 +1088,14 @@ export default function HomeScreen({ currentUser, onLogout }) {
         onGoHome={goHomeWithRefresh}
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
-        onOpenAdmin={() => {
-          if (isAdmin) setRoute({ name: 'adminPanel' });
-        }}
+        onOpenAdmin={openAdminHome}
         isAdmin={isAdmin}
       />
     </SafeAreaView>
   );
 }
 
-function ProfileScreen({ currentUser, roleName, isAdmin, bottomInset, navHeight, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, onStartEmailChange, onProfileUpdated, onLogout }) {
+function ProfileScreen({ currentUser, roleName, isAdmin, isSuperAdmin = false, bottomInset, navHeight, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, onStartEmailChange, onProfileUpdated, onLogout }) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(currentUser?.name ?? 'Пользователь');
   const [email, setEmail] = useState(currentUser?.email ?? 'unknown@mail.com');
@@ -1150,11 +1172,6 @@ function ProfileScreen({ currentUser, roleName, isAdmin, bottomInset, navHeight,
             <Text style={styles.profileEditText}>{isEditing ? (isSaving ? 'Сохранение...' : 'Сохранить') : 'Редактировать профиль'}</Text>
           </TouchableOpacity>
 
-          {isAdmin && (
-            <TouchableOpacity activeOpacity={0.85} style={styles.adminPanelBtn} onPress={onOpenAdmin}>
-              <Text style={styles.adminPanelText}>Панель администратора</Text>
-            </TouchableOpacity>
-          )}
         </ScrollView>
       </View>
 
@@ -2146,7 +2163,7 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
 
               {isAdmin ? (
                 <TouchableOpacity style={styles.bottomNavBtn} onPress={onOpenAdmin} activeOpacity={0.8}>
-                  <SvgXml xml={PLUS_NAV_SVG} width="32" height="32" />
+                  <SvgXml xml={activeTab === 'admin' ? PLUS_NAV_ACTIVE_SVG : PLUS_NAV_SVG} width="32" height="32" />
                 </TouchableOpacity>
               ) : null}
             </View>
