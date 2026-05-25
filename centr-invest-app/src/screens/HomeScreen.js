@@ -2015,21 +2015,28 @@ function FavoritesScreen({
           </View>
 
           <View style={styles.favoritesList}>
-            {favoriteItems.map((item) => (
-              <RecentCard
-                key={item.id}
-                title={item.title}
-                questions={item.questions}
-                status={item.status}
-                statusVariant={item.statusVariant}
-                timeLabel={item.timeLabel}
-                icon={item.icon}
-                iconColor={item.accent}
-                isFavorite={favoriteIds.has(String(item.id))}
-                onFavorite={() => onFavorite?.(item.quiz)}
-                onPress={() => onOpenQuiz?.(item.quiz)}
-              />
-            ))}
+            {favoriteItems.length ? (
+              favoriteItems.map((item) => (
+                <RecentCard
+                  key={item.id}
+                  title={item.title}
+                  questions={item.questions}
+                  status={item.status}
+                  statusVariant={item.statusVariant}
+                  timeLabel={item.timeLabel}
+                  icon={item.icon}
+                  iconColor={item.accent}
+                  isFavorite={favoriteIds.has(String(item.id))}
+                  onFavorite={() => onFavorite?.(item.quiz)}
+                  onPress={() => onOpenQuiz?.(item.quiz)}
+                />
+              ))
+            ) : (
+              <View style={styles.recentEmptyState}>
+                <Image source={RECENT_EMPTY_IMAGE} style={styles.recentEmptyImage} resizeMode="contain" />
+                <Text style={styles.recentEmptyText}>Здесь пока ничего нет</Text>
+              </View>
+            )}
           </View>
         </ScrollView>
       </View>
