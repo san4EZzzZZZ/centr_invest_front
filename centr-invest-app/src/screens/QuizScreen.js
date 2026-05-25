@@ -32,20 +32,33 @@ function buildAnswerRequest(question, answer) {
   return { textAnswer: String(answer ?? '').trim() };
 }
 
-function ChoiceOption({ label, selected, onPress, disabled }) {
+function getMatchingValidationState(answerResponse, leftItem, selectedValue) {
+  if (!answerResponse || !selectedValue) return null;
+  const rowResult = answerResponse.matchingResults?.[leftItem];
+  if (rowResult === true) return 'correct';
+  if (rowResult === false) return 'incorrect';
+  return answerResponse.correct ? 'correct' : 'incorrect';
+}
+
+function ChoiceOption({ label, selected, onPress, disabled, validationState }) {
   return (
     <TouchableOpacity 
       disabled={disabled}
       onPress={onPress}
       activeOpacity={0.88}
-      style={[styles.choiceOption, selected ? styles.choiceOptionSelected : null]}
+      style={[
+        styles.choiceOption,
+        selected ? styles.choiceOptionSelected : null,
+        selected && validationState === 'correct' ? styles.choiceOptionCorrect : null,
+        selected && validationState === 'incorrect' ? styles.choiceOptionIncorrect : null,
+      ]}
     >
       <Text style={styles.choiceLabel}>{label}</Text>
     </TouchableOpacity>
   );
 }
 
-function MatchingRow({ leftItem, rightItems, selectedValue, expanded, disabled, onToggle, onPick }) {
+function MatchingRow({ leftItem, rightItems, selectedValue, expanded, disabled, onToggle, onPick, validationState }) {
   return (
     <View style={styles.matchingRow}>
       <Text style={styles.matchingLabel}>{leftItem}</Text>
@@ -53,10 +66,24 @@ function MatchingRow({ leftItem, rightItems, selectedValue, expanded, disabled, 
         disabled={disabled}
         onPress={onToggle}
         activeOpacity={0.85}
-        style={[styles.selectBox, selectedValue ? styles.selectBoxSelected : null, expanded ? styles.selectBoxExpanded : null]}
+        style={[
+          styles.selectBox,
+          selectedValue ? styles.selectBoxSelected : null,
+          expanded ? styles.selectBoxExpanded : null,
+          selectedValue && validationState === 'correct' ? styles.selectBoxCorrect : null,
+          selectedValue && validationState === 'incorrect' ? styles.selectBoxIncorrect : null,
+        ]}
       >
-        <Text style={[styles.selectText, selectedValue ? styles.selectTextSelected : null]} numberOfLines={1}>
-          {selectedValue || 'placeholder'}
+        <Text
+          style={[
+            styles.selectText,
+            selectedValue ? styles.selectTextSelected : null,
+            selectedValue && validationState === 'correct' ? styles.selectTextCorrect : null,
+            selectedValue && validationState === 'incorrect' ? styles.selectTextIncorrect : null,
+          ]}
+          numberOfLines={1}
+        >
+          {selectedValue || 'Ответ'}
         </Text>
         <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color="#252525" />
       </TouchableOpacity>
@@ -64,7 +91,7 @@ function MatchingRow({ leftItem, rightItems, selectedValue, expanded, disabled, 
         <View style={styles.dropdownMenu}>
           {rightItems.map((rightItem, index) => (
             <TouchableOpacity
-              key={rightItem}
+              key={`${leftItem}_${rightItem}_${index}`}
               onPress={() => onPick(rightItem)}
               activeOpacity={0.85}
               style={[styles.dropdownItem, index < rightItems.length - 1 ? styles.dropdownItemDivider : null]}
@@ -126,6 +153,7 @@ export default function QuizScreen({ quiz, onBack, onFinish }) {
 
   const progress = totalQuestions > 0 ? questionNumber / totalQuestions : 0;
   const canContinue = useMemo(() => isQuestionAnswered(question, draftAnswer), [question, draftAnswer]);
+  const validationState = answerResponse ? (answerResponse.correct ? 'correct' : 'incorrect') : null;
 
   function handleChoiceSelect(optionId) {
     if (!question || answerResponse) return;
@@ -180,18 +208,22 @@ export default function QuizScreen({ quiz, onBack, onFinish }) {
     if (question.type === 'MATCHING') {
       return (
         <View style={styles.matchingList}>
-          {(question.matchLeftItems ?? []).map((leftItem) => (
+          {(question.matchLeftItems ?? []).map((leftItem, index) => {
+            const rowValidationState = getMatchingValidationState(answerResponse, leftItem, draftAnswer?.[leftItem]);
+            return (
             <MatchingRow
-              key={leftItem}
+              key={`${leftItem}_${index}`}
               leftItem={leftItem}
               rightItems={question.matchRightItems ?? []}
               selectedValue={draftAnswer?.[leftItem]}
               expanded={expandedRowId === leftItem}
               disabled={Boolean(answerResponse)}
+              validationState={rowValidationState}
               onToggle={() => setExpandedRowId(expandedRowId === leftItem ? null : leftItem)}
               onPick={(rightItem) => handleMatchingSelect(leftItem, rightItem)}
             />
-          ))}
+            );
+          })}
         </View>
       );
     }
@@ -204,7 +236,11 @@ export default function QuizScreen({ quiz, onBack, onFinish }) {
             value={typeof draftAnswer === 'string' ? draftAnswer : ''}
             placeholder="Введите ответ"
             placeholderTextColor="#C9C9C9"
-            style={styles.textInput}
+            style={[
+              styles.textInput,
+              validationState === 'correct' ? styles.textInputCorrect : null,
+              validationState === 'incorrect' ? styles.textInputIncorrect : null,
+            ]}
             onFocus={() => setTextFocused(true)}
             onBlur={() => setTextFocused(false)}
             onChangeText={setDraftAnswer}
@@ -217,12 +253,13 @@ export default function QuizScreen({ quiz, onBack, onFinish }) {
 
     return (
       <View style={styles.choiceList}>
-        {(question.options ?? []).map((option) => (
+        {(question.options ?? []).map((option, index) => (
           <ChoiceOption
-            key={option.id}
+            key={`${option.id}_${index}`}
             label={option.text}
             selected={Array.isArray(draftAnswer) && draftAnswer.includes(option.id)}
             disabled={Boolean(answerResponse)}
+            validationState={validationState}
             onPress={() => handleChoiceSelect(option.id)}
           />
         ))}
@@ -359,6 +396,8 @@ const styles = StyleSheet.create({
   choiceList: { marginTop: 22, gap: 12 },
   choiceOption: { minHeight: 48, borderRadius: 8, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#D6D6D6', paddingHorizontal: 12, justifyContent: 'center' },
   choiceOptionSelected: { backgroundColor: '#F8E2D5', borderColor: '#FF7A45' },
+  choiceOptionCorrect: { borderColor: '#1FA84F', backgroundColor: '#EEF8F1' },
+  choiceOptionIncorrect: { borderColor: '#C72E33', backgroundColor: '#FDF0F1' },
   choiceLabel: { fontFamily: 'Roboto_400Regular', fontSize: 14, lineHeight: 18, color: '#252525' },
   matchingList: { marginTop: 14, gap: 12 },
   matchingRow: { marginTop: 8 },
@@ -366,8 +405,12 @@ const styles = StyleSheet.create({
   selectBox: { marginTop: 14, minHeight: 56, borderRadius: 14, borderWidth: 1, borderColor: '#D6D6D6', backgroundColor: '#FFFFFF', paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   selectBoxSelected: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E95B20' },
   selectBoxExpanded: { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderColor: '#E95B20' },
+  selectBoxCorrect: { borderColor: '#1FA84F', backgroundColor: '#EEF8F1' },
+  selectBoxIncorrect: { borderColor: '#C72E33', backgroundColor: '#FDF0F1' },
   selectText: { flex: 1, marginRight: 10, fontFamily: 'Roboto_400Regular', fontSize: 14, lineHeight: 18, color: '#CFCFCF' },
   selectTextSelected: { color: '#252525' },
+  selectTextCorrect: { color: '#1FA84F' },
+  selectTextIncorrect: { color: '#8C2743' },
   dropdownMenu: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E95B20', borderTopWidth: 0, borderBottomLeftRadius: 14, borderBottomRightRadius: 14, overflow: 'hidden' },
   dropdownItem: { backgroundColor: '#FFFFFF', paddingHorizontal: 18, paddingVertical: 14 },
   dropdownItemDivider: { borderBottomWidth: 1, borderBottomColor: '#D9D9D9' },
@@ -376,6 +419,8 @@ const styles = StyleSheet.create({
   textPromptCard: { width: '100%', borderRadius: 8, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   textAnswerBlock: { marginTop: 18 },
   textInput: { width: '100%', minHeight: 56, borderRadius: 8, borderWidth: 1, borderColor: '#D6D6D6', paddingHorizontal: 16, paddingVertical: Platform.OS === 'ios' ? 11 : 8, fontFamily: 'Roboto_400Regular', fontSize: 16, lineHeight: 24, color: '#252525' },
+  textInputCorrect: { borderColor: '#1FA84F', backgroundColor: '#EEF8F1', paddingHorizontal: 16, paddingVertical: Platform.OS === 'ios' ? 11 : 8 },
+  textInputIncorrect: { borderColor: '#C72E33', backgroundColor: '#FDF0F1', paddingHorizontal: 16, paddingVertical: Platform.OS === 'ios' ? 11 : 8 },
   explanationCard: { marginTop: 18, paddingHorizontal: 2 },
   explanationError: { borderRadius: 10, padding: 12, backgroundColor: '#FFF0EB' },
   explanationTitle: { fontFamily: 'Roboto_400Regular', fontSize: 14, lineHeight: 18, color: '#252525', marginBottom: 10 },
