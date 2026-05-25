@@ -271,6 +271,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
   const [allProfessions, setAllProfessions] = useState([]);
   const [tests, setTests] = useState([]);
   const [favorites, setFavorites] = useState([]);
+  const [completedTests, setCompletedTests] = useState([]);
   const [profile, setProfile] = useState(null);
   const [adminTests, setAdminTests] = useState([]);
   const [search, setSearch] = useState('');
@@ -298,6 +299,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
   }, [displayUser, currentUser]);
 
   const favoriteIds = useMemo(() => new Set(favorites.map((item) => item.testId)), [favorites]);
+  const completedIds = useMemo(() => new Set(completedTests.map((item) => item.testId)), [completedTests]);
   const displayUser = profile?.user
     ? { ...currentUser, email: profile.user.email, name: profile.user.username }
     : currentUser;
@@ -309,9 +311,10 @@ export default function HomeScreen({ currentUser, onLogout }) {
     setError(null);
 
     try {
-      const [professionsResponse, profileResponse] = await Promise.all([
+      const [professionsResponse, profileResponse, completedResponse] = await Promise.all([
         contentApi.getLanguages({ title: query }),
         profileApi.get().catch(() => null),
+        profileApi.getCompletedTests().catch(() => []),
       ]);
 
       const nextProfessions = (Array.isArray(professionsResponse) ? professionsResponse : []).map((p) => {
@@ -343,6 +346,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
       setTests(nextTests);
       setProfile(profileResponse);
       setFavorites(profileResponse?.favoriteTests ?? []);
+      setCompletedTests(Array.isArray(completedResponse) ? completedResponse : []);
     } catch (loadError) {
       if (requestId === homeRequestId.current) {
         setError(loadError.message || 'Не удалось загрузить данные');
@@ -614,8 +618,8 @@ export default function HomeScreen({ currentUser, onLogout }) {
                   key={test.id}
                   title={test.title}
                   questions={`${test.questionCount ?? 0} вопросов`}
-                  status={test.languageTitle ?? test.professionTitle ?? 'Язык'}
-                  statusVariant={favoriteIds.has(test.id) ? 'passed' : 'not_passed'}
+                  status={completedIds.has(test.id) ? 'Пройдено' : 'Не пройдено'}
+                  statusVariant={completedIds.has(test.id) ? 'passed' : 'not_passed'}
                   icon={test.languageIcon}
                   iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
                   onPress={() => setRoute({ name: 'quiz', quiz: test })}

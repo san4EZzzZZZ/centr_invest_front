@@ -145,6 +145,7 @@ export const attemptsApi = {
 export const profileApi = {
   get: () => apiFetch('/profile'),
   getFavorites: () => apiFetch('/profile/favorites'),
+  getCompletedTests: () => apiFetch('/profile/completed-tests'),
   addFavorite: (testId) => apiFetch(`/profile/favorites/tests/${testId}`, { method: 'POST' }),
   removeFavorite: (testId) => apiFetch(`/profile/favorites/tests/${testId}`, { method: 'DELETE' }),
   updateName: (username) =>
