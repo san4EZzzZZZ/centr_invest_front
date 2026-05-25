@@ -462,6 +462,6 @@ const styles = StyleSheet.create({
   feedbackBadgeText: { fontFamily: 'Roboto_500Medium', fontSize: 12, lineHeight: 16, color: '#252525' },
   footer: { paddingHorizontal: 16, paddingTop: 12, backgroundColor: '#FFFFFF' },
   primaryBtn: { height: 56, borderRadius: 12, backgroundColor: '#7A1136', alignItems: 'center', justifyContent: 'center' },
-  primaryBtnDisabled: { opacity: 0.5 },
+  primaryBtnDisabled: { backgroundColor: '#D7C4CE' },
   primaryBtnText: { fontFamily: 'Roboto_500Medium', fontSize: 16, lineHeight: 16, color: '#FFFFFF' },
 });
