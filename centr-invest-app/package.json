@@ -9,6 +9,7 @@
     "autoprefixer": "^10.5.0",
     "babel-preset-expo": "~56.0.0",
     "expo": "~56.0.3",
+    "expo-build-properties": "~56.0.14",
     "expo-font": "~56.0.5",
     "expo-splash-screen": "~56.0.9",
     "expo-status-bar": "~56.0.4",
