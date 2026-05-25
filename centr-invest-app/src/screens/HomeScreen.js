@@ -62,6 +62,15 @@ const PROFESSIONS = [
 
 const FALLBACK_ICON = 'https://img.icons8.com/color/96/source-code.png';
 
+function maskEmail(value) {
+  const email = String(value || '').trim();
+  if (!email || !email.includes('@')) return '****';
+
+  const [localPart, domainPart] = email.split('@');
+  const visiblePart = localPart.slice(0, Math.min(4, localPart.length));
+  return `${visiblePart}****@${domainPart}`;
+}
+
 const LANGUAGE_ICONS = {
   'JavaScript': require('../../assets/js.jpg'),
   'JS': require('../../assets/js.jpg'),
@@ -80,6 +89,24 @@ const LANGUAGE_ICONS = {
   'Rust': 'https://img.icons8.com/external-tal-revivo-color-tal-revivo/96/external-rust-is-a-multi-paradigm-system-programming-language-designed-for-performance-and-safety-logo-color-tal-revivo.png',
 };
 
+const LANGUAGE_DESCRIPTIONS = {
+  'JavaScript': 'Язык для веб-интерфейсов, сайтов и интерактивных приложений.',
+  JS: 'Язык для веб-интерфейсов, сайтов и интерактивных приложений.',
+  PHP: 'Подходит для серверной части сайтов, CMS и backend-задач.',
+  Java: 'Популярен для enterprise-разработки, Android и backend-систем.',
+  Python: 'Удобен для анализа данных, автоматизации и backend-разработки.',
+  TypeScript: 'Надстройка над JavaScript с типизацией для крупных проектов.',
+  TS: 'Надстройка над JavaScript с типизацией для крупных проектов.',
+  'C#': 'Используется для приложений, игр, backend-сервисов и .NET.',
+  'C++': 'Быстрый язык для системного ПО, игр и высокопроизводительных задач.',
+  SQL: 'Нужен для работы с базами данных, запросами и аналитикой.',
+  Go: 'Хорошо подходит для сетевых сервисов и высоконагруженного backend.',
+  Swift: 'Основной язык для iOS и приложений экосистемы Apple.',
+  Kotlin: 'Современный язык для Android, backend и мультиплатформенной разработки.',
+  Ruby: 'Удобен для веб-разработки и быстрых прототипов.',
+  Rust: 'Фокусируется на безопасности памяти и высокой производительности.',
+};
+
 function getLanguageIcon(title) {
   if (!title) return null;
   const upperTitle = title.toUpperCase();
@@ -89,6 +116,29 @@ function getLanguageIcon(title) {
     }
   }
   return null;
+}
+
+function getLanguageDescription(title) {
+  if (!title) return 'Краткое описание скоро появится.';
+
+  const normalizedTitle = Object.keys(LANGUAGE_DESCRIPTIONS).find(
+    (key) => key.toUpperCase() === String(title).toUpperCase()
+  );
+
+  if (normalizedTitle) {
+    return LANGUAGE_DESCRIPTIONS[normalizedTitle];
+  }
+
+  return 'Язык для обучения, практики и решения прикладных задач.';
+}
+
+function normalizeLanguageItem(item) {
+  return {
+    ...item,
+    title: normalizeLanguageTitle(item.title),
+    icon: item.icon ?? getLanguageIcon(item.title) ?? FALLBACK_ICON,
+    description: item.description ?? getLanguageDescription(item.title),
+  };
 }
 
 function getImageSource(source) {
@@ -330,6 +380,10 @@ export default function HomeScreen({ currentUser, onLogout }) {
     currentUser?.role === 'Администратор' ||
     currentUser?.role === 'Супер-администратор';
 
+  const displayUser = profile?.user
+    ? { ...currentUser, email: profile.user.email, name: profile.user.username }
+    : currentUser;
+
   const roleName = useMemo(() => {
     const userRoleCode = displayUser?.roleCode || currentUser?.roleCode;
     const userRole = displayUser?.role || currentUser?.role;
@@ -343,6 +397,16 @@ export default function HomeScreen({ currentUser, onLogout }) {
     return 'Ученик';
   }, [displayUser, currentUser]);
 
+  const homeLanguages = useMemo(() => {
+    const source = professions.length ? professions : allProfessions.length ? allProfessions : PROFESSIONS;
+    return source.map(normalizeLanguageItem);
+  }, [allProfessions, professions]);
+
+  const availableLanguages = useMemo(() => {
+    const source = allProfessions.length ? allProfessions : professions.length ? professions : PROFESSIONS;
+    return source.map(normalizeLanguageItem);
+  }, [allProfessions, professions]);
+
   const favoriteIds = useMemo(() => new Set(favorites.map((item) => item.testId)), [favorites]);
   const completedIds = useMemo(() => new Set(completedTests.map((item) => item.testId)), [completedTests]);
   const completedTestsById = useMemo(() => {
@@ -354,9 +418,6 @@ export default function HomeScreen({ currentUser, onLogout }) {
     });
     return map;
   }, [completedTests]);
-  const displayUser = profile?.user
-    ? { ...currentUser, email: profile.user.email, name: profile.user.username }
-    : currentUser;
 
   async function loadHomeData(query = search) {
     const requestId = homeRequestId.current + 1;
@@ -548,6 +609,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
     return (
       <ProfileScreen
         currentUser={displayUser}
+        roleName={roleName}
         isAdmin={isAdmin}
         bottomInset={bottomInset}
         navHeight={NAV_HEIGHT}
@@ -555,7 +617,94 @@ export default function HomeScreen({ currentUser, onLogout }) {
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
         onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
+        onStartEmailChange={(newEmail) => setRoute({ name: 'emailChangeRequest', newEmail })}
+        onProfileUpdated={(nextUser) => {
+          setProfile((prev) => ({
+            ...(prev ?? {}),
+            user: {
+              ...(prev?.user ?? {}),
+              username: nextUser.name,
+              email: nextUser.email,
+            },
+          }));
+        }}
         onLogout={onLogout}
+      />
+    );
+  }
+
+  if (route.name === 'emailChangeRequest') {
+    return (
+      <EmailChangeRequestScreen
+        newEmail={route.newEmail}
+        bottomInset={bottomInset}
+        navHeight={NAV_HEIGHT}
+        isAdmin={isAdmin}
+        onBackToProfile={() => setRoute({ name: 'profile' })}
+        onGoHome={goHomeWithRefresh}
+        onOpenFavorites={() => setRoute({ name: 'favorites' })}
+        onOpenProfile={() => setRoute({ name: 'profile' })}
+        onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
+        onEmailSent={() => setRoute({ name: 'emailChangeConfirm', newEmail: route.newEmail })}
+      />
+    );
+  }
+
+  if (route.name === 'emailChangeConfirm') {
+    return (
+      <EmailChangeConfirmScreen
+        newEmail={route.newEmail}
+        bottomInset={bottomInset}
+        navHeight={NAV_HEIGHT}
+        isAdmin={isAdmin}
+        onBackToProfile={() => setRoute({ name: 'profile' })}
+        onGoHome={goHomeWithRefresh}
+        onOpenFavorites={() => setRoute({ name: 'favorites' })}
+        onOpenProfile={() => setRoute({ name: 'profile' })}
+        onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
+        onConfirmed={(confirmedEmail) => {
+          setProfile((prev) => ({
+            ...(prev ?? {}),
+            user: {
+              ...(prev?.user ?? {}),
+              email: confirmedEmail,
+            },
+          }));
+          setRoute({ name: 'emailChangeSuccess' });
+        }}
+      />
+    );
+  }
+
+  if (route.name === 'emailChangeSuccess') {
+    return (
+      <EmailChangeSuccessScreen
+        bottomInset={bottomInset}
+        navHeight={NAV_HEIGHT}
+        isAdmin={isAdmin}
+        onBackToProfile={() => setRoute({ name: 'profile' })}
+        onGoHome={goHomeWithRefresh}
+        onOpenFavorites={() => setRoute({ name: 'favorites' })}
+        onOpenProfile={() => setRoute({ name: 'profile' })}
+        onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
+      />
+    );
+  }
+
+  if (route.name === 'languages') {
+    return (
+      <LanguagesScreen
+        languages={availableLanguages}
+        bottomInset={bottomInset}
+        navHeight={NAV_HEIGHT}
+        onBack={() => setRoute({ name: 'home' })}
+        onGoHome={goHomeWithRefresh}
+        onOpenFavorites={() => setRoute({ name: 'favorites' })}
+        onOpenProfile={() => setRoute({ name: 'profile' })}
+        onOpenAdmin={() => {
+          if (isAdmin) setRoute({ name: 'admin' });
+        }}
+        isAdmin={isAdmin}
       />
     );
   }
@@ -636,21 +785,23 @@ export default function HomeScreen({ currentUser, onLogout }) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Языки</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => setRoute({ name: 'languages' })}>
               <Text style={styles.sectionAction}>Смотреть все</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.horizontalListWrap}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalListContent}>
-              {(professions.length ? professions : PROFESSIONS).map((item) => (
+              {homeLanguages.map((item) => (
                 <TouchableOpacity  key={item.id} style={styles.professionCard} activeOpacity={0.8}>
                   <Image
-                    source={getImageSource(item.icon ?? FALLBACK_ICON)}
+                    source={getImageSource(item.icon)}
                     style={styles.professionIcon} 
                     resizeMode="contain"
                   />
-                  <Text numberOfLines={2} style={styles.professionName}>{item.title}</Text>
+                  <View style={styles.professionTextWrap}>
+                    <Text numberOfLines={2} style={styles.professionName}>{item.title}</Text>
+                  </View>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -703,7 +854,51 @@ export default function HomeScreen({ currentUser, onLogout }) {
   );
 }
 
-function ProfileScreen({ currentUser, isAdmin, bottomInset, navHeight, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, onLogout }) {
+function ProfileScreen({ currentUser, roleName, isAdmin, bottomInset, navHeight, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, onStartEmailChange, onProfileUpdated, onLogout }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(currentUser?.name ?? 'Пользователь');
+  const [email, setEmail] = useState(currentUser?.email ?? 'unknown@mail.com');
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setName(currentUser?.name ?? 'Пользователь');
+    setEmail(currentUser?.email ?? 'unknown@mail.com');
+  }, [currentUser?.email, currentUser?.name]);
+
+  async function handleSaveProfile() {
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedName) {
+      Alert.alert('Ошибка', 'Введите имя пользователя');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await profileApi.updateName(trimmedName);
+
+      if (trimmedEmail && trimmedEmail !== currentUser?.email) {
+        onProfileUpdated?.({ name: trimmedName, email: currentUser?.email || 'unknown@mail.com' });
+        setName(trimmedName);
+        setEmail(currentUser?.email || 'unknown@mail.com');
+        setIsEditing(false);
+        onStartEmailChange?.(trimmedEmail);
+        return;
+      }
+
+      const savedEmail = currentUser?.email || 'unknown@mail.com';
+      onProfileUpdated?.({ name: trimmedName, email: savedEmail });
+      setName(trimmedName);
+      setEmail(savedEmail);
+      setIsEditing(false);
+    } catch (saveError) {
+      Alert.alert('Ошибка', saveError.message || 'Не удалось сохранить профиль');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <SafeAreaView edges={['top']} style={[styles.screen, styles.profileScreen]}>
       <View style={styles.profileShell}>
@@ -718,18 +913,29 @@ function ProfileScreen({ currentUser, isAdmin, bottomInset, navHeight, onGoHome,
               <Image source={require('../../assets/icon.png')} style={styles.avatarImage} />
             </View>
 
-            <ProfileField label="Имя пользователя" value={currentUser?.name ?? 'Пользователь'} />
-            <ProfileField label="Email" value={currentUser?.email ?? 'unknown@mail.com'} />
-            <ProfileField label="Должность" value={currentUser?.role ?? 'Пользователь'} />
+            <ProfileField label="Имя пользователя" value={name} isEditing={isEditing} onChangeText={setName} />
+            <ProfileField label="Email" value={email} isEditing={isEditing} onChangeText={setEmail} keyboardType="email-address" />
+            <ProfileField label="Роль" value={roleName ?? currentUser?.role ?? 'Пользователь'} />
 
             <TouchableOpacity  activeOpacity={0.85} style={styles.logoutBtn} onPress={onLogout}>
               <Text style={styles.logoutText}>Выйти</Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity activeOpacity={0.85} style={styles.adminPanelBtn} onPress={onOpenAdmin}>
-            <Text style={styles.adminPanelText}>Панель администратора</Text>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={[styles.profileEditBtn, isSaving && styles.profileEditBtnDisabled]}
+            onPress={isEditing ? handleSaveProfile : () => setIsEditing(true)}
+            disabled={isSaving}
+          >
+            <Text style={styles.profileEditText}>{isEditing ? (isSaving ? 'Сохранение...' : 'Сохранить') : 'Редактировать профиль'}</Text>
           </TouchableOpacity>
+
+          {isAdmin && (
+            <TouchableOpacity activeOpacity={0.85} style={styles.adminPanelBtn} onPress={onOpenAdmin}>
+              <Text style={styles.adminPanelText}>Панель администратора</Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       </View>
 
@@ -737,6 +943,214 @@ function ProfileScreen({ currentUser, isAdmin, bottomInset, navHeight, onGoHome,
         bottomInset={bottomInset}
         navHeight={navHeight}
         activeTab="profile"
+        onGoHome={onGoHome}
+        onOpenFavorites={onOpenFavorites}
+        onOpenProfile={onOpenProfile}
+        onOpenAdmin={onOpenAdmin}
+        isAdmin={isAdmin}
+      />
+    </SafeAreaView>
+  );
+}
+
+function EmailChangeLayout({ children, bottomInset, navHeight, isAdmin, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin }) {
+  return (
+    <SafeAreaView edges={['top']} style={[styles.screen, styles.emailChangeScreen]}>
+      <View style={styles.emailChangeShell}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.emailChangeScrollContent, { paddingBottom: navHeight + bottomInset + 24 }]}
+        >
+          <Image source={require('../../assets/centr_test.png')} style={styles.emailChangeLogo} resizeMode="contain" />
+          {children}
+        </ScrollView>
+      </View>
+
+      <BottomNav
+        bottomInset={bottomInset}
+        navHeight={navHeight}
+        activeTab="profile"
+        onGoHome={onGoHome}
+        onOpenFavorites={onOpenFavorites}
+        onOpenProfile={onOpenProfile}
+        onOpenAdmin={onOpenAdmin}
+        isAdmin={isAdmin}
+      />
+    </SafeAreaView>
+  );
+}
+
+function EmailChangeRequestScreen({ newEmail, bottomInset, navHeight, isAdmin, onBackToProfile, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, onEmailSent }) {
+  const [isSending, setIsSending] = useState(false);
+
+  async function handleSendEmail() {
+    setIsSending(true);
+    try {
+      await profileApi.requestEmailChange(newEmail);
+      onEmailSent?.();
+    } catch (sendError) {
+      Alert.alert('Ошибка', sendError.message || 'Не удалось отправить письмо');
+    } finally {
+      setIsSending(false);
+    }
+  }
+
+  return (
+    <EmailChangeLayout
+      bottomInset={bottomInset}
+      navHeight={navHeight}
+      isAdmin={isAdmin}
+      onGoHome={onGoHome}
+      onOpenFavorites={onOpenFavorites}
+      onOpenProfile={onOpenProfile}
+      onOpenAdmin={onOpenAdmin}
+    >
+      <View style={styles.emailChangeCard}>
+        <Text style={styles.emailChangeTitle}>Подтверждение изменения Email</Text>
+        <Text style={styles.emailChangeDescription}>На новую почту будет отправлено письмо{"\n"}для подтверждения.</Text>
+        <Text style={styles.emailChangeMaskedEmail}>{maskEmail(newEmail)}.</Text>
+
+        <TouchableOpacity
+          activeOpacity={0.85}
+          style={[styles.emailChangePrimaryBtn, isSending && styles.profileEditBtnDisabled]}
+          onPress={handleSendEmail}
+          disabled={isSending}
+        >
+          <Text style={styles.emailChangePrimaryText}>{isSending ? 'Отправка...' : 'Отправить письмо'}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity activeOpacity={0.8} style={styles.emailChangeBackBtn} onPress={onBackToProfile}>
+          <Text style={styles.emailChangeBackText}>←  Вернуться в профиль</Text>
+        </TouchableOpacity>
+      </View>
+    </EmailChangeLayout>
+  );
+}
+
+function EmailChangeConfirmScreen({ newEmail, bottomInset, navHeight, isAdmin, onBackToProfile, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, onConfirmed }) {
+  const [code, setCode] = useState('');
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  async function handleConfirmEmail() {
+    const trimmedCode = code.trim();
+    if (!trimmedCode) {
+      Alert.alert('Ошибка', 'Введите код подтверждения');
+      return;
+    }
+
+    setIsConfirming(true);
+    try {
+      await profileApi.confirmEmailChange({ newEmail, code: trimmedCode });
+      onConfirmed?.(newEmail);
+    } catch (confirmError) {
+      Alert.alert('Ошибка', confirmError.message || 'Не удалось подтвердить email');
+    } finally {
+      setIsConfirming(false);
+    }
+  }
+
+  return (
+    <EmailChangeLayout
+      bottomInset={bottomInset}
+      navHeight={navHeight}
+      isAdmin={isAdmin}
+      onGoHome={onGoHome}
+      onOpenFavorites={onOpenFavorites}
+      onOpenProfile={onOpenProfile}
+      onOpenAdmin={onOpenAdmin}
+    >
+      <View style={styles.emailChangeCard}>
+        <Text style={styles.emailChangeConfirmTitle}>Изменение Email</Text>
+        <TextInput
+          value={code}
+          onChangeText={setCode}
+          placeholder="Код подтверждения"
+          placeholderTextColor="#D6D6D6"
+          keyboardType="number-pad"
+          style={styles.emailChangeCodeInput}
+        />
+
+        <TouchableOpacity
+          activeOpacity={0.85}
+          style={[styles.emailChangePrimaryBtn, isConfirming && styles.profileEditBtnDisabled]}
+          onPress={handleConfirmEmail}
+          disabled={isConfirming}
+        >
+          <Text style={styles.emailChangePrimaryText}>{isConfirming ? 'Подтверждение...' : 'Подтвердить'}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity activeOpacity={0.8} style={styles.emailChangeBackBtn} onPress={onBackToProfile}>
+          <Text style={styles.emailChangeBackText}>←  Вернуться в профиль</Text>
+        </TouchableOpacity>
+      </View>
+    </EmailChangeLayout>
+  );
+}
+
+function EmailChangeSuccessScreen({ bottomInset, navHeight, isAdmin, onBackToProfile, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin }) {
+  return (
+    <EmailChangeLayout
+      bottomInset={bottomInset}
+      navHeight={navHeight}
+      isAdmin={isAdmin}
+      onGoHome={onGoHome}
+      onOpenFavorites={onOpenFavorites}
+      onOpenProfile={onOpenProfile}
+      onOpenAdmin={onOpenAdmin}
+    >
+      <View style={styles.emailChangeCard}>
+        <Text style={styles.emailChangeConfirmTitle}>Изменение Email</Text>
+        <Text style={styles.emailChangeSuccessText}>Вы успешно изменили почту</Text>
+        <View style={styles.emailChangeCheckCircle}>
+          <Ionicons name="checkmark" size={52} color="#FFFFFF" />
+        </View>
+
+        <TouchableOpacity activeOpacity={0.85} style={styles.emailChangePrimaryBtn} onPress={onBackToProfile}>
+          <Text style={styles.emailChangePrimaryText}>Вернуться в профиль</Text>
+        </TouchableOpacity>
+      </View>
+    </EmailChangeLayout>
+  );
+}
+
+function LanguagesScreen({ languages, bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, isAdmin }) {
+  return (
+    <SafeAreaView edges={['top']} style={[styles.screen, styles.languagesScreen]}>
+      <View style={styles.languagesShell}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.languagesScrollContent, { paddingBottom: navHeight + bottomInset + 24 }]}
+        >
+          <View style={styles.languagesHeader}>
+            <TouchableOpacity onPress={onBack} activeOpacity={0.8} style={styles.backBtn}>
+              <Ionicons name="chevron-back" size={18} color="#252525" />
+            </TouchableOpacity>
+            <Text style={styles.languagesTitle}>Языки</Text>
+          </View>
+
+          <View style={styles.languagesList}>
+            {languages.map((item) => (
+              <TouchableOpacity key={item.id} activeOpacity={0.9} style={styles.languageCard}>
+                <View style={styles.languageCardMain}>
+                  <Image source={getImageSource(item.icon)} style={styles.languageCardIcon} resizeMode="contain" />
+                  <View style={styles.languageCardTextWrap}>
+                    <Text numberOfLines={2} style={styles.languageCardTitle}>{item.title}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.languageTextWrap}>
+                  <Text style={styles.languageDescription}>{item.description}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
+
+      <BottomNav
+        bottomInset={bottomInset}
+        navHeight={navHeight}
+        activeTab="home"
         onGoHome={onGoHome}
         onOpenFavorites={onOpenFavorites}
         onOpenProfile={onOpenProfile}
@@ -1241,11 +1655,21 @@ function FavoritesScreen({ favorites, bottomInset, navHeight, onGoHome, onOpenFa
   );
 }
 
-function ProfileField({ label, value }) {
+function ProfileField({ label, value, isEditing = false, onChangeText, keyboardType = 'default' }) {
   return (
     <View style={styles.profileField}>
       <Text style={styles.profileFieldLabel}>{label}</Text>
-      <Text style={styles.profileFieldValue}>{value}</Text>
+      {isEditing && onChangeText ? (
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          keyboardType={keyboardType}
+          autoCapitalize={keyboardType === 'email-address' ? 'none' : 'sentences'}
+          style={styles.profileFieldInput}
+        />
+      ) : (
+        <Text style={styles.profileFieldValue}>{value}</Text>
+      )}
     </View>
   );
 }
@@ -1360,6 +1784,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   profileScreen: {
+    backgroundColor: '#FFFFFF',
+  },
+  emailChangeScreen: {
     backgroundColor: '#FFFFFF',
   },
   favoritesScreen: {
@@ -1765,6 +2192,131 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     alignItems: 'center',
   },
+  emailChangeShell: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  emailChangeScrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 16,
+    paddingTop: 86,
+    alignItems: 'center',
+  },
+  emailChangeLogo: {
+    width: 242,
+    height: 118,
+    marginBottom: 156,
+  },
+  emailChangeCard: {
+    width: '100%',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#EFE7FF',
+    backgroundColor: '#FFFFFF',
+    paddingTop: 24,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    boxShadow: '0px 8px 14px #F1EFFF',
+  },
+  emailChangeTitle: {
+    fontFamily: 'Roboto',
+    fontWeight: '400',
+    fontSize: 18,
+    lineHeight: 22,
+    color: '#252525',
+    textAlign: 'center',
+    marginBottom: 28,
+  },
+  emailChangeConfirmTitle: {
+    fontFamily: 'Roboto',
+    fontWeight: '400',
+    fontSize: 24,
+    lineHeight: 28,
+    color: '#000000',
+    textAlign: 'center',
+    marginBottom: 18,
+  },
+  emailChangeDescription: {
+    fontFamily: 'Roboto',
+    fontWeight: '400',
+    fontSize: 18,
+    lineHeight: 29,
+    color: '#A4A4A4',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  emailChangeMaskedEmail: {
+    fontFamily: 'Roboto',
+    fontWeight: '400',
+    fontSize: 16,
+    lineHeight: 20,
+    color: '#666666',
+    textAlign: 'center',
+    marginBottom: 18,
+  },
+  emailChangePrimaryBtn: {
+    alignSelf: 'stretch',
+    height: 64,
+    borderRadius: 12,
+    backgroundColor: '#8A0F43',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emailChangePrimaryText: {
+    fontFamily: 'Roboto',
+    fontWeight: '400',
+    fontSize: 18,
+    lineHeight: 22,
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  emailChangeBackBtn: {
+    marginTop: 18,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  emailChangeBackText: {
+    fontFamily: 'Roboto',
+    fontWeight: '400',
+    fontSize: 16,
+    lineHeight: 20,
+    color: '#FF5D2E',
+    textAlign: 'center',
+  },
+  emailChangeCodeInput: {
+    alignSelf: 'stretch',
+    height: 68,
+    borderWidth: 1,
+    borderColor: '#EAEBED',
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    marginBottom: 14,
+    fontFamily: 'Roboto',
+    fontWeight: '400',
+    fontSize: 18,
+    lineHeight: 22,
+    color: '#111111',
+    outlineStyle: 'none',
+  },
+  emailChangeSuccessText: {
+    fontFamily: 'Roboto',
+    fontWeight: '400',
+    fontSize: 16,
+    lineHeight: 20,
+    color: '#252525',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  emailChangeCheckCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FF956D',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
   profileTitle: {
     fontFamily: 'Roboto',
     fontWeight: '700',
@@ -1804,6 +2356,7 @@ const styles = StyleSheet.create({
   profileField: {
     alignItems: 'center',
     marginBottom: 16,
+    width: '100%',
   },
   profileFieldLabel: {
     fontFamily: 'Roboto',
@@ -1822,6 +2375,23 @@ const styles = StyleSheet.create({
     color: '#111111',
     textAlign: 'center',
   },
+  profileFieldInput: {
+    width: 240,
+    maxWidth: '100%',
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#E7E7E7',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    fontFamily: 'Roboto',
+    fontWeight: '700',
+    fontSize: 18,
+    lineHeight: 22,
+    color: '#111111',
+    textAlign: 'center',
+    outlineStyle: 'none',
+  },
   logoutBtn: {
     marginTop: 6,
     paddingVertical: 6,
@@ -1833,6 +2403,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 20,
     color: '#FF5D2E',
+  },
+  profileEditBtn: {
+    alignSelf: 'stretch',
+    height: 51,
+    marginTop: 16,
+    marginHorizontal: -16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#8A0F43',
+  },
+  profileEditBtnDisabled: {
+    opacity: 0.7,
+  },
+  profileEditText: {
+    fontFamily: 'Roboto',
+    fontWeight: '400',
+    fontSize: 16,
+    lineHeight: 20,
+    color: '#FFFFFF',
+    textAlign: 'center',
   },
   adminPanelBtn: {
     alignSelf: 'stretch',
@@ -1935,26 +2526,112 @@ const styles = StyleSheet.create({
   },
   professionCard: {
     width: 148,
-    height: 100,
+    minHeight: 108,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1.5,
     borderColor: '#F2F2F2',
     flexDirection: 'row',
-    alignItems: 'center', // Вернул центрирование для надежности
+    alignItems: 'center',
     paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   professionIcon: {
     width: 44,
     height: 44,
     marginRight: 8,
   },
-  professionName: {
+  professionTextWrap: {
     flex: 1,
+    minWidth: 0,
+  },
+  professionName: {
     fontFamily: 'Roboto_700Bold',
-    fontSize: 18,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 18,
     color: '#252525',
+  },
+  languagesScreen: {
+    backgroundColor: '#FFFFFF',
+  },
+  languagesShell: {
+    flex: 1,
+    marginHorizontal: 16,
+    marginTop: 0,
+    marginBottom: 0,
+    borderRadius: 26,
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
+  },
+  languagesScrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 18,
+  },
+  languagesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 18,
+  },
+  languagesTitle: {
+    fontFamily: 'Roboto_500Medium',
+    fontSize: 20,
+    lineHeight: 24,
+    color: '#252525',
+  },
+  languagesList: {
+    gap: 12,
+  },
+  languageCard: {
+    minHeight: 0,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderWidth: 0,
+    borderColor: 'transparent',
+    backgroundColor: '#FFFFFF',
+    gap: 12,
+  },
+  languageCardMain: {
+    width: 148,
+    minHeight: 108,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#F2F2F2',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  languageCardIcon: {
+    width: 44,
+    height: 44,
+    marginRight: 8,
+  },
+  languageCardTextWrap: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
+  },
+  languageCardTitle: {
+    fontFamily: 'Roboto_700Bold',
+    fontSize: 16,
+    lineHeight: 18,
+    color: '#252525',
+  },
+  languageTextWrap: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'flex-start',
+    paddingTop: 6,
+  },
+  languageDescription: {
+    marginTop: 0,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 14,
+    lineHeight: 18,
+    color: '#595959',
+    textAlignVertical: 'center',
   },
   recentList: {
     paddingHorizontal: 16,

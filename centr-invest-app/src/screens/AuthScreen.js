@@ -983,7 +983,7 @@ const styles = StyleSheet.create({
   },
   confirmBackLinkWrap: {
     marginTop: 8,
-    marginBottom: 4,
+    marginBottom: 16,
     marginHorizontal: 45,
   },
   confirmBackLinkText: {
