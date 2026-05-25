@@ -184,6 +184,51 @@ function getOptionLabel(options, optionId) {
   return options?.find((option) => option.id === optionId)?.label ?? options?.[0]?.label ?? 'Вариант';
 }
 
+function formatDuration(value) {
+  if (value == null) return '';
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return formatDurationSeconds(value);
+  }
+
+  const text = String(value).trim();
+  if (!text) return '';
+
+  const minutesMatch = text.match(/^(\d+)\s*мин\s*(\d+)\s*сек$/i);
+  if (minutesMatch) {
+    const minutes = Number(minutesMatch[1]);
+    const seconds = Number(minutesMatch[2]);
+    return formatDurationSeconds(minutes * 60 + seconds);
+  }
+
+  const secondsMatch = text.match(/^(\d+)\s*сек$/i);
+  if (secondsMatch) {
+    return formatDurationSeconds(Number(secondsMatch[1]));
+  }
+
+  const hmsMatch = text.match(/^(\d+)\.(\d+)\.(\d+)$/);
+  if (hmsMatch) {
+    const hours = Number(hmsMatch[1]);
+    const minutes = Number(hmsMatch[2]);
+    const seconds = Number(hmsMatch[3]);
+    return formatDurationSeconds(hours * 3600 + minutes * 60 + seconds);
+  }
+
+  return text;
+}
+
+function formatDurationSeconds(seconds) {
+  const safeSeconds = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainingSeconds = safeSeconds % 60;
+
+  if (minutes === 0) {
+    return `${remainingSeconds} сек`;
+  }
+
+  return `${minutes} мин ${remainingSeconds} сек`;
+}
+
 function toAdminPayload(quiz, fallbackLanguageId) {
   const languageId = Number(quiz.languageId ?? quiz.professionId ?? fallbackLanguageId);
   const title = String(quiz.title || '').trim() || 'Новый тест';
@@ -300,6 +345,15 @@ export default function HomeScreen({ currentUser, onLogout }) {
 
   const favoriteIds = useMemo(() => new Set(favorites.map((item) => item.testId)), [favorites]);
   const completedIds = useMemo(() => new Set(completedTests.map((item) => item.testId)), [completedTests]);
+  const completedTestsById = useMemo(() => {
+    const map = new Map();
+    completedTests.forEach((item) => {
+      if (!map.has(item.testId)) {
+        map.set(item.testId, item);
+      }
+    });
+    return map;
+  }, [completedTests]);
   const displayUser = profile?.user
     ? { ...currentUser, email: profile.user.email, name: profile.user.username }
     : currentUser;
@@ -620,6 +674,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
                   questions={`${test.questionCount ?? 0} вопросов`}
                   status={completedIds.has(test.id) ? 'Пройдено' : 'Не пройдено'}
                   statusVariant={completedIds.has(test.id) ? 'passed' : 'not_passed'}
+                  timeLabel={formatDuration(completedTestsById.get(test.id)?.duration || completedTestsById.get(test.id)?.bestTime)}
                   icon={test.languageIcon}
                   iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
                   onPress={() => setRoute({ name: 'quiz', quiz: test })}
@@ -1247,12 +1302,20 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
   );
 }
 
-function RecentCard({ title, questions, status, statusVariant, icon, iconColor, onPress }) {
+function RecentCard({ title, questions, status, statusVariant, timeLabel, icon, iconColor, onPress }) {
   const isPassed = statusVariant === 'passed';
   const isDraft = statusVariant === 'draft';
+  const isNotPassed = statusVariant === 'not_passed';
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.recentCard}>
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.9}
+      style={[
+        styles.recentCard,
+        isPassed ? styles.recentCardPassed : isNotPassed ? styles.recentCardNotPassed : null,
+      ]}
+    >
       <View style={styles.recentLeft}>
         <View style={[styles.recentIcon, { backgroundColor: icon ? 'transparent' : iconColor, alignItems: 'center', justifyContent: 'center' }]}>
           {icon ? (
@@ -1261,26 +1324,29 @@ function RecentCard({ title, questions, status, statusVariant, icon, iconColor, 
             <View style={[styles.recentIconInner, { backgroundColor: iconColor }]} />
           )}
         </View>
-        <View>
-          <Text style={styles.recentTitle}>{title}</Text>
-          <Text style={styles.recentQuestions}>{questions}</Text>
+        <View style={styles.recentTextWrap}>
+          <Text numberOfLines={2} style={styles.recentTitle}>{title}</Text>
+          <Text numberOfLines={1} style={styles.recentQuestions}>{questions}</Text>
         </View>
       </View>
-      <View
-        style={[
-          styles.statusPill,
-          isDraft ? styles.statusPillDraft : isPassed ? styles.statusPillPassed : styles.statusPillNotPassed,
-        ]}
-      >
-        <Text
-          numberOfLines={1}
+      <View style={styles.recentStatusWrap}>
+        <View
           style={[
-            styles.statusText,
-            isDraft ? styles.statusTextDraft : isPassed ? styles.statusTextPassed : styles.statusTextNotPassed,
+            styles.statusPill,
+            isDraft ? styles.statusPillDraft : isPassed ? styles.statusPillPassed : styles.statusPillNotPassed,
           ]}
         >
-          {status}
-        </Text>
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.statusText,
+              isDraft ? styles.statusTextDraft : isPassed ? styles.statusTextPassed : styles.statusTextNotPassed,
+            ]}
+          >
+            {status}
+          </Text>
+        </View>
+        {isPassed && timeLabel ? <Text style={styles.recentTime}>{timeLabel}</Text> : null}
       </View>
     </TouchableOpacity>
   );
@@ -1904,10 +1970,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  recentCardPassed: {
+    borderColor: '#D8EFE3',
+  },
+  recentCardNotPassed: {
+    borderColor: '#FFEE8F',
+  },
   recentLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flexShrink: 1,
+    flex: 1,
+  },
+  recentStatusWrap: {
+    marginLeft: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  recentTextWrap: {
+    flex: 1,
+    minWidth: 0,
   },
   recentIcon: {
     width: 48,
@@ -1961,6 +2044,14 @@ const styles = StyleSheet.create({
   },
   statusTextDraft: {
     color: '#7A1136',
+  },
+  recentTime: {
+    marginTop: 4,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 10,
+    lineHeight: 10,
+    color: '#9E9E9E',
+    textAlign: 'center',
   },
   bottomNavContainer: {
     position: 'absolute',
