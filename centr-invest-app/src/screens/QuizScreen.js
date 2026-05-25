@@ -40,6 +40,15 @@ function getMatchingValidationState(answerResponse, leftItem, selectedValue) {
   return answerResponse.correct ? 'correct' : 'incorrect';
 }
 
+function getChoiceValidationState(answerResponse, optionId, selected) {
+  if (!answerResponse) return null;
+  const correctOptionIds = Array.isArray(answerResponse.correctOptionIds) ? answerResponse.correctOptionIds.map(String) : [];
+  const isCorrectOption = correctOptionIds.includes(String(optionId));
+  if (isCorrectOption) return 'correct';
+  if (selected) return 'incorrect';
+  return null;
+}
+
 function ChoiceOption({ label, selected, onPress, disabled, validationState }) {
   return (
     <TouchableOpacity 
@@ -231,38 +240,53 @@ export default function QuizScreen({ quiz, onBack, onFinish }) {
     if (question.type === 'SHORT_TEXT') {
       return (
         <View style={styles.textAnswerBlock}>
-          <TextInput 
-            editable={!answerResponse}
-            value={typeof draftAnswer === 'string' ? draftAnswer : ''}
-            placeholder="Введите ответ"
-            placeholderTextColor="#C9C9C9"
+          <View
             style={[
-              styles.textInput,
-              validationState === 'correct' ? styles.textInputCorrect : null,
-              validationState === 'incorrect' ? styles.textInputIncorrect : null,
+              styles.textInputFrame,
+              validationState === 'correct' ? styles.textInputFrameCorrect : null,
+              validationState === 'incorrect' ? styles.textInputFrameIncorrect : null,
             ]}
-            onFocus={() => setTextFocused(true)}
-            onBlur={() => setTextFocused(false)}
-            onChangeText={setDraftAnswer}
-            returnKeyType="done"
-            onSubmitEditing={handlePrimary}
-          />
+          >
+            <TextInput 
+              editable={!answerResponse}
+              value={typeof draftAnswer === 'string' ? draftAnswer : ''}
+              placeholder="Введите ответ"
+              placeholderTextColor="#C9C9C9"
+              style={[
+                styles.textInput,
+                validationState === 'correct' ? styles.textInputCorrect : null,
+                validationState === 'incorrect' ? styles.textInputIncorrect : null,
+              ]}
+              onFocus={() => setTextFocused(true)}
+              onBlur={() => setTextFocused(false)}
+              onChangeText={setDraftAnswer}
+              returnKeyType="done"
+              onSubmitEditing={handlePrimary}
+            />
+          </View>
         </View>
       );
     }
 
     return (
       <View style={styles.choiceList}>
-        {(question.options ?? []).map((option, index) => (
-          <ChoiceOption
-            key={`${option.id}_${index}`}
-            label={option.text}
-            selected={Array.isArray(draftAnswer) && draftAnswer.includes(option.id)}
-            disabled={Boolean(answerResponse)}
-            validationState={validationState}
-            onPress={() => handleChoiceSelect(option.id)}
-          />
-        ))}
+        {question.type === 'MULTIPLE_CHOICE' ? (
+          <Text style={styles.multiChoiceHint}>Выберите несколько вариантов</Text>
+        ) : null}
+        {(question.options ?? []).map((option, index) => {
+          const isSelected = Array.isArray(draftAnswer) && draftAnswer.includes(option.id);
+          const optionValidationState = getChoiceValidationState(answerResponse, option.id, isSelected);
+          return (
+            <ChoiceOption
+              key={`${option.id}_${index}`}
+              label={option.text}
+              selected={isSelected}
+              disabled={Boolean(answerResponse)}
+              validationState={optionValidationState}
+              onPress={() => handleChoiceSelect(option.id)}
+            />
+          );
+        })}
       </View>
     );
   }
@@ -394,6 +418,7 @@ const styles = StyleSheet.create({
   promptWrap: { marginTop: 20, alignItems: 'center' },
   promptText: { textAlign: 'center', alignSelf: 'center', fontFamily: 'Roboto_400Regular', fontSize: 14, lineHeight: 18, color: '#252525', maxWidth: 330 },
   choiceList: { marginTop: 22, gap: 12 },
+  multiChoiceHint: { marginBottom: 2, fontFamily: 'Roboto_400Regular', fontSize: 14, lineHeight: 18, color: '#C9C9C9' },
   choiceOption: { minHeight: 48, borderRadius: 8, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#D6D6D6', paddingHorizontal: 12, justifyContent: 'center' },
   choiceOptionSelected: { backgroundColor: '#F8E2D5', borderColor: '#FF7A45' },
   choiceOptionCorrect: { borderColor: '#1FA84F', backgroundColor: '#EEF8F1' },
@@ -418,9 +443,12 @@ const styles = StyleSheet.create({
   dropdownTextActive: { color: '#7A1136' },
   textPromptCard: { width: '100%', borderRadius: 8, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   textAnswerBlock: { marginTop: 18 },
-  textInput: { width: '100%', minHeight: 56, borderRadius: 8, borderWidth: 1, borderColor: '#D6D6D6', paddingHorizontal: 16, paddingVertical: Platform.OS === 'ios' ? 11 : 8, fontFamily: 'Roboto_400Regular', fontSize: 16, lineHeight: 24, color: '#252525' },
-  textInputCorrect: { borderColor: '#1FA84F', backgroundColor: '#EEF8F1', paddingHorizontal: 16, paddingVertical: Platform.OS === 'ios' ? 11 : 8 },
-  textInputIncorrect: { borderColor: '#C72E33', backgroundColor: '#FDF0F1', paddingHorizontal: 16, paddingVertical: Platform.OS === 'ios' ? 11 : 8 },
+  textInputFrame: { width: '100%', minHeight: 56, borderRadius: 8, borderWidth: 1, borderColor: '#D6D6D6', backgroundColor: '#FFFFFF', justifyContent: 'center' },
+  textInputFrameCorrect: { borderColor: '#1FA84F', backgroundColor: '#EEF8F1' },
+  textInputFrameIncorrect: { borderColor: '#C72E33', backgroundColor: '#FDF0F1' },
+  textInput: { width: '100%', minHeight: 54, paddingLeft: 16, paddingRight: 16, paddingTop: Platform.OS === 'ios' ? 11 : 8, paddingBottom: Platform.OS === 'ios' ? 11 : 8, fontFamily: 'Roboto_400Regular', fontSize: 16, lineHeight: 24, color: '#252525', textAlignVertical: 'center', backgroundColor: 'transparent' },
+  textInputCorrect: { color: '#1FA84F' },
+  textInputIncorrect: { color: '#8C2743' },
   explanationCard: { marginTop: 18, paddingHorizontal: 2 },
   explanationError: { borderRadius: 10, padding: 12, backgroundColor: '#FFF0EB' },
   explanationTitle: { fontFamily: 'Roboto_400Regular', fontSize: 14, lineHeight: 18, color: '#252525', marginBottom: 10 },
