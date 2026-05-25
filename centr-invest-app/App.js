@@ -280,9 +280,11 @@ export default function App() {
 
     setIsSubmitting(true);
     try {
-      await authApi.confirmRegistration({ email, code });
+      const auth = await authApi.confirmRegistration({ email, code });
+      setToken(auth.token);
+      setCurrentUser(normalizeAppUser(auth.user));
       setAlert(null);
-      setAuthMode('register-success');
+      setIsLoggedIn(true);
     } catch (error) {
       const msg = error.message || '';
       if (msg.includes('Invalid confirmation code')) {

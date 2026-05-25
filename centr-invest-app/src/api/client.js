@@ -118,15 +118,25 @@ export const authApi = {
 };
 
 export const contentApi = {
-  getLanguages: ({ title, language, profession } = {}) => {
+  getLanguages: ({ title, language, profession, sort } = {}) => {
     const params = new URLSearchParams();
     if (title) params.set('title', title);
     if (language) params.set('language', language);
     if (!language && profession) params.set('language', profession);
+    if (sort) params.set('sort', sort);
     const query = params.toString();
     return apiFetch(`/languages${query ? `?${query}` : ''}`);
   },
   getProfessions: (params) => contentApi.getLanguages(params),
+  getLanguageTests: (languageId, { title, page, size, sort } = {}) => {
+    const params = new URLSearchParams();
+    if (title) params.set('title', title);
+    if (page !== undefined) params.set('page', String(page));
+    if (size !== undefined) params.set('size', String(size));
+    if (sort) params.set('sort', sort);
+    const query = params.toString();
+    return apiFetch(`/languages/${languageId}/tests${query ? `?${query}` : ''}`);
+  },
   getTest: (testId) => apiFetch(`/tests/${testId}`),
 };
 
@@ -144,8 +154,17 @@ export const attemptsApi = {
 
 export const profileApi = {
   get: () => apiFetch('/profile'),
-  getFavorites: () => apiFetch('/profile/favorites'),
   getCompletedTests: () => apiFetch('/profile/completed-tests'),
+  getFavorites: ({ title, language, page, size, sort } = {}) => {
+    const params = new URLSearchParams();
+    if (title) params.set('title', title);
+    if (language) params.set('language', language);
+    if (page !== undefined) params.set('page', String(page));
+    if (size !== undefined) params.set('size', String(size));
+    if (sort) params.set('sort', sort);
+    const query = params.toString();
+    return apiFetch(`/profile/favorites${query ? `?${query}` : ''}`);
+  },
   addFavorite: (testId) => apiFetch(`/profile/favorites/tests/${testId}`, { method: 'POST' }),
   removeFavorite: (testId) => apiFetch(`/profile/favorites/tests/${testId}`, { method: 'DELETE' }),
   updateName: (username) =>
@@ -209,4 +228,5 @@ export const adminApi = {
       method: 'PATCH',
       body: JSON.stringify(payload),
     }),
+  deleteUser: (userId) => apiFetch(`/admin/users/${userId}`, { method: 'DELETE' }),
 };

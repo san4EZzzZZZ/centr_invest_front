@@ -370,6 +370,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
   const [profile, setProfile] = useState(null);
   const [adminTests, setAdminTests] = useState([]);
   const [search, setSearch] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const homeRequestId = useRef(0);
@@ -379,6 +380,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
     currentUser?.roleCode === 'SUPER_ADMIN' ||
     currentUser?.role === 'Администратор' ||
     currentUser?.role === 'Супер-администратор';
+  const isSuperAdmin = currentUser?.roleCode === 'SUPER_ADMIN';
 
   const displayUser = profile?.user
     ? { ...currentUser, email: profile.user.email, name: profile.user.username }
@@ -419,7 +421,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
     return map;
   }, [completedTests]);
 
-  async function loadHomeData(query = search) {
+  async function loadHomeData(query = search, languageOverride = selectedLanguage) {
     const requestId = homeRequestId.current + 1;
     homeRequestId.current = requestId;
     setIsLoading(true);
@@ -427,7 +429,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
 
     try {
       const [professionsResponse, profileResponse, completedResponse] = await Promise.all([
-        contentApi.getLanguages({ title: query }),
+        contentApi.getLanguages({ title: query, sort: 'titleAsc' }),
         profileApi.get().catch(() => null),
         profileApi.getCompletedTests().catch(() => []),
       ]);
@@ -442,17 +444,44 @@ export default function HomeScreen({ currentUser, onLogout }) {
           icon: mappedIcon ?? p.icon ?? FALLBACK_ICON,
         };
       });
-      const nextTests = nextProfessions.flatMap((profession) =>
-        (profession.tests ?? []).map((test) => ({
+      const languageFilter = languageOverride;
+      let nextTests = [];
+      if (languageFilter?.id) {
+        const languageTests = await contentApi.getLanguageTests(languageFilter.id, { title: query, sort: 'titleAsc' });
+        const languageIcon = getLanguageIcon(languageFilter.title) ?? languageFilter.icon ?? FALLBACK_ICON;
+        nextTests = (Array.isArray(languageTests) ? languageTests : []).map((test) => ({
           ...test,
-          languageId: profession.id,
-          languageTitle: profession.title,
-          languageIcon: profession.icon,
-          professionId: profession.id,
-          professionTitle: profession.title,
+          languageId: languageFilter.id,
+          languageTitle: languageFilter.title,
+          languageIcon,
+          professionId: languageFilter.id,
+          professionTitle: languageFilter.title,
           status: 'published',
-        }))
-      );
+        }));
+      } else if (query) {
+        nextTests = nextProfessions.flatMap((profession) =>
+          (profession.tests ?? []).map((test) => ({
+            ...test,
+            languageId: profession.id,
+            languageTitle: profession.title,
+            languageIcon: profession.icon,
+            professionId: profession.id,
+            professionTitle: profession.title,
+            status: 'published',
+          }))
+        );
+      } else {
+        nextTests = (profileResponse?.recentAttempts ?? []).map((attempt) => ({
+          rowKey: `attempt-${attempt.attemptId}`,
+          id: attempt.testId,
+          title: attempt.testTitle,
+          questionCount: attempt.totalQuestions,
+          languageTitle: attempt.languageTitle,
+          languageIcon: getLanguageIcon(attempt.languageTitle) ?? FALLBACK_ICON,
+          professionTitle: attempt.languageTitle,
+          status: 'recent',
+        }));
+      }
 
       if (requestId !== homeRequestId.current) return;
 
@@ -494,7 +523,8 @@ export default function HomeScreen({ currentUser, onLogout }) {
 
   function goHomeWithRefresh() {
     setSearch('');
-    loadHomeData('');
+    setSelectedLanguage(null);
+    loadHomeData('', null);
     setRoute({ name: 'home' });
   }
 
@@ -542,17 +572,26 @@ export default function HomeScreen({ currentUser, onLogout }) {
     }
   }
 
+  async function openTestEditor(quiz) {
+    try {
+      const details = await adminApi.getTest(quiz.id);
+      setRoute({ name: 'editor', quiz: toEditorQuiz(details) });
+    } catch (editError) {
+      Alert.alert('Ошибка', editError.message || 'Не удалось открыть тест');
+    }
+  }
+
   useEffect(() => {
     loadHomeData('');
   }, []);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      loadHomeData(search);
+      loadHomeData(search, selectedLanguage);
     }, 350);
 
     return () => clearTimeout(timeoutId);
-  }, [search]);
+  }, [search, selectedLanguage]);
 
   useEffect(() => {
     if (route.name === 'admin') {
@@ -587,14 +626,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
         quizzes={adminTests}
         onBack={goHomeWithRefresh}
         onCreate={() => setRoute({ name: 'editor', quiz: null })}
-        onEdit={async (quiz) => {
-          try {
-            const details = await adminApi.getTest(quiz.id);
-            setRoute({ name: 'editor', quiz: toEditorQuiz(details) });
-          } catch (editError) {
-            Alert.alert('Ошибка', editError.message || 'Не удалось открыть тест');
-          }
-        }}
+        onEdit={openTestEditor}
         onDelete={async (quizId) => {
           await adminApi.deleteTest(quizId);
           setAdminTests((prev) => prev.filter((quiz) => quiz.id !== quizId));
@@ -608,7 +640,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
     return (
       <QuizEditorScreen
         quiz={route.quiz}
-        onCancel={() => setRoute({ name: 'admin' })}
+        onCancel={() => setRoute({ name: 'adminPanel' })}
         onSave={async (nextQuiz) => {
           try {
             const fallbackProfessionId = route.quiz?.languageId ?? route.quiz?.professionId ?? allProfessions[0]?.id ?? professions[0]?.id;
@@ -625,7 +657,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
             }
             await loadAdminTests();
             await loadHomeData('');
-            setRoute({ name: 'admin' });
+            setRoute({ name: 'adminPanel' });
           } catch (saveError) {
             Alert.alert('Ошибка', saveError.message || 'Не удалось сохранить тест');
           }
@@ -731,7 +763,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
         onOpenAdmin={() => {
-          if (isAdmin) setRoute({ name: 'admin' });
+          if (isAdmin) setRoute({ name: 'adminPanel' });
         }}
         isAdmin={isAdmin}
       />
@@ -741,6 +773,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
   if (route.name === 'adminPanel') {
     return (
       <AdminPanelScreen
+        isSuperAdmin={isSuperAdmin}
         bottomInset={bottomInset}
         navHeight={NAV_HEIGHT}
         onBack={() => setRoute({ name: 'profile' })}
@@ -749,6 +782,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
         onOpenProfile={() => setRoute({ name: 'profile' })}
         onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
         onOpenUser={(user) => setRoute({ name: 'userEdit', user })}
+        onOpenTest={openTestEditor}
       />
     );
   }
@@ -822,7 +856,12 @@ export default function HomeScreen({ currentUser, onLogout }) {
           <View style={styles.horizontalListWrap}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalListContent}>
               {homeLanguages.map((item) => (
-                <TouchableOpacity  key={item.id} style={styles.professionCard} activeOpacity={0.8}>
+                <TouchableOpacity
+                  key={item.id}
+                  style={[styles.professionCard, selectedLanguage?.id === item.id ? styles.professionCardActive : null]}
+                  activeOpacity={0.8}
+                  onPress={() => setSelectedLanguage((current) => (current?.id === item.id ? null : item))}
+                >
                   <Image
                     source={getImageSource(item.icon)}
                     style={styles.professionIcon} 
@@ -839,7 +878,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Недавние</Text>
+            <Text style={styles.sectionTitle}>{selectedLanguage ? `Тесты: ${selectedLanguage.title}` : search ? 'Результаты поиска' : 'Недавние'}</Text>
           </View>
           <View style={styles.recentList}>
             {isLoading ? (
@@ -847,21 +886,25 @@ export default function HomeScreen({ currentUser, onLogout }) {
             ) : error ? (
               <Text style={styles.errorText}>{error}</Text>
             ) : tests.length ? (
-              tests.map((test, index) => (
-                <RecentCard
-                  key={test.id}
-                  title={test.title}
-                  questions={`${test.questionCount ?? 0} вопросов`}
-                  status={completedIds.has(test.id) ? 'Пройдено' : 'Не пройдено'}
-                  statusVariant={completedIds.has(test.id) ? 'passed' : 'not_passed'}
-                  timeLabel={formatDuration(completedTestsById.get(test.id)?.duration || completedTestsById.get(test.id)?.bestTime)}
-                  icon={test.languageIcon}
-                  iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
-                  isFavorite={favoriteIds.has(String(test.id))}
-                  onFavorite={() => toggleFavorite(test)}
-                  onPress={() => setRoute({ name: 'quiz', quiz: test })}
-                />
-              ))
+              tests.map((test, index) => {
+                const completedAttempt = completedTestsById.get(test.id);
+                const passed = Boolean(completedAttempt || test.status === 'recent');
+                return (
+                  <RecentCard
+                    key={test.rowKey ?? test.id}
+                    title={test.title}
+                    questions={`${test.questionCount ?? 0} вопросов`}
+                    status={passed ? 'Пройдено' : 'Не пройдено'}
+                    statusVariant={passed ? 'passed' : 'not_passed'}
+                    timeLabel={formatDuration(test.status === 'recent' ? completedAttempt?.bestTime || completedAttempt?.duration : completedAttempt?.duration || completedAttempt?.bestTime)}
+                    icon={test.languageIcon}
+                    iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
+                    isFavorite={favoriteIds.has(String(test.id))}
+                    onFavorite={() => toggleFavorite(test)}
+                    onPress={() => setRoute({ name: 'quiz', quiz: test })}
+                  />
+                );
+              })
             ) : (
               <Text style={styles.errorText}>Вы еще не проходили тесты</Text>
             )}
@@ -877,7 +920,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
         onOpenAdmin={() => {
-          if (isAdmin) setRoute({ name: 'admin' });
+          if (isAdmin) setRoute({ name: 'adminPanel' });
         }}
         isAdmin={isAdmin}
       />
@@ -1192,19 +1235,30 @@ function LanguagesScreen({ languages, bottomInset, navHeight, onBack, onGoHome, 
   );
 }
 
-function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, onOpenUser }) {
+function AdminPanelScreen({ isSuperAdmin, bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, onOpenUser, onOpenTest }) {
   const [userSearch, setUserSearch] = useState('');
   const [testSearch, setTestSearch] = useState('');
-  const users = [
-    { id: 'user-1', name: 'Пользователь 1' },
-    { id: 'user-2', name: 'Пользователь 2' },
-    { id: 'user-3', name: 'Пользователь 3' },
-  ];
-  const adminTests = [
-    { id: 'test-1', title: 'Java Senior', questions: '12 вопросов' },
-    { id: 'test-2', title: 'Java Senior', questions: '12 вопросов' },
-    { id: 'test-3', title: 'Java Senior', questions: '12 вопросов' },
-  ];
+  const [users, setUsers] = useState([]);
+  const [adminTests, setAdminTests] = useState([]);
+  const [panelError, setPanelError] = useState(null);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(async () => {
+      try {
+        setPanelError(null);
+        const [testsResponse, usersResponse] = await Promise.all([
+          adminApi.getTests({ title: testSearch }),
+          isSuperAdmin ? adminApi.getUsers({ search: userSearch }) : Promise.resolve([]),
+        ]);
+        setAdminTests(Array.isArray(testsResponse) ? testsResponse : []);
+        setUsers(Array.isArray(usersResponse) ? usersResponse : []);
+      } catch (error) {
+        setPanelError(error.message || 'Не удалось загрузить админ-панель');
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [isSuperAdmin, testSearch, userSearch]);
 
   return (
     <SafeAreaView edges={['top']} style={[styles.screen, styles.adminPanelScreen]}>
@@ -1223,7 +1277,7 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
 
         <Text style={styles.adminPanelUsersTitle}>Пользователи</Text>
 
-        <View style={styles.adminPanelSearchBar}>
+        {isSuperAdmin ? <View style={styles.adminPanelSearchBar}>
           <SvgXml xml={SEARCH_SVG} width="24" height="24" />
           <TextInput
             placeholder="Поиск пользователя"
@@ -1232,13 +1286,17 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
             onChangeText={setUserSearch}
             style={styles.adminPanelSearchInput}
           />
-        </View>
+        </View> : (
+          <Text style={styles.userEditEmptyTestsText}>Пользователи доступны только супер-администратору</Text>
+        )}
+
+        {panelError ? <Text style={styles.errorText}>{panelError}</Text> : null}
 
         <View style={styles.adminPanelUsersList}>
           {users.map((user) => (
             <TouchableOpacity key={user.id} activeOpacity={0.85} style={styles.adminPanelUserRow} onPress={() => onOpenUser?.(user)}>
-              <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
-              <Text numberOfLines={1} style={styles.adminPanelUserName}>{user.name}</Text>
+              <Image source={user.avatarUrl ? { uri: user.avatarUrl } : { uri: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
+              <Text numberOfLines={1} style={styles.adminPanelUserName}>{user.username ?? user.email ?? user.name}</Text>
               <Ionicons name="chevron-forward" size={12} color="#252525" />
               <View pointerEvents="none" style={styles.adminPanelUserDivider} />
             </TouchableOpacity>
@@ -1260,11 +1318,13 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
 
         <View style={styles.adminPanelTestsList}>
           {adminTests.map((test) => (
-            <TouchableOpacity key={test.id} activeOpacity={0.85} style={styles.adminPanelTestCard}>
-              <Image source={getImageSource(getLanguageIcon(test.title) || FALLBACK_ICON)} style={styles.adminPanelPythonIcon} resizeMode="contain" />
+            <TouchableOpacity key={test.id} activeOpacity={0.85} style={styles.adminPanelTestCard} onPress={() => onOpenTest?.(test)}>
+              <Image source={getImageSource(getLanguageIcon(test.languageTitle || test.title) || FALLBACK_ICON)} style={styles.adminPanelPythonIcon} resizeMode="contain" />
               <View style={styles.adminPanelTestTextWrap}>
                 <Text numberOfLines={1} style={styles.adminPanelTestName}>{test.title}</Text>
-                <Text numberOfLines={1} style={styles.adminPanelTestQuestions}>{test.questions}</Text>
+                <Text numberOfLines={1} style={styles.adminPanelTestQuestions}>
+                  {test.languageTitle ? `${test.languageTitle} · ` : ''}{test.questionCount ?? 0} вопросов
+                </Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -1286,17 +1346,54 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
 }
 
 function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin }) {
-  const initialName = 'User 1';
-  const initialEmail = 'yourmail@mail.com';
+  const initialName = user?.username ?? user?.name ?? '';
+  const initialEmail = user?.email ?? '';
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
-  const [role, setRole] = useState('');
+  const [role, setRole] = useState(user?.role ?? 'USER');
   const [roleOpen, setRoleOpen] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const userTests = user?.tests ?? [];
-  const canSave = name !== initialName || email !== initialEmail || role.length > 0;
-  const roleOptions = ['Администратор', 'Редактор', 'Пользователь', 'Гость'];
-  const canCreateTests = role === 'Администратор' || role === 'Редактор';
+  const [isSaving, setIsSaving] = useState(false);
+  const canSave = name !== initialName || email !== initialEmail || role !== user?.role;
+  const roleOptions = ['ADMIN', 'USER'];
+  const canCreateTests = role === 'ADMIN';
+
+  async function saveUser() {
+    if (!user?.id || !canSave) return;
+    setIsSaving(true);
+    try {
+      await adminApi.updateUser(user.id, {
+        email: String(email || '').trim(),
+        username: String(name || '').trim(),
+        role: role === 'ADMIN' || role === 'USER' ? role : 'USER',
+      });
+      onBack?.();
+    } catch (error) {
+      Alert.alert('Ошибка', error.message || 'Не удалось сохранить пользователя');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  function deleteUser() {
+    if (!user?.id) return;
+    Alert.alert('Удалить пользователя?', `Пользователь "${user?.username ?? user?.email}" будет удален.`, [
+      { text: 'Отмена', style: 'cancel' },
+      {
+        text: 'Удалить',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await adminApi.deleteUser(user.id);
+            onBack?.();
+          } catch (error) {
+            Alert.alert('Ошибка', error.message || 'Не удалось удалить пользователя');
+          }
+        },
+      },
+    ]);
+  }
 
   return (
     <SafeAreaView edges={['top']} style={[styles.screen, styles.adminPanelScreen]}>
@@ -1309,7 +1406,7 @@ function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpen
           <TouchableOpacity onPress={onBack} style={styles.adminPanelBackBtn} hitSlop={12}>
             <Ionicons name="chevron-back" size={16} color="#252525" />
           </TouchableOpacity>
-          <Text numberOfLines={1} style={styles.userEditTitle}>Редактирование: {user?.name ?? 'Пользователь 1'}</Text>
+          <Text numberOfLines={1} style={styles.userEditTitle}>Редактирование: {user?.username ?? user?.name ?? 'Пользователь'}</Text>
         </View>
 
         <Text style={styles.userEditSectionTitle}>Основная информация</Text>
@@ -1388,11 +1485,11 @@ function UserEditScreen({ user, bottomInset, navHeight, onBack, onGoHome, onOpen
       </ScrollView>
 
       <View style={[styles.userEditActions, { bottom: navHeight + bottomInset + 16 }]}>
-        <TouchableOpacity activeOpacity={0.85} style={styles.userEditDeleteBtn}>
+        <TouchableOpacity activeOpacity={0.85} style={styles.userEditDeleteBtn} onPress={deleteUser}>
           <Text style={styles.userEditDeleteText}>Удалить пользователя</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity disabled={!canSave} activeOpacity={0.85} style={[styles.userEditSaveBtn, !canSave ? styles.userEditSaveBtnDisabled : null]}>
+        <TouchableOpacity disabled={!canSave || isSaving} onPress={saveUser} activeOpacity={0.85} style={[styles.userEditSaveBtn, !canSave ? styles.userEditSaveBtnDisabled : null]}>
           <Text style={[styles.userEditSaveText, !canSave ? styles.userEditSaveTextDisabled : null]}>Сохранить изменения</Text>
         </TouchableOpacity>
       </View>
@@ -1722,7 +1819,7 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
             <View style={[styles.bottomNav, { height: navHeight + bottomInset, paddingBottom: bottomInset }]}>
               <TouchableOpacity  style={styles.bottomNavBtn} onPress={onGoHome} activeOpacity={0.8}>
                 <SvgXml
-                  xml={HOME_NAV_SVG}
+                  xml={activeTab === 'home' ? HOME_ACTIVE_SVG : HOME_INACTIVE_SVG}
                   width="32"
                   height="32"
                 />
@@ -2654,6 +2751,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
+  professionCardActive: {
+    borderColor: '#76113A',
+    backgroundColor: '#FFF7FB',
+  },
   professionIcon: {
     width: 44,
     height: 44,
@@ -2893,9 +2994,9 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 0,
     width: '100%',
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-around',
     alignItems: 'center',
-    gap: 64,
+    paddingHorizontal: 24,
   },
   bottomNavShadowWrap: {
     width: '100%',
@@ -2961,8 +3062,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(242, 239, 255, 0.6)',
   },
   bottomNavBtn: {
-    width: 32,
-    height: 32,
+    width: 56,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
