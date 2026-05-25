@@ -1527,7 +1527,7 @@ function LanguageTestsScreen({
   );
 }
 
-function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, onOpenUser }) {
+function AdminPanelScreen({ isSuperAdmin = false, bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, onOpenUser, onOpenTest }) {
   const [userSearch, setUserSearch] = useState('');
   const [testSearch, setTestSearch] = useState('');
   const [users, setUsers] = useState([]);
