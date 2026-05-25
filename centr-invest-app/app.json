@@ -15,8 +15,11 @@
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+        "monochromeImage": "./assets/android-icon-monochrome.png",
+        "package": "com.centr.invest.app",
+        "usesCleartextTraffic": true
+      },
+      "package": "com.san4ezzz.centrinvestapp"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -25,6 +28,11 @@
     "plugins": [
       "expo-font",
       "expo-splash-screen"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "afe3ec99-3e66-41e5-abdd-162367daf9fc"
+      }
+    }
   }
 }

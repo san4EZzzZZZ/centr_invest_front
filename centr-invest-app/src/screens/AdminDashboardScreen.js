@@ -143,7 +143,6 @@ export default function AdminDashboardScreen({ quizzes = [], onBack, onCreate, o
     </SafeAreaView>
   );
 }
-}
 
 const styles = StyleSheet.create({
   screen: {
