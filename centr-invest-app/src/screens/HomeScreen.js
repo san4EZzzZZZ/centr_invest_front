@@ -407,7 +407,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
     return source.map(normalizeLanguageItem);
   }, [allProfessions, professions]);
 
-  const favoriteIds = useMemo(() => new Set(favorites.map((item) => item.testId)), [favorites]);
+  const favoriteIds = useMemo(() => new Set(favorites.map((item) => String(item.testId))), [favorites]);
   const completedIds = useMemo(() => new Set(completedTests.map((item) => item.testId)), [completedTests]);
   const completedTestsById = useMemo(() => {
     const map = new Map();
@@ -499,16 +499,45 @@ export default function HomeScreen({ currentUser, onLogout }) {
   }
 
   async function toggleFavorite(test) {
+    const testId = test?.id;
+    if (testId == null) return;
+
+    const normalizedTestId = String(testId);
+    const wasFavorite = favoriteIds.has(normalizedTestId);
+    const previousFavorites = favorites;
+
+    setFavorites((currentFavorites) => {
+      if (wasFavorite) {
+        return currentFavorites.filter((item) => String(item.testId) !== normalizedTestId);
+      }
+
+      const alreadyExists = currentFavorites.some((item) => String(item.testId) === normalizedTestId);
+      if (alreadyExists) return currentFavorites;
+
+      return [
+        {
+          testId,
+          languageId: test.languageId ?? test.professionId,
+          languageTitle: test.languageTitle ?? test.professionTitle,
+          testTitle: test.title,
+          questionCount: test.questionCount ?? test.questions?.length ?? 0,
+          addedAt: new Date().toISOString(),
+        },
+        ...currentFavorites,
+      ];
+    });
+
     try {
-      if (favoriteIds.has(test.id)) {
-        await profileApi.removeFavorite(test.id);
+      if (wasFavorite) {
+        await profileApi.removeFavorite(testId);
       } else {
-        await profileApi.addFavorite(test.id);
+        await profileApi.addFavorite(testId);
       }
       const nextProfile = await profileApi.get();
       setProfile(nextProfile);
       setFavorites(nextProfile?.favoriteTests ?? []);
     } catch (favoriteError) {
+      setFavorites(previousFavorites);
       Alert.alert('Ошибка', favoriteError.message || 'Не удалось обновить избранное');
     }
   }
@@ -828,6 +857,8 @@ export default function HomeScreen({ currentUser, onLogout }) {
                   timeLabel={formatDuration(completedTestsById.get(test.id)?.duration || completedTestsById.get(test.id)?.bestTime)}
                   icon={test.languageIcon}
                   iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
+                  isFavorite={favoriteIds.has(String(test.id))}
+                  onFavorite={() => toggleFavorite(test)}
                   onPress={() => setRoute({ name: 'quiz', quiz: test })}
                 />
               ))
@@ -1726,53 +1757,140 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
   );
 }
 
-function RecentCard({ title, questions, status, statusVariant, timeLabel, icon, iconColor, onPress }) {
+function RecentCard({ title, questions, status, statusVariant, timeLabel, icon, iconColor, isFavorite, onFavorite, onPress }) {
   const isPassed = statusVariant === 'passed';
   const isDraft = statusVariant === 'draft';
   const isNotPassed = statusVariant === 'not_passed';
+  const swipeProgress = useRef(new Animated.Value(0)).current;
+  const swipeProgressValue = useRef(0);
+  const swipeStartValue = useRef(0);
+  const isOpenRef = useRef(false);
+  const longPressTriggeredRef = useRef(false);
+  const [isFavoriteActionVisible, setIsFavoriteActionVisible] = useState(false);
+
+  useEffect(() => {
+    const listenerId = swipeProgress.addListener(({ value }) => {
+      swipeProgressValue.current = value;
+    });
+
+    return () => swipeProgress.removeListener(listenerId);
+  }, [swipeProgress]);
+
+  function animateFavoriteAction(open) {
+    isOpenRef.current = open;
+    setIsFavoriteActionVisible(open);
+    Animated.spring(swipeProgress, {
+      toValue: open ? 1 : 0,
+      useNativeDriver: false,
+    }).start();
+  }
+
+  function handleFavoritePress() {
+    onFavorite?.();
+  }
+
+  function handleCardPress() {
+    if (longPressTriggeredRef.current) {
+      longPressTriggeredRef.current = false;
+      return;
+    }
+    onPress?.();
+  }
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 8 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+      onPanResponderGrant: () => {
+        swipeStartValue.current = swipeProgressValue.current;
+        if (!isOpenRef.current) setIsFavoriteActionVisible(true);
+      },
+      onPanResponderMove: (_, gesture) => {
+        const nextValue = Math.max(0, Math.min(1, swipeStartValue.current - gesture.dx / 56));
+        swipeProgress.setValue(nextValue);
+      },
+      onPanResponderRelease: (_, gesture) => {
+        animateFavoriteAction(gesture.dx < -14 || swipeProgressValue.current > 0.45);
+      },
+      onPanResponderTerminate: () => {
+        animateFavoriteAction(swipeProgressValue.current > 0.45);
+      },
+    })
+  ).current;
+
+  const cardMarginRight = swipeProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 56],
+  });
+  const favoriteOpacity = swipeProgress.interpolate({
+    inputRange: [0, 0.25, 1],
+    outputRange: [0, 1, 1],
+  });
 
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.9}
-      style={[
-        styles.recentCard,
-        isPassed ? styles.recentCardPassed : isNotPassed ? styles.recentCardNotPassed : null,
-      ]}
-    >
-      <View style={styles.recentLeft}>
-        <View style={[styles.recentIcon, { backgroundColor: icon ? 'transparent' : iconColor, alignItems: 'center', justifyContent: 'center' }]}>
-          {icon ? (
-            <Image source={getImageSource(icon)} style={{ width: 40, height: 40 }} resizeMode="contain" />
-          ) : (
-            <View style={[styles.recentIconInner, { backgroundColor: iconColor }]} />
-          )}
-        </View>
-        <View style={styles.recentTextWrap}>
-          <Text numberOfLines={2} style={styles.recentTitle}>{title}</Text>
-          <Text numberOfLines={1} style={styles.recentQuestions}>{questions}</Text>
-        </View>
-      </View>
-      <View style={styles.recentStatusWrap}>
-        <View
-          style={[
-            styles.statusPill,
-            isDraft ? styles.statusPillDraft : isPassed ? styles.statusPillPassed : styles.statusPillNotPassed,
-          ]}
+    <View style={styles.recentSwipeRow}>
+      <Animated.View pointerEvents={isFavoriteActionVisible ? 'auto' : 'none'} style={[styles.recentFavoriteSlot, { opacity: favoriteOpacity }]}>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
+          style={styles.recentFavoriteBtn}
+          onPress={handleFavoritePress}
         >
-          <Text
-            numberOfLines={1}
+          <SvgXml xml={isFavorite ? HEART_ACTIVE_SVG : HEART_INACTIVE_SVG} width="32" height="32" />
+        </TouchableOpacity>
+      </Animated.View>
+
+      <View {...panResponder.panHandlers} style={styles.recentSwipeCardWrap}>
+        <Animated.View style={[styles.recentSwipeCardInner, { marginRight: cardMarginRight }]}>
+          <TouchableOpacity
+            onPress={handleCardPress}
+            onLongPress={() => {
+              longPressTriggeredRef.current = true;
+              animateFavoriteAction(true);
+            }}
+            delayLongPress={280}
+            activeOpacity={0.9}
             style={[
-              styles.statusText,
-              isDraft ? styles.statusTextDraft : isPassed ? styles.statusTextPassed : styles.statusTextNotPassed,
+              styles.recentCard,
+              isPassed ? styles.recentCardPassed : isNotPassed ? styles.recentCardNotPassed : null,
             ]}
           >
-            {status}
-          </Text>
-        </View>
-        {isPassed && timeLabel ? <Text style={styles.recentTime}>{timeLabel}</Text> : null}
+            <View style={styles.recentLeft}>
+              <View style={[styles.recentIcon, { backgroundColor: icon ? 'transparent' : iconColor, alignItems: 'center', justifyContent: 'center' }]}>
+                {icon ? (
+                  <Image source={getImageSource(icon)} style={{ width: 40, height: 40 }} resizeMode="contain" />
+                ) : (
+                  <View style={[styles.recentIconInner, { backgroundColor: iconColor }]} />
+                )}
+              </View>
+              <View style={styles.recentTextWrap}>
+                <Text numberOfLines={2} style={styles.recentTitle}>{title}</Text>
+                <Text numberOfLines={1} style={styles.recentQuestions}>{questions}</Text>
+              </View>
+            </View>
+            <View style={styles.recentStatusWrap}>
+              <View
+                style={[
+                  styles.statusPill,
+                  isDraft ? styles.statusPillDraft : isPassed ? styles.statusPillPassed : styles.statusPillNotPassed,
+                ]}
+              >
+                <Text
+                  numberOfLines={1}
+                  style={[
+                    styles.statusText,
+                    isDraft ? styles.statusTextDraft : isPassed ? styles.statusTextPassed : styles.statusTextNotPassed,
+                  ]}
+                >
+                  {status}
+                </Text>
+              </View>
+              {isPassed && timeLabel ? <Text style={styles.recentTime}>{timeLabel}</Text> : null}
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -2636,6 +2754,34 @@ const styles = StyleSheet.create({
   recentList: {
     paddingHorizontal: 16,
     gap: 16,
+  },
+  recentSwipeRow: {
+    position: 'relative',
+    width: '100%',
+  },
+  recentFavoriteSlot: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+    elevation: 2,
+  },
+  recentFavoriteBtn: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recentSwipeCardWrap: {
+    width: '100%',
+    zIndex: 1,
+  },
+  recentSwipeCardInner: {
+    flex: 1,
   },
   recentCard: {
     backgroundColor: '#FFFFFF',
