@@ -52,12 +52,59 @@ const PROFILE_INACTIVE_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fi
 </svg>`;
 
 const PROFESSIONS = [
-  { id: 1, title: 'PHP', icon: 'https://img.icons8.com/?size=96&id=JybIpZjjXT0F&format=png' },
+  { id: 1, title: 'PHP', icon: 'https://img.icons8.com/color/96/elephant.png' },
   { id: 2, title: 'Java', icon: 'https://img.icons8.com/color/96/java-coffee-cup-logo.png' },
   { id: 3, title: 'Python', icon: 'https://img.icons8.com/color/96/python--v1.png' },
+  { id: 4, title: 'JS', icon: require('../../assets/js.jpg') },
+  { id: 5, title: 'SQL', icon: 'https://img.icons8.com/color/96/mysql-logo.png' },
+  { id: 6, title: 'C++', icon: 'https://img.icons8.com/color/96/c-plus-plus-logo.png' },
 ];
 
 const FALLBACK_ICON = 'https://img.icons8.com/color/96/source-code.png';
+
+const LANGUAGE_ICONS = {
+  'JavaScript': require('../../assets/js.jpg'),
+  'JS': require('../../assets/js.jpg'),
+  'PHP': 'https://img.icons8.com/color/96/elephant.png',
+  'Java': 'https://img.icons8.com/color/96/java-coffee-cup-logo.png',
+  'Python': 'https://img.icons8.com/color/96/python--v1.png',
+  'TypeScript': 'https://img.icons8.com/color/96/typescript.png',
+  'TS': 'https://img.icons8.com/color/96/typescript.png',
+  'C#': 'https://img.icons8.com/color/96/c-sharp-logo.png',
+  'C++': 'https://img.icons8.com/color/96/c-plus-plus-logo.png',
+  'SQL': 'https://img.icons8.com/color/96/mysql-logo.png',
+  'Go': 'https://img.icons8.com/color/96/golang.png',
+  'Swift': 'https://img.icons8.com/color/96/swift.png',
+  'Kotlin': 'https://img.icons8.com/color/96/kotlin.png',
+  'Ruby': 'https://img.icons8.com/color/96/ruby-programming-language.png',
+  'Rust': 'https://img.icons8.com/external-tal-revivo-color-tal-revivo/96/external-rust-is-a-multi-paradigm-system-programming-language-designed-for-performance-and-safety-logo-color-tal-revivo.png',
+};
+
+function getLanguageIcon(title) {
+  if (!title) return null;
+  const upperTitle = title.toUpperCase();
+  for (const [lang, icon] of Object.entries(LANGUAGE_ICONS)) {
+    if (upperTitle.includes(lang.toUpperCase())) {
+      return icon;
+    }
+  }
+  return null;
+}
+
+function getImageSource(source) {
+  if (!source) return { uri: FALLBACK_ICON };
+  return typeof source === 'string' ? { uri: source } : source;
+}
+
+function normalizeLanguageTitle(title) {
+  if (!title) return title;
+
+  const normalized = title.replace(/\s+/g, '').toLowerCase();
+  if (normalized === 'javascript') return 'JS';
+
+  return title;
+}
+
 const DEFAULT_READ_MORE_URL = 'https://developer.mozilla.org/';
 
 function toEditorQuiz(test) {
@@ -267,12 +314,22 @@ export default function HomeScreen({ currentUser, onLogout }) {
         profileApi.get().catch(() => null),
       ]);
 
-      const nextProfessions = Array.isArray(professionsResponse) ? professionsResponse : [];
+      const nextProfessions = (Array.isArray(professionsResponse) ? professionsResponse : []).map((p) => {
+        const mappedIcon = p?.title ? getLanguageIcon(p.title) : null;
+        const normalizedTitle = normalizeLanguageTitle(p.title);
+
+        return {
+          ...p,
+          title: normalizedTitle,
+          icon: mappedIcon ?? p.icon ?? FALLBACK_ICON,
+        };
+      });
       const nextTests = nextProfessions.flatMap((profession) =>
         (profession.tests ?? []).map((test) => ({
           ...test,
           languageId: profession.id,
           languageTitle: profession.title,
+          languageIcon: profession.icon,
           professionId: profession.id,
           professionTitle: profession.title,
           status: 'published',
@@ -302,7 +359,15 @@ export default function HomeScreen({ currentUser, onLogout }) {
 
     try {
       const response = await adminApi.getTests();
-      setAdminTests(Array.isArray(response) ? response : []);
+      const testsWithIcons = (Array.isArray(response) ? response : []).map((t) => {
+        const mappedIcon = getLanguageIcon(t.languageTitle || t.title);
+
+        return {
+          ...t,
+          icon: mappedIcon ?? t.languageIcon ?? FALLBACK_ICON,
+        };
+      });
+      setAdminTests(testsWithIcons);
     } catch (loadError) {
       Alert.alert('Ошибка', loadError.message || 'Не удалось загрузить админские тесты');
     }
@@ -500,7 +565,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
           <View style={styles.searchBar}>
             <SvgXml xml={SEARCH_SVG} width="24" height="24" />
             <TextInput 
-              placeholder="Поиск теста"
+              placeholder="Поиск"
               placeholderTextColor="#7C7C7C"
               value={search}
               onChangeText={setSearch}
@@ -522,8 +587,8 @@ export default function HomeScreen({ currentUser, onLogout }) {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalListContent}>
               {(professions.length ? professions : PROFESSIONS).map((item) => (
                 <TouchableOpacity  key={item.id} style={styles.professionCard} activeOpacity={0.8}>
-                  <Image 
-                    source={{ uri: item.icon ?? FALLBACK_ICON }} 
+                  <Image
+                    source={getImageSource(item.icon ?? FALLBACK_ICON)}
                     style={styles.professionIcon} 
                     resizeMode="contain"
                   />
@@ -551,6 +616,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
                   questions={`${test.questionCount ?? 0} вопросов`}
                   status={test.languageTitle ?? test.professionTitle ?? 'Язык'}
                   statusVariant={favoriteIds.has(test.id) ? 'passed' : 'not_passed'}
+                  icon={test.languageIcon}
                   iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
                   onPress={() => setRoute({ name: 'quiz', quiz: test })}
                 />
@@ -667,7 +733,7 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
         <View style={styles.adminPanelUsersList}>
           {users.map((user) => (
             <TouchableOpacity key={user.id} activeOpacity={0.85} style={styles.adminPanelUserRow} onPress={() => onOpenUser?.(user)}>
-              <Image source={{ uri: PROFESSIONS[2].icon }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
+              <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
               <Text numberOfLines={1} style={styles.adminPanelUserName}>{user.name}</Text>
               <Ionicons name="chevron-forward" size={12} color="#252525" />
               <View pointerEvents="none" style={styles.adminPanelUserDivider} />
@@ -691,7 +757,7 @@ function AdminPanelScreen({ bottomInset, navHeight, onBack, onGoHome, onOpenFavo
         <View style={styles.adminPanelTestsList}>
           {adminTests.map((test) => (
             <TouchableOpacity key={test.id} activeOpacity={0.85} style={styles.adminPanelTestCard}>
-              <Image source={{ uri: PROFESSIONS[2].icon }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
+              <Image source={getImageSource(getLanguageIcon(test.title) || FALLBACK_ICON)} style={styles.adminPanelPythonIcon} resizeMode="contain" />
               <View style={styles.adminPanelTestTextWrap}>
                 <Text numberOfLines={1} style={styles.adminPanelTestName}>{test.title}</Text>
                 <Text numberOfLines={1} style={styles.adminPanelTestQuestions}>{test.questions}</Text>
@@ -1028,7 +1094,7 @@ function SwipeableUserTestCard() {
       >
         <Animated.View style={{ marginRight: cardMarginRight }}>
           <TouchableOpacity activeOpacity={0.85} style={styles.adminPanelTestCard}>
-            <Image source={{ uri: PROFESSIONS[2].icon }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
+            <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }} style={styles.adminPanelPythonIcon} resizeMode="contain" />
             <View style={styles.adminPanelTestTextWrap}>
               <Text numberOfLines={1} style={styles.adminPanelTestName}>Java Senior</Text>
               <Text numberOfLines={1} style={styles.adminPanelTestQuestions}>12 вопросов</Text>
@@ -1045,6 +1111,7 @@ function FavoritesScreen({ favorites, bottomInset, navHeight, onGoHome, onOpenFa
     quiz: { id: item.testId, title: item.testTitle, questionCount: item.questionCount },
     id: item.testId,
     title: item.testTitle,
+    icon: getLanguageIcon(item.languageTitle || item.testTitle) || FALLBACK_ICON,
     questions: item.languageTitle ?? item.professionTitle ?? 'Язык',
     accent: index === 0 ? '#F7D76D' : index === 1 ? '#F6D85F' : '#F3C95A',
   }));
@@ -1072,7 +1139,15 @@ function FavoritesScreen({ favorites, bottomInset, navHeight, onGoHome, onOpenFa
                 onPress={() => onOpenQuiz?.(item.quiz)}
               >
                 <View style={styles.recentLeft}>
-                  <View style={[styles.recentIcon, { backgroundColor: item.accent }]} />
+                  <View style={[styles.recentIcon, { 
+                    backgroundColor: item.icon ? 'transparent' : item.accent,
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }]}>
+                    {item.icon ? (
+                      <Image source={getImageSource(item.icon)} style={{ width: 36, height: 36 }} resizeMode="contain" />
+                    ) : null}
+                  </View>
 
                   <View>
                     <Text numberOfLines={1} style={styles.recentTitle}>
@@ -1168,14 +1243,20 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
   );
 }
 
-function RecentCard({ title, questions, status, statusVariant, iconColor, onPress }) {
+function RecentCard({ title, questions, status, statusVariant, icon, iconColor, onPress }) {
   const isPassed = statusVariant === 'passed';
   const isDraft = statusVariant === 'draft';
 
   return (
-    <TouchableOpacity  onPress={onPress} activeOpacity={0.9} style={styles.recentCard}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.recentCard}>
       <View style={styles.recentLeft}>
-        <View style={[styles.recentIcon, { backgroundColor: iconColor }]} />
+        <View style={[styles.recentIcon, { backgroundColor: icon ? 'transparent' : iconColor, alignItems: 'center', justifyContent: 'center' }]}>
+          {icon ? (
+            <Image source={getImageSource(icon)} style={{ width: 40, height: 40 }} resizeMode="contain" />
+          ) : (
+            <View style={[styles.recentIconInner, { backgroundColor: iconColor }]} />
+          )}
+        </View>
         <View>
           <Text style={styles.recentTitle}>{title}</Text>
           <Text style={styles.recentQuestions}>{questions}</Text>
@@ -1791,17 +1872,18 @@ const styles = StyleSheet.create({
     borderColor: '#F2F2F2',
     flexDirection: 'row',
     alignItems: 'center', // Вернул центрирование для надежности
-    paddingLeft: 19.5,
-    paddingRight: 4,
+    paddingHorizontal: 14,
   },
   professionIcon: {
     width: 44,
     height: 44,
-    marginRight: 10, // Немного увеличил отступ от иконки до текста
+    marginRight: 8,
   },
   professionName: {
-    fontFamily: 'Roboto_700Bold', // Попробую Bold, возможно Medium недостаточно жирный для Semibold
-    fontSize: 20,
+    flex: 1,
+    fontFamily: 'Roboto_700Bold',
+    fontSize: 18,
+    lineHeight: 20,
     color: '#252525',
   },
   recentList: {

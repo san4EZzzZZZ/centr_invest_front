@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, View, Image } from "react-native";
 import { TouchableOpacity, TextInput } from "../components/SilentTouchables";
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,7 +10,11 @@ function QuizCard({ quiz, onEdit, onDelete }) {
   return (
     <View style={styles.quizCard}>
       <View style={styles.quizCardTop}>
-        <View style={styles.quizIcon} />
+        <View style={[styles.quizIcon, { backgroundColor: quiz.icon ? 'transparent' : '#F5D76A', alignItems: 'center', justifyContent: 'center' }]}>
+          {quiz.icon ? (
+            <Image source={{ uri: quiz.icon }} style={{ width: 28, height: 28 }} resizeMode="contain" />
+          ) : null}
+        </View>
         <View style={styles.quizCardBody}>
           <Text style={styles.quizTitle} numberOfLines={1}>
             {quiz.title}
