@@ -369,11 +369,6 @@ export default function QuizScreen({ quiz, onBack, onFinish }) {
                     </Text>
                   ) : null}
                 </View>
-                <View style={styles.feedbackBadgeWrap}>
-                  <View style={[styles.feedbackBadge, answerResponse.correct ? styles.feedbackBadgeSuccess : styles.feedbackBadgeError]}>
-                    <Text style={styles.feedbackBadgeText}>{answerResponse.correct ? 'Верно' : 'Неверно'}</Text>
-                  </View>
-                </View>
               </>
             ) : null}
           </ScrollView>
@@ -455,11 +450,6 @@ const styles = StyleSheet.create({
   explanationText: { fontFamily: 'Roboto_400Regular', fontSize: 14, lineHeight: 18, color: '#252525' },
   sourceLabel: { marginTop: 10, fontFamily: 'Roboto_400Regular', fontSize: 14, lineHeight: 18, color: '#252525' },
   sourceLink: { marginTop: 14, fontFamily: 'Roboto_400Regular', fontSize: 14, lineHeight: 18, color: '#7A1136' },
-  feedbackBadgeWrap: { marginTop: 14, alignItems: 'flex-start' },
-  feedbackBadge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  feedbackBadgeSuccess: { backgroundColor: '#E1F4E5' },
-  feedbackBadgeError: { backgroundColor: '#F7E2E8' },
-  feedbackBadgeText: { fontFamily: 'Roboto_500Medium', fontSize: 12, lineHeight: 16, color: '#252525' },
   footer: { paddingHorizontal: 16, paddingTop: 12, backgroundColor: '#FFFFFF' },
   primaryBtn: { height: 56, borderRadius: 12, backgroundColor: '#7A1136', alignItems: 'center', justifyContent: 'center' },
   primaryBtnDisabled: { backgroundColor: '#D7C4CE' },
