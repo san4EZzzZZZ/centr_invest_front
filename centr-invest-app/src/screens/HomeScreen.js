@@ -66,6 +66,7 @@ const PROFESSIONS = [
 ];
 
 const FALLBACK_ICON = 'https://img.icons8.com/color/96/source-code.png';
+const RECENT_EMPTY_IMAGE = require('../../assets/Group 11.png');
 
 function maskEmail(value) {
   const email = String(value || '').trim();
@@ -423,8 +424,26 @@ export default function HomeScreen({ currentUser, onLogout }) {
     });
     return map;
   }, [completedTests]);
+  const recentTests = useMemo(() => {
+    const profileRecentAttempts = Array.isArray(profile?.recentAttempts) ? profile.recentAttempts : [];
+
+    return profileRecentAttempts.map((item) => ({
+      id: item.testId,
+      title: item.testTitle,
+      questionCount: item.totalQuestions ?? 0,
+      languageTitle: item.languageTitle,
+      languageIcon: getLanguageIcon(item.languageTitle) ?? FALLBACK_ICON,
+      status: 'passed',
+      duration: item.duration,
+      bestTime: item.bestTime,
+      completedAt: item.completedAt,
+    }));
+  }, [profile]);
+  const trimmedSearch = search.trim();
+  const isSearchMode = trimmedSearch.length > 0;
 
   async function loadHomeData(query = search) {
+    const normalizedQuery = String(query ?? '').trim();
     const requestId = homeRequestId.current + 1;
     homeRequestId.current = requestId;
     setIsLoading(true);
@@ -432,7 +451,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
 
     try {
       const [professionsResponse, profileResponse, completedResponse] = await Promise.all([
-        contentApi.getLanguages({ title: query }),
+        contentApi.getLanguages({ title: normalizedQuery }),
         profileApi.get().catch(() => null),
         profileApi.getCompletedTests().catch(() => []),
       ]);
@@ -462,7 +481,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
       if (requestId !== homeRequestId.current) return;
 
       setProfessions(nextProfessions);
-      if (!query) setAllProfessions(nextProfessions);
+      if (!normalizedQuery) setAllProfessions(nextProfessions);
       setTests(nextTests);
       setProfile(profileResponse);
       setFavorites(profileResponse?.favoriteTests ?? []);
@@ -880,15 +899,35 @@ export default function HomeScreen({ currentUser, onLogout }) {
               <ActivityIndicator color="#7A1136" />
             ) : error ? (
               <Text style={styles.errorText}>{error}</Text>
-            ) : tests.length ? (
-              tests.map((test, index) => (
+            ) : isSearchMode ? (
+              tests.length ? (
+                tests.map((test, index) => (
+                  <RecentCard
+                    key={`search_${test.id}`}
+                    title={test.title}
+                    questions={`${test.questionCount ?? 0} вопросов`}
+                    status={completedIds.has(test.id) ? 'Пройдено' : 'Не пройдено'}
+                    statusVariant={completedIds.has(test.id) ? 'passed' : 'not_passed'}
+                    timeLabel={formatDuration(completedTestsById.get(test.id)?.duration || completedTestsById.get(test.id)?.bestTime)}
+                    icon={test.languageIcon}
+                    iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
+                    isFavorite={favoriteIds.has(String(test.id))}
+                    onFavorite={() => toggleFavorite(test)}
+                    onPress={() => setRoute({ name: 'quiz', quiz: test })}
+                  />
+                ))
+              ) : (
+                <Text style={styles.errorText}>По вашему запросу тесты не найдены</Text>
+              )
+            ) : recentTests.length ? (
+              recentTests.map((test, index) => (
                 <RecentCard
                   key={test.id}
                   title={test.title}
                   questions={`${test.questionCount ?? 0} вопросов`}
-                  status={completedIds.has(test.id) ? 'Пройдено' : 'Не пройдено'}
-                  statusVariant={completedIds.has(test.id) ? 'passed' : 'not_passed'}
-                  timeLabel={formatDuration(completedTestsById.get(test.id)?.duration || completedTestsById.get(test.id)?.bestTime)}
+                  status="Пройдено"
+                  statusVariant="passed"
+                  timeLabel={formatDuration(test.duration || test.bestTime)}
                   icon={test.languageIcon}
                   iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
                   isFavorite={favoriteIds.has(String(test.id))}
@@ -897,7 +936,10 @@ export default function HomeScreen({ currentUser, onLogout }) {
                 />
               ))
             ) : (
-              <Text style={styles.errorText}>Вы еще не проходили тесты</Text>
+              <View style={styles.recentEmptyState}>
+                <Image source={RECENT_EMPTY_IMAGE} style={styles.recentEmptyImage} resizeMode="contain" />
+                <Text style={styles.recentEmptyText}>Здесь пока ничего нет</Text>
+              </View>
             )}
           </View>
         </View>
@@ -2978,6 +3020,24 @@ const styles = StyleSheet.create({
   recentList: {
     paddingHorizontal: 16,
     gap: 16,
+  },
+  recentEmptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 56,
+    paddingBottom: 24,
+  },
+  recentEmptyImage: {
+    width: 240,
+    height: 240,
+  },
+  recentEmptyText: {
+    marginTop: 12,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 14,
+    lineHeight: 18,
+    color: '#B8B8B8',
+    textAlign: 'center',
   },
   recentSwipeRow: {
     position: 'relative',
