@@ -162,6 +162,7 @@ function normalizeLanguageTitle(title) {
 }
 
 const DEFAULT_READ_MORE_URL = 'https://developer.mozilla.org/';
+const DEFAULT_ATTEMPT_QUESTION_COUNT = 7;
 
 function toEditorQuiz(test) {
   if (!test) return null;
@@ -283,6 +284,22 @@ function formatDurationSeconds(seconds) {
   }
 
   return `${minutes} мин ${remainingSeconds} сек`;
+}
+
+function getResolvedQuestionCount(item) {
+  const candidates = [item?.questionCount, item?.totalQuestions, item?.questions?.length];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === 'number' && Number.isFinite(candidate) && candidate > 0) {
+      return candidate;
+    }
+  }
+
+  return 0;
+}
+
+function getAttemptQuestionCount(testId, completedTestsById) {
+  return completedTestsById.get(testId)?.totalQuestions ?? DEFAULT_ATTEMPT_QUESTION_COUNT;
 }
 
 function toAdminPayload(quiz, fallbackLanguageId) {
@@ -552,6 +569,31 @@ export default function HomeScreen({ currentUser, onLogout }) {
     setRoute({ name: 'home' });
   }
 
+  function openQuiz(test) {
+    if (!test) return;
+
+    setRoute({
+      name: 'quiz',
+      quiz: {
+        ...test,
+        wasFavoriteAtStart: favoriteIds.has(String(test.id)),
+      },
+    });
+  }
+
+  async function goHomeAfterResult() {
+    const completedQuiz = route.quiz;
+
+    if (completedQuiz?.id != null && completedQuiz?.wasFavoriteAtStart === false) {
+      try {
+        await profileApi.removeFavorite(completedQuiz.id);
+      } catch {
+      }
+    }
+
+    goHomeWithRefresh();
+  }
+
   async function toggleFavorite(test) {
     const testId = test?.id;
     if (testId == null) return;
@@ -574,7 +616,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
           languageId: test.languageId ?? test.professionId,
           languageTitle: test.languageTitle ?? test.professionTitle,
           testTitle: test.title,
-          questionCount: test.questionCount ?? test.questions?.length ?? 0,
+          questionCount: getResolvedQuestionCount(test),
           addedAt: new Date().toISOString(),
         },
         ...currentFavorites,
@@ -639,7 +681,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
         quizTitle={route.quiz?.title}
         result={route.result}
         attemptId={route.attemptId}
-        onGoHome={goHomeWithRefresh}
+        onGoHome={goHomeAfterResult}
       />
     );
   }
@@ -831,12 +873,17 @@ export default function HomeScreen({ currentUser, onLogout }) {
     return (
       <FavoritesScreen
         favorites={favorites}
+        favoriteIds={favoriteIds}
+        completedIds={completedIds}
+        completedTestsById={completedTestsById}
+        isAdmin={isAdmin}
         bottomInset={bottomInset}
         navHeight={NAV_HEIGHT}
         onGoHome={goHomeWithRefresh}
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
-        onOpenQuiz={(test) => setRoute({ name: 'quiz', quiz: test })}
+        onOpenAdmin={() => setRoute({ name: 'adminPanel' })}
+        onOpenQuiz={openQuiz}
         onFavorite={toggleFavorite}
       />
     );
@@ -859,7 +906,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
           if (isAdmin) setRoute({ name: 'admin' });
         }}
         onFavorite={toggleFavorite}
-        onOpenQuiz={(test) => setRoute({ name: 'quiz', quiz: test })}
+        onOpenQuiz={openQuiz}
         isAdmin={isAdmin}
       />
     );
@@ -947,7 +994,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
                     iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
                     isFavorite={favoriteIds.has(String(test.id))}
                     onFavorite={() => toggleFavorite(test)}
-                    onPress={() => setRoute({ name: 'quiz', quiz: test })}
+                    onPress={() => openQuiz(test)}
                   />
                 ))
               ) : (
@@ -966,7 +1013,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
                   iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
                   isFavorite={favoriteIds.has(String(test.id))}
                   onFavorite={() => toggleFavorite(test)}
-                  onPress={() => setRoute({ name: 'quiz', quiz: test })}
+                  onPress={() => openQuiz(test)}
                 />
               ))
             ) : (
@@ -1921,14 +1968,36 @@ function SwipeableUserTestCard() {
   );
 }
 
-function FavoritesScreen({ favorites, bottomInset, navHeight, onGoHome, onOpenFavorites, onOpenProfile, onOpenQuiz }) {
+function FavoritesScreen({
+  favorites,
+  favoriteIds,
+  completedIds,
+  completedTestsById,
+  isAdmin,
+  bottomInset,
+  navHeight,
+  onGoHome,
+  onOpenFavorites,
+  onOpenProfile,
+  onOpenAdmin,
+  onOpenQuiz,
+  onFavorite,
+}) {
   const favoriteItems = favorites.map((item, index) => ({
-    quiz: { id: item.testId, title: item.testTitle, questionCount: item.questionCount },
+    quiz: {
+      id: item.testId,
+      title: item.testTitle,
+      questionCount: getAttemptQuestionCount(item.testId, completedTestsById),
+      languageIcon: getLanguageIcon(item.languageTitle || item.testTitle) || FALLBACK_ICON,
+    },
     id: item.testId,
     title: item.testTitle,
     icon: getLanguageIcon(item.languageTitle || item.testTitle) || FALLBACK_ICON,
-    questions: item.languageTitle ?? item.professionTitle ?? 'Язык',
-    accent: index === 0 ? '#F7D76D' : index === 1 ? '#F6D85F' : '#F3C95A',
+    questions: `${getAttemptQuestionCount(item.testId, completedTestsById)} вопросов`,
+    status: completedIds.has(item.testId) ? 'Пройдено' : 'Не пройдено',
+    statusVariant: completedIds.has(item.testId) ? 'passed' : 'not_passed',
+    timeLabel: formatDuration(completedTestsById.get(item.testId)?.duration || completedTestsById.get(item.testId)?.bestTime),
+    accent: index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E',
   }));
 
   return (
@@ -1947,37 +2016,19 @@ function FavoritesScreen({ favorites, bottomInset, navHeight, onGoHome, onOpenFa
 
           <View style={styles.favoritesList}>
             {favoriteItems.map((item) => (
-              <TouchableOpacity 
+              <RecentCard
                 key={item.id}
-                activeOpacity={0.9}
-                style={styles.recentCard}
+                title={item.title}
+                questions={item.questions}
+                status={item.status}
+                statusVariant={item.statusVariant}
+                timeLabel={item.timeLabel}
+                icon={item.icon}
+                iconColor={item.accent}
+                isFavorite={favoriteIds.has(String(item.id))}
+                onFavorite={() => onFavorite?.(item.quiz)}
                 onPress={() => onOpenQuiz?.(item.quiz)}
-              >
-                <View style={styles.recentLeft}>
-                  <View style={[styles.recentIcon, { 
-                    backgroundColor: item.icon ? 'transparent' : item.accent,
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }]}>
-                    {item.icon ? (
-                      <Image source={getImageSource(item.icon)} style={{ width: 36, height: 36 }} resizeMode="contain" />
-                    ) : null}
-                  </View>
-
-                  <View>
-                    <Text numberOfLines={1} style={styles.recentTitle}>
-                      {item.title}
-                    </Text>
-                    <Text style={styles.recentQuestions}>{item.questions}</Text>
-                  </View>
-                </View>
-
-                <View style={[styles.statusPill, styles.statusPillPassed]}>
-                  <Text numberOfLines={1} style={[styles.statusText, styles.statusTextPassed]}>
-                    В избранном
-                  </Text>
-                </View>
-              </TouchableOpacity>
+              />
             ))}
           </View>
         </ScrollView>
@@ -1990,8 +2041,8 @@ function FavoritesScreen({ favorites, bottomInset, navHeight, onGoHome, onOpenFa
         onGoHome={onGoHome}
         onOpenFavorites={onOpenFavorites}
         onOpenProfile={onOpenProfile}
-        onOpenAdmin={() => {}}
-        isAdmin={false}
+        onOpenAdmin={onOpenAdmin}
+        isAdmin={isAdmin}
       />
     </SafeAreaView>
   );
