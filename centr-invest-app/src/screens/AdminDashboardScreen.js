@@ -4,8 +4,8 @@ import { TouchableOpacity, TextInput } from "../components/SilentTouchables";
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-function QuizCard({ quiz, onEdit, onDelete }) {
-  const isDraft = quiz.status === 'draft';
+function QuizCard({ quiz, onEdit, onDelete, onPublish }) {
+  const isDraft = quiz.published === false;
 
   return (
     <View style={styles.quizCard}>
@@ -30,22 +30,38 @@ function QuizCard({ quiz, onEdit, onDelete }) {
       </View>
 
       <View style={styles.actionsRow}>
-        <TouchableOpacity  onPress={onEdit} activeOpacity={0.8} style={styles.actionBtn}>
-          <Feather name="edit-3" size={16} color="#9A7B00" />
+        {isDraft && (
+          <TouchableOpacity
+            onPress={onPublish}
+            activeOpacity={0.8}
+            style={[styles.actionBtn, styles.publishBtn]}
+          >
+            <Feather name="archive" size={16} color="#27AE60" />
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity
+          onPress={onEdit}
+          activeOpacity={0.8}
+          style={[styles.actionBtn, styles.editBtnDraft]}
+        >
+          <Feather name="edit-3" size={16} color="#E2B93B" />
         </TouchableOpacity>
         <TouchableOpacity 
           onPress={onDelete}
           activeOpacity={0.8}
           style={[styles.actionBtn, styles.deleteBtn]}
         >
-          <Feather name="trash-2" size={16} color="#D83131" />
+          <Feather name="trash-2" size={16} color="#EB5757" />
         </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-export default function AdminDashboardScreen({ quizzes, onBack, onCreate, onEdit, onDelete, bottomInset = 0, navHeight = 64 }) {
+export default function AdminDashboardScreen({ quizzes = [], onBack, onCreate, onEdit, onDelete, onPublish, bottomInset = 0, navHeight = 64 }) {
+  const publishedQuizzes = quizzes.filter(q => q.published);
+  const draftQuizzes = quizzes.filter(q => !q.published);
+
   return (
     <SafeAreaView edges={['top']} style={styles.screen}>
       <View style={styles.header}>
@@ -57,15 +73,47 @@ export default function AdminDashboardScreen({ quizzes, onBack, onCreate, onEdit
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: navHeight + bottomInset + 24 }]}>
+        {publishedQuizzes.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Опубликованные</Text>
+            <View style={styles.list}>
+              {publishedQuizzes.map((quiz) => (
+                <QuizCard
+                  key={quiz.id}
+                  quiz={quiz}
+                  onEdit={() => onEdit?.(quiz)}
+                  onDelete={() => {
+                    Alert.alert('Удалить тест?', `Тест "${quiz.title}" будет удален без возможности восстановления.`, [
+                      { text: 'Отмена', style: 'cancel' },
+                      {
+                        text: 'Удалить',
+                        style: 'destructive',
+                        onPress: () => {
+                          Promise.resolve(onDelete?.(quiz.id)).catch((deleteError) => {
+                            Alert.alert('Ошибка', deleteError?.message || 'Не удалось удалить тест');
+                          });
+                        },
+                      },
+                    ]);
+                  }}
+                />
+              ))}
+            </View>
+          </View>
+        )}
+
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Черновики</Text>
+
           <View style={styles.list}>
-            {quizzes.map((quiz) => (
+            {draftQuizzes.map((quiz) => (
               <QuizCard
                 key={quiz.id}
                 quiz={quiz}
+                onPublish={() => onPublish?.(quiz.id)}
                 onEdit={() => onEdit?.(quiz)}
                 onDelete={() => {
-                  Alert.alert('Удалить тест?', `Тест "${quiz.title}" будет удален без возможности восстановления.`, [
+                  Alert.alert('Удалить черновик?', `Тест "${quiz.title}" будет удален.`, [
                     { text: 'Отмена', style: 'cancel' },
                     {
                       text: 'Удалить',
@@ -81,10 +129,6 @@ export default function AdminDashboardScreen({ quizzes, onBack, onCreate, onEdit
               />
             ))}
           </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Черновики</Text>
 
           <TouchableOpacity  style={styles.createCard} onPress={onCreate} activeOpacity={0.9}>
             <View style={styles.createIcon}>
@@ -98,6 +142,7 @@ export default function AdminDashboardScreen({ quizzes, onBack, onCreate, onEdit
       </ScrollView>
     </SafeAreaView>
   );
+}
 }
 
 const styles = StyleSheet.create({
@@ -221,8 +266,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionBtn: {
-    width: 30,
-    height: 30,
+    width: 32,
+    height: 32,
     borderRadius: 8,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
@@ -230,8 +275,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ECECEC',
   },
+  publishBtn: {
+    borderColor: '#D8EFE3',
+    backgroundColor: '#F6FFF9',
+  },
+  editBtnDraft: {
+    borderColor: '#FEF1D3',
+    backgroundColor: '#FFFEF8',
+  },
   deleteBtn: {
     borderColor: '#FFD6D6',
+    backgroundColor: '#FFF9F9',
   },
   createCard: {
     flexDirection: 'row',
