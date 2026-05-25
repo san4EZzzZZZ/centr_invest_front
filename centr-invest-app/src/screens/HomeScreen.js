@@ -14,11 +14,6 @@ const SEARCH_SVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" 
 <path d="M9.5 16C7.68333 16 6.146 15.3707 4.888 14.112C3.63 12.8533 3.00067 11.316 3 9.5C2.99933 7.684 3.62867 6.14667 4.888 4.888C6.14733 3.62933 7.68467 3 9.5 3C11.3153 3 12.853 3.62933 14.113 4.888C15.373 6.14667 16.002 7.684 16 9.5C16 10.2333 15.8833 10.925 15.65 11.575C15.4167 12.225 15.1 12.8 14.7 13.3L20.3 18.9C20.4833 19.0833 20.575 19.3167 20.575 19.6C20.575 19.8833 20.4833 20.1167 20.3 20.3C20.1167 20.4833 19.8833 20.575 19.6 20.575C19.3167 20.575 19.0833 20.4833 18.9 20.3L13.3 14.7C12.8 15.1 12.225 15.4167 11.575 15.65C10.925 15.8833 10.2333 16 9.5 16ZM9.5 14C10.75 14 11.8127 13.5627 12.688 12.688C13.5633 11.8133 14.0007 10.7507 14 9.5C13.9993 8.24933 13.562 7.187 12.688 6.313C11.814 5.439 10.7513 5.00133 9.5 5C8.24867 4.99867 7.18633 5.43633 6.313 6.313C5.43967 7.18967 5.002 8.252 5 9.5C4.998 10.748 5.43567 11.8107 6.313 12.688C7.19033 13.5653 8.25267 14.0027 9.5 14Z" fill="#7C7C7C"/>
 </svg>`;
 
-const HOME_NAV_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M8.1775 27.9999C6.60683 27.9999 5.3335 26.6932 5.3335 25.0799V13.3439C5.3335 12.4572 5.72683 11.6172 6.40016 11.0639L14.2228 4.63988C14.7226 4.22599 15.3512 3.99951 16.0002 3.99951C16.6491 3.99951 17.2777 4.22599 17.7775 4.63988L25.5988 11.0639C26.2735 11.6172 26.6668 12.4572 26.6668 13.3439V25.0799C26.6668 26.6932 25.3935 27.9999 23.8228 27.9999H8.1775Z" stroke="#CECECE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M12.667 28V20.6667C12.667 19.9594 12.9479 19.2811 13.448 18.781C13.9481 18.281 14.6264 18 15.3337 18H16.667C17.3742 18 18.0525 18.281 18.5526 18.781C19.0527 19.2811 19.3337 19.9594 19.3337 20.6667V28" stroke="#CECECE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-
 const PLUS_NAV_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M26.2857 17.7143H17.7143V26.2857C17.7143 26.7404 17.5337 27.1764 17.2122 27.4979C16.8907 27.8194 16.4547 28 16 28C15.5453 28 15.1093 27.8194 14.7878 27.4979C14.4663 27.1764 14.2857 26.7404 14.2857 26.2857V17.7143H5.71429C5.25963 17.7143 4.82359 17.5337 4.5021 17.2122C4.18061 16.8907 4 16.4547 4 16C4 15.5453 4.18061 15.1093 4.5021 14.7878C4.82359 14.4663 5.25963 14.2857 5.71429 14.2857H14.2857V5.71429C14.2857 5.25963 14.4663 4.82359 14.7878 4.5021C15.1093 4.18061 15.5453 4 16 4C16.4547 4 16.8907 4.18061 17.2122 4.5021C17.5337 4.82359 17.7143 5.25963 17.7143 5.71429V14.2857H26.2857C26.7404 14.2857 27.1764 14.4663 27.4979 14.7878C27.8194 15.1093 28 15.5453 28 16C28 16.4547 27.8194 16.8907 27.4979 17.2122C27.1764 17.5337 26.7404 17.7143 26.2857 17.7143Z" fill="#CECECE"/>
 </svg>`;
@@ -28,11 +23,13 @@ const BIN_SVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xml
 </svg>`;
 
 const HOME_ACTIVE_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M28 26.6664C28 27.02 27.8595 27.3592 27.6095 27.6092C27.3594 27.8593 27.0203 27.9997 26.6667 27.9997H5.33333C4.97971 27.9997 4.64057 27.8593 4.39052 27.6092C4.14048 27.3592 4 27.02 4 26.6664V12.6531C3.99986 12.4499 4.04616 12.2494 4.13535 12.0668C4.22455 11.8843 4.35429 11.7245 4.51467 11.5997L15.1813 3.30241C15.4154 3.12034 15.7035 3.02148 16 3.02148C16.2965 3.02148 16.5846 3.12034 16.8187 3.30241L27.4853 11.5997C27.6457 11.7245 27.7754 11.8843 27.8646 12.0668C27.9538 12.2494 28.0001 12.4499 28 12.6531V26.6664Z" fill="#76113A"/>
+<path d="M8.17734 27.9999C6.60668 27.9999 5.33334 26.6932 5.33334 25.0799V13.3439C5.33334 12.4572 5.72668 11.6172 6.40001 11.0639L14.2227 4.63988C14.7225 4.22599 15.3511 3.99951 16 3.99951C16.6489 3.99951 17.2775 4.22599 17.7773 4.63988L25.5987 11.0639C26.2733 11.6172 26.6667 12.4572 26.6667 13.3439V25.0799C26.6667 26.6932 25.3933 27.9999 23.8227 27.9999H8.17734Z" stroke="#76113A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12.6667 28V20.6667C12.6667 19.9594 12.9476 19.2811 13.4477 18.781C13.9478 18.281 14.6261 18 15.3334 18H16.6667C17.3739 18 18.0522 18.281 18.5523 18.781C19.0524 19.2811 19.3334 19.9594 19.3334 20.6667V28" stroke="#76113A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
 
 const HOME_INACTIVE_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M28 26.6664C28 27.02 27.8595 27.3592 27.6095 27.6092C27.3594 27.8593 27.0203 27.9997 26.6667 27.9997H5.33333C4.97971 27.9997 4.64057 27.8593 4.39052 27.6092C4.14048 27.3592 4 27.02 4 26.6664V12.6531C3.99986 12.4499 4.04616 12.2494 4.13535 12.0668C4.22455 11.8843 4.35429 11.7245 4.51467 11.5997L15.1813 3.30241C15.4154 3.12034 15.7035 3.02148 16 3.02148C16.2965 3.02148 16.5846 3.12034 16.8187 3.30241L27.4853 11.5997C27.6457 11.7245 27.7754 11.8843 27.8646 12.0668C27.9538 12.2494 28.0001 12.4499 28 12.6531V26.6664Z" fill="#CECECE"/>
+<path d="M8.1775 27.9999C6.60683 27.9999 5.3335 26.6932 5.3335 25.0799V13.3439C5.3335 12.4572 5.72683 11.6172 6.40016 11.0639L14.2228 4.63988C14.7226 4.22599 15.3512 3.99951 16.0002 3.99951C16.6491 3.99951 17.2777 4.22599 17.7775 4.63988L25.5988 11.0639C26.2735 11.6172 26.6668 12.4572 26.6668 13.3439V25.0799C26.6668 26.6932 25.3935 27.9999 23.8228 27.9999H8.1775Z" stroke="#CECECE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12.667 28V20.6667C12.667 19.9594 12.9479 19.2811 13.448 18.781C13.9481 18.281 14.6264 18 15.3337 18H16.667C17.3742 18 18.0525 18.281 18.5526 18.781C19.0527 19.2811 19.3337 19.9594 19.3337 20.6667V28" stroke="#CECECE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
 
 const HEART_ACTIVE_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -726,13 +723,14 @@ export default function HomeScreen({ currentUser, onLogout }) {
         languages={availableLanguages}
         bottomInset={bottomInset}
         navHeight={NAV_HEIGHT}
-        onBack={() => setRoute({ name: 'home' })}
+        onBack={goHomeWithRefresh}
         onGoHome={goHomeWithRefresh}
         onOpenFavorites={() => setRoute({ name: 'favorites' })}
         onOpenProfile={() => setRoute({ name: 'profile' })}
         onOpenAdmin={() => {
           if (isAdmin) setRoute({ name: 'admin' });
         }}
+        onOpenLanguage={(language) => setRoute({ name: 'languageTests', language })}
         isAdmin={isAdmin}
       />
     );
@@ -783,6 +781,29 @@ export default function HomeScreen({ currentUser, onLogout }) {
     );
   }
 
+  if (route.name === 'languageTests') {
+    return (
+      <LanguageTestsScreen
+        language={route.language}
+        favoriteIds={favoriteIds}
+        completedIds={completedIds}
+        completedTestsById={completedTestsById}
+        bottomInset={bottomInset}
+        navHeight={NAV_HEIGHT}
+        onBack={() => setRoute({ name: 'languages' })}
+        onGoHome={goHomeWithRefresh}
+        onOpenFavorites={() => setRoute({ name: 'favorites' })}
+        onOpenProfile={() => setRoute({ name: 'profile' })}
+        onOpenAdmin={() => {
+          if (isAdmin) setRoute({ name: 'admin' });
+        }}
+        onFavorite={toggleFavorite}
+        onOpenQuiz={(test) => setRoute({ name: 'quiz', quiz: test })}
+        isAdmin={isAdmin}
+      />
+    );
+  }
+
   return (
     <SafeAreaView edges={['top']} style={[styles.screen, styles.homeScreen]}>
       <ScrollView
@@ -822,7 +843,12 @@ export default function HomeScreen({ currentUser, onLogout }) {
           <View style={styles.horizontalListWrap}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalListContent}>
               {homeLanguages.map((item) => (
-                <TouchableOpacity  key={item.id} style={styles.professionCard} activeOpacity={0.8}>
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.professionCard}
+                  activeOpacity={0.8}
+                  onPress={() => setRoute({ name: 'languageTests', language: item })}
+                >
                   <Image
                     source={getImageSource(item.icon)}
                     style={styles.professionIcon} 
@@ -1144,7 +1170,7 @@ function EmailChangeSuccessScreen({ bottomInset, navHeight, isAdmin, onBackToPro
   );
 }
 
-function LanguagesScreen({ languages, bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, isAdmin }) {
+function LanguagesScreen({ languages, bottomInset, navHeight, onBack, onGoHome, onOpenFavorites, onOpenProfile, onOpenAdmin, onOpenLanguage, isAdmin }) {
   return (
     <SafeAreaView edges={['top']} style={[styles.screen, styles.languagesScreen]}>
       <View style={styles.languagesShell}>
@@ -1161,7 +1187,12 @@ function LanguagesScreen({ languages, bottomInset, navHeight, onBack, onGoHome, 
 
           <View style={styles.languagesList}>
             {languages.map((item) => (
-              <TouchableOpacity key={item.id} activeOpacity={0.9} style={styles.languageCard}>
+              <TouchableOpacity
+                key={item.id}
+                activeOpacity={0.9}
+                style={styles.languageCard}
+                onPress={() => onOpenLanguage?.(item)}
+              >
                 <View style={styles.languageCardMain}>
                   <Image source={getImageSource(item.icon)} style={styles.languageCardIcon} resizeMode="contain" />
                   <View style={styles.languageCardTextWrap}>
@@ -1174,6 +1205,148 @@ function LanguagesScreen({ languages, bottomInset, navHeight, onBack, onGoHome, 
                 </View>
               </TouchableOpacity>
             ))}
+          </View>
+        </ScrollView>
+      </View>
+
+      <BottomNav
+        bottomInset={bottomInset}
+        navHeight={navHeight}
+        activeTab="home"
+        onGoHome={onGoHome}
+        onOpenFavorites={onOpenFavorites}
+        onOpenProfile={onOpenProfile}
+        onOpenAdmin={onOpenAdmin}
+        isAdmin={isAdmin}
+      />
+    </SafeAreaView>
+  );
+}
+
+function LanguageTestsScreen({
+  language,
+  favoriteIds,
+  completedIds,
+  completedTestsById,
+  bottomInset,
+  navHeight,
+  onBack,
+  onGoHome,
+  onOpenFavorites,
+  onOpenProfile,
+  onOpenAdmin,
+  onFavorite,
+  onOpenQuiz,
+  isAdmin,
+}) {
+  const [search, setSearch] = useState('');
+  const [tests, setTests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const requestIdRef = useRef(0);
+
+  useEffect(() => {
+    let ignore = false;
+    const timeoutId = setTimeout(() => {
+      const nextRequestId = requestIdRef.current + 1;
+      requestIdRef.current = nextRequestId;
+
+      async function loadLanguageTests() {
+        if (!language?.id) {
+          setTests([]);
+          setError('Язык не найден');
+          setIsLoading(false);
+          return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+          const response = await contentApi.getTestsByLanguage(language.id, { title: search.trim() });
+          if (ignore || nextRequestId !== requestIdRef.current) return;
+
+          const nextTests = (Array.isArray(response) ? response : []).map((test) => ({
+            ...test,
+            languageId: test.languageId ?? language.id,
+            languageTitle: test.languageTitle ?? language.title,
+            languageIcon: getLanguageIcon(test.languageTitle ?? language.title) ?? language.icon ?? FALLBACK_ICON,
+            professionId: test.languageId ?? language.id,
+            professionTitle: test.languageTitle ?? language.title,
+            status: 'published',
+          }));
+
+          setTests(nextTests);
+        } catch (loadError) {
+          if (!ignore && nextRequestId === requestIdRef.current) {
+            setError(loadError.message || 'Не удалось загрузить тесты');
+          }
+        } finally {
+          if (!ignore && nextRequestId === requestIdRef.current) {
+            setIsLoading(false);
+          }
+        }
+      }
+
+      loadLanguageTests();
+    }, 300);
+
+    return () => {
+      ignore = true;
+      clearTimeout(timeoutId);
+    };
+  }, [language?.icon, language?.id, language?.title, search]);
+
+  return (
+    <SafeAreaView edges={['top']} style={[styles.screen, styles.languageTestsScreen]}>
+      <View style={styles.languageTestsShell}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[styles.languageTestsContent, { paddingBottom: navHeight + bottomInset + 24 }]}
+        >
+          <View style={styles.languageTestsHeader}>
+            <TouchableOpacity onPress={onBack} activeOpacity={0.8} style={styles.backBtn}>
+              <Ionicons name="chevron-back" size={18} color="#252525" />
+            </TouchableOpacity>
+            <Text style={styles.languageTestsTitle}>{language?.title ?? 'Тесты'}</Text>
+          </View>
+
+          <View style={styles.languageTestsSearchBar}>
+            <SvgXml xml={SEARCH_SVG} width="24" height="24" />
+            <TextInput
+              placeholder="Поиск теста"
+              placeholderTextColor="#7C7C7C"
+              value={search}
+              onChangeText={setSearch}
+              style={styles.languageTestsSearchInput}
+            />
+          </View>
+
+          <View style={styles.recentList}>
+            {isLoading ? (
+              <ActivityIndicator color="#7A1136" />
+            ) : error ? (
+              <Text style={styles.errorText}>{error}</Text>
+            ) : tests.length ? (
+              tests.map((test, index) => (
+                <RecentCard
+                  key={test.id}
+                  title={test.title}
+                  questions={`${test.questionCount ?? 0} вопросов`}
+                  status={completedIds.has(test.id) ? 'Пройдено' : 'Не пройдено'}
+                  statusVariant={completedIds.has(test.id) ? 'passed' : 'not_passed'}
+                  timeLabel={formatDuration(completedTestsById.get(test.id)?.duration || completedTestsById.get(test.id)?.bestTime)}
+                  icon={test.languageIcon}
+                  iconColor={index === 0 ? '#FFB58F' : index === 1 ? '#FDE68A' : '#D17E7E'}
+                  isFavorite={favoriteIds.has(String(test.id))}
+                  onFavorite={() => onFavorite?.(test)}
+                  onPress={() => onOpenQuiz?.(test)}
+                />
+              ))
+            ) : (
+              <Text style={styles.errorText}>Тесты по этому языку пока не найдены</Text>
+            )}
           </View>
         </ScrollView>
       </View>
@@ -1722,7 +1895,7 @@ function BottomNav({ bottomInset, navHeight, activeTab, onGoHome, onOpenFavorite
             <View style={[styles.bottomNav, { height: navHeight + bottomInset, paddingBottom: bottomInset }]}>
               <TouchableOpacity  style={styles.bottomNavBtn} onPress={onGoHome} activeOpacity={0.8}>
                 <SvgXml
-                  xml={HOME_NAV_SVG}
+                  xml={activeTab === 'home' ? HOME_ACTIVE_SVG : HOME_INACTIVE_SVG}
                   width="32"
                   height="32"
                 />
@@ -2672,6 +2845,9 @@ const styles = StyleSheet.create({
   languagesScreen: {
     backgroundColor: '#FFFFFF',
   },
+  languageTestsScreen: {
+    backgroundColor: '#FFFFFF',
+  },
   languagesShell: {
     flex: 1,
     marginHorizontal: 16,
@@ -2696,13 +2872,53 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: '#252525',
   },
+  languageTestsShell: {
+    flex: 1,
+    marginHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  languageTestsContent: {
+    paddingHorizontal: 0,
+    paddingTop: 18,
+  },
+  languageTestsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 18,
+  },
+  languageTestsTitle: {
+    fontFamily: 'Roboto_500Medium',
+    fontSize: 20,
+    lineHeight: 24,
+    color: '#252525',
+  },
+  languageTestsSearchBar: {
+    marginHorizontal: 16,
+    marginBottom: 20,
+    height: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EAEAEA',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+  },
+  languageTestsSearchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontFamily: 'Roboto_400Regular',
+    fontSize: 16,
+    lineHeight: 20,
+    color: '#252525',
+    outlineStyle: 'none',
+  },
   languagesList: {
     gap: 12,
   },
   languageCard: {
-    minHeight: 0,
+    minHeight: 108,
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     borderWidth: 0,
     borderColor: 'transparent',
     backgroundColor: '#FFFFFF',
@@ -2740,14 +2956,14 @@ const styles = StyleSheet.create({
   languageTextWrap: {
     flex: 1,
     minWidth: 0,
-    justifyContent: 'flex-start',
-    paddingTop: 6,
+    justifyContent: 'center',
+    alignSelf: 'center',
   },
   languageDescription: {
     marginTop: 0,
     fontFamily: 'Roboto_400Regular',
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 16,
+    lineHeight: 20,
     color: '#595959',
     textAlignVertical: 'center',
   },
