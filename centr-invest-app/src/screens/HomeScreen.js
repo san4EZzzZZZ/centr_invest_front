@@ -444,7 +444,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
   const trimmedSearch = search.trim();
   const isSearchMode = trimmedSearch.length > 0;
 
-  async function loadHomeData(query = search) {
+  async function loadHomeData(query = search, languageOverride = selectedLanguage) {
     const normalizedQuery = String(query ?? '').trim();
     const requestId = homeRequestId.current + 1;
     homeRequestId.current = requestId;
@@ -468,7 +468,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
           icon: mappedIcon ?? p.icon ?? FALLBACK_ICON,
         };
       });
-      const languageFilter = languageOverride;
+      const languageFilter = languageOverride ?? null;
       let nextTests = [];
       if (languageFilter?.id) {
         const languageTests = await contentApi.getLanguageTests(languageFilter.id, { title: query, sort: 'titleAsc' });
@@ -887,7 +887,7 @@ export default function HomeScreen({ currentUser, onLogout }) {
               placeholderTextColor="#7C7C7C"
               value={search}
               onChangeText={setSearch}
-              onSubmitEditing={() => loadHomeData(search)}
+              onSubmitEditing={() => loadHomeData(search, selectedLanguage)}
               style={styles.searchInput}
             />
           </View>
