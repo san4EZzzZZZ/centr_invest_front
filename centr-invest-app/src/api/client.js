@@ -127,6 +127,12 @@ export const contentApi = {
     const query = params.toString();
     return apiFetch(`/languages${query ? `?${query}` : ''}`);
   },
+  getTestsByLanguage: (languageId, { title } = {}) => {
+    const params = new URLSearchParams();
+    if (title) params.set('title', title);
+    const query = params.toString();
+    return apiFetch(`/languages/${languageId}/tests${query ? `?${query}` : ''}`);
+  },
   getProfessions: (params) => contentApi.getLanguages(params),
   getLanguageTests: (languageId, { title, page, size, sort } = {}) => {
     const params = new URLSearchParams();
